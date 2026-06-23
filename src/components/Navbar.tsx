@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Sun, Moon } from "lucide-react";
 
 const LINKS = [
@@ -16,6 +16,7 @@ export default function Navbar() {
   const [active, setActive] = useState("");
   const io = useRef<IntersectionObserver | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
 
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -46,7 +47,7 @@ export default function Navbar() {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
       }
     } else {
-      window.location.href = `/#${id}`;
+      router.push(`/#${id}`);
     }
   };
 
