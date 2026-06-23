@@ -62,6 +62,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${playfair.variable} ${hanken.variable} scroll-smooth`}
+      suppressHydrationWarning
     >
       <head>
         <script
