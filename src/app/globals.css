@@ -337,12 +337,6 @@ body::before {
   gap: 0.35rem;
 }
 
-@media (max-width: 640px) {
-  .hero-avatar {
-    width: 130px;
-    height: 130px;
-  }
-}
 .hero-name-wrap {
   display: flex;
   align-items: center;
@@ -350,11 +344,36 @@ body::before {
 }
 .hero-name {
   font-family: var(--font-sans-alt), sans-serif;
-  font-size: 2.5rem;
+  font-size: clamp(1.85rem, 8vw, 2.5rem);
   font-weight: 700;
   color: var(--t1);
   line-height: 1.1;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .hero-avatar {
+    width: 120px;
+    height: 120px;
+  }
+  .hero-profile {
+    gap: 1.25rem;
+  }
+  .hero-name {
+    font-size: 1.65rem;
+  }
+}
+@media (max-width: 480px) {
+  .hero-avatar {
+    width: 110px;
+    height: 110px;
+  }
+  .hero-profile {
+    gap: 1rem;
+  }
+  .hero-name {
+    font-size: 1.5rem;
+  }
 }
 .hero-status-emoji {
   font-size: 1.15rem;
