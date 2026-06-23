@@ -20,6 +20,18 @@
   --font-sans-alt: var(--font-hanken, 'Hanken Grotesk', sans-serif);
 }
 
+[data-theme='light'] {
+  --bg:          #ffffff;
+  --bg-2:        #f8f9fa;
+  --bg-3:        #e9ecef;
+  --border:      rgba(0, 0, 0, 0.08);
+  --border-h:    rgba(0, 0, 0, 0.16);
+  --t1:          #121314;
+  --t2:          #5a6065;
+  --t3:          #8b949e;
+  --accent:      #121314;
+}
+
 /* ═══════════════════════════════════════════
    BASE
 ═══════════════════════════════════════════ */
@@ -28,7 +40,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: #000000;
+  background: var(--bg);
   background-attachment: fixed;
   color: var(--t1);
   font-family: var(--font-inter, 'Inter', system-ui, sans-serif);
@@ -296,7 +308,7 @@ body::before {
 .hero-avatar {
   width: 160px;
   height: 160px;
-  background: transparent;
+  background: var(--bg);
   border: none;
   flex-shrink: 0;
   position: relative;
@@ -1420,5 +1432,141 @@ body::before {
   position: absolute;
   left: -1.2rem;
   color: var(--t3);
+}
+
+/* ═══════════════════════════════════════════
+   THEME SWITCHER & LIGHT MODE OVERRIDES
+   ═══════════════════════════════════════════ */
+.dock-sep {
+  width: 1px;
+  height: 14.5px;
+  background: var(--border-h);
+  margin: 0 0.15rem;
+}
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--t2);
+  padding: 0.35rem;
+  border-radius: 9999px;
+  transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.theme-toggle-btn:hover {
+  color: var(--t1);
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+.theme-toggle-icon {
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.theme-toggle-btn:hover .theme-toggle-icon {
+  transform: rotate(20deg) scale(1.05);
+}
+
+/* Light Theme overrides */
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+[data-theme='light'] ::selection {
+  background: rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .dock-inner {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .dock-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme='light'] .dock-link.active {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme='light'] .theme-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme='light'] .corner-box {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.01);
+}
+[data-theme='light'] .corner-box:hover {
+  border-color: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.02);
+}
+[data-theme='light'] .exp-node::after {
+  border-left: 1px dashed rgba(0, 0, 0, 0.12);
+}
+[data-theme='light'] .exp-logo,
+[data-theme='light'] .exp-chevron-wrap {
+  background: rgba(0, 0, 0, 0.02);
+}
+[data-theme='light'] .exp-content:hover .exp-chevron-wrap {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme='light'] .exp-badge.done {
+  color: #555555;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+[data-theme='light'] .btn-line:hover {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* GitHub Contributions Calendar colors for Light Theme (grayscale) */
+[data-theme='light'] .gc-day.lvl-0,
+[data-theme='light'] .gc-key.lvl-0 { background: #ebedf0; }
+[data-theme='light'] .gc-day.lvl-1,
+[data-theme='light'] .gc-key.lvl-1 { background: #c6c6c6; }
+[data-theme='light'] .gc-day.lvl-2,
+[data-theme='light'] .gc-key.lvl-2 { background: #8e8e8e; }
+[data-theme='light'] .gc-day.lvl-3,
+[data-theme='light'] .gc-key.lvl-3 { background: #555555; }
+[data-theme='light'] .gc-day.lvl-4,
+[data-theme='light'] .gc-key.lvl-4 { background: #1a1a1a; }
+
+/* Section title dashed border */
+[data-theme='light'] .section-title {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.02);
+}
+/* Skills pills */
+[data-theme='light'] .skills-pill {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.02);
+}
+[data-theme='light'] .skills-pill:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.04);
+}
+/* GitHub calendar footer dashed line */
+[data-theme='light'] .gc-foot {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+/* Project tags & GitHub button borders */
+[data-theme='light'] .proj-tag,
+[data-theme='light'] .proj-gh-btn {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.02);
+}
+/* Icon buttons */
+[data-theme='light'] .ic {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme='light'] .ic:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.04);
+}
+/* Project detail stat cards */
+[data-theme='light'] .proj-detail-stat-card {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.02);
+}
+/* Subtle noise opacity adjustment */
+[data-theme='light'] body::before {
+  opacity: 0.02;
 }
 

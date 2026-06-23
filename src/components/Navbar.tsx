@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { Sun, Moon } from "lucide-react";
 
 const LINKS = [
   { label: "About",         id: "about",         key: "1" },
@@ -16,6 +17,26 @@ export default function Navbar() {
   const io = useRef<IntersectionObserver | null>(null);
   const pathname = usePathname();
   const isHome = pathname === "/";
+
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    const currentTheme =
+      savedTheme ||
+      (document.documentElement.getAttribute("data-theme") as "light" | "dark") ||
+      "dark";
+    setTheme(currentTheme);
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    localStorage.setItem("theme", nextTheme);
+  };
 
   const go = (id: string) => {
     if (isHome) {
@@ -83,6 +104,24 @@ export default function Navbar() {
               </button>
             </li>
           ))}
+          <li className="dock-item">
+            <span className="dock-sep" />
+          </li>
+          <li className="dock-item">
+            <button
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            >
+              {mounted && theme === "dark" ? (
+                <Sun className="theme-toggle-icon text-amber-400 animate-pulse-slow" size={15} />
+              ) : mounted && theme === "light" ? (
+                <Moon className="theme-toggle-icon text-indigo-500" size={15} />
+              ) : (
+                <span style={{ width: 15, height: 15 }} />
+              )}
+            </button>
+          </li>
         </ul>
       </div>
     </nav>
