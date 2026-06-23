@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Playfair_Display, Hanken_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
+import ClickSound from "@/components/ClickSound";
 import "./globals.css";
 
 
@@ -66,6 +67,7 @@ export default function RootLayout({
         className="antialiased"
         style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
       >
+        <ClickSound />
         <Navbar />
         {children}
       </body>

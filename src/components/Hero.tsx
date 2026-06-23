@@ -80,31 +80,29 @@ export default function Hero() {
               <div className="hero-avatar-fallback">YE</div>
             )}
           </div>
-          <div className="hero-content-col">
-            <div className="hero-info">
-              <h1 className="hero-name">Yugendhra E</h1>
+          <div className="hero-info">
+            <h1 className="hero-name">Yugendhra E</h1>
 
-              <div className="hero-tagline">
-                {PERSONAL.title} · Building scalable systems
-              </div>
-
-              <div className="hero-meta">
-                <span className="hero-meta-item">
-                  <PIN_ICON /> India
-                </span>
-                <span className="hero-meta-item">
-                  <CLOCK_ICON /> {mounted ? time : "--:--:-- --"}
-                </span>
-              </div>
+            <div className="hero-tagline">
+              {PERSONAL.title} · Building scalable systems
             </div>
 
-            {/* About text, directly rendered with dangerous HTML for highlights */}
-            <div className="hero-bio a1">
-              {PERSONAL.about.map((paragraph, index) => (
-                <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
-              ))}
+            <div className="hero-meta">
+              <span className="hero-meta-item">
+                <PIN_ICON /> India
+              </span>
+              <span className="hero-meta-item">
+                <CLOCK_ICON /> {mounted ? time : "--:--:-- --"}
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* About text, directly rendered with dangerous HTML for highlights */}
+        <div className="hero-bio a1">
+          {PERSONAL.about.map((paragraph, index) => (
+            <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
+          ))}
         </div>
 
         {/* Actions - Grouped to Left (social links) and Right (Resume & Contact) */}

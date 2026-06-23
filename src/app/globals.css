@@ -289,19 +289,13 @@ body::before {
 /* Profile row */
 .hero-profile {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 2.5rem;
-  margin-bottom: 2rem;
-}
-.hero-content-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  margin-bottom: 1.75rem;
 }
 .hero-avatar {
-  width: 280px;
-  height: 280px;
+  width: 160px;
+  height: 160px;
   background: transparent;
   border: none;
   flex-shrink: 0;
@@ -311,7 +305,12 @@ body::before {
 .hero-avatar:hover {
   transform: translateY(-2px);
 }
-.hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.hero-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.15) brightness(0.85);
+}
 .hero-avatar-fallback {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
@@ -327,14 +326,9 @@ body::before {
 }
 
 @media (max-width: 640px) {
-  .hero-profile {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
-  }
   .hero-avatar {
-    width: 200px;
-    height: 200px;
+    width: 130px;
+    height: 130px;
   }
 }
 .hero-name-wrap {

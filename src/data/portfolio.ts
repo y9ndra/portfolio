@@ -10,7 +10,7 @@ export const PERSONAL = {
   linkedin: "https://www.linkedin.com/in/y9ndra",
   leetcode: "https://leetcode.com/u/y9ndra/",
   resume: "/assets/resume/resume.pdf",
-  avatar: "/assets/images/profile_bw.png",
+  avatar: "/assets/images/profile_bw_v4.png",
 };
 
 export const SKILLS = [
