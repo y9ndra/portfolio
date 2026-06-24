@@ -76,9 +76,11 @@ export default function Experience() {
                       <div>
                         <div className="exp-company-row">
                           <h3 className="exp-company">{exp.company}</h3>
-                          <span className={`exp-badge ${isActive ? "active" : "done"}`}>
-                            <span className="badge-dot" /> {exp.status}
-                          </span>
+                          {exp.status.toLowerCase() !== "done" && (
+                            <span className={`exp-badge ${isActive ? "active" : "done"}`}>
+                              <span className="badge-dot" /> {exp.status}
+                            </span>
+                          )}
                         </div>
                         <p className="exp-role">{exp.role}</p>
                       </div>

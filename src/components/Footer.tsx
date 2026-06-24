@@ -13,12 +13,25 @@ export default function Footer() {
   const [views, setViews] = useState<number | null>(null);
 
   useEffect(() => {
-    // Simple localStorage-based page view counter
-    const key = "portfolio_views";
-    const stored = localStorage.getItem(key);
-    const count = stored ? parseInt(stored, 10) + 1 : 1;
-    localStorage.setItem(key, count.toString());
-    setViews(count);
+    const key = "last_known_global_views";
+
+    fetch("/api/views", { method: "POST" })
+      .then((res) => {
+        if (!res.ok) throw new Error("API failed");
+        return res.json();
+      })
+      .then((data) => {
+        const count = data.views;
+        setViews(count);
+        localStorage.setItem(key, count.toString());
+      })
+      .catch((err) => {
+        console.error("View count fetch failed:", err);
+        const stored = localStorage.getItem(key) || localStorage.getItem("portfolio_views");
+        const count = stored ? parseInt(stored, 10) + 1 : 1;
+        localStorage.setItem(key, count.toString());
+        setViews(count);
+      });
   }, []);
 
   return (

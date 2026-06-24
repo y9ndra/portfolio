@@ -15,6 +15,8 @@ const LINKS = [
 export default function Navbar() {
   const [active, setActive] = useState("");
   const io = useRef<IntersectionObserver | null>(null);
+  const ignoreScroll = useRef(false);
+  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
@@ -40,6 +42,13 @@ export default function Navbar() {
   };
 
   const go = (id: string) => {
+    setActive(id);
+    ignoreScroll.current = true;
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = setTimeout(() => {
+      ignoreScroll.current = false;
+    }, 1000);
+
     if (isHome) {
       if (id === "hero") {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -56,6 +65,14 @@ export default function Navbar() {
 
     io.current = new IntersectionObserver(
       (entries) => {
+        if (ignoreScroll.current) return;
+
+        const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 15;
+        if (isAtBottom) {
+          setActive("contact");
+          return;
+        }
+
         for (const e of entries) {
           if (e.isIntersecting) setActive(e.target.id);
         }
@@ -63,6 +80,32 @@ export default function Navbar() {
       { rootMargin: "-30% 0px -65% 0px" }
     );
     document.querySelectorAll("section[id], .hero").forEach((s) => io.current?.observe(s));
+
+    const handleScroll = () => {
+      if (ignoreScroll.current) return;
+
+      const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 15;
+      if (isAtBottom) {
+        setActive("contact");
+        return;
+      }
+
+      const sections = document.querySelectorAll("section[id]");
+      const targetY = window.innerHeight * 0.35;
+      
+      for (const s of sections) {
+        const rect = s.getBoundingClientRect();
+        if (rect.top <= targetY && rect.bottom >= targetY) {
+          setActive(s.id);
+          break;
+        }
+      }
+    };
+
+    const handleScrollEnd = () => {
+      ignoreScroll.current = false;
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
@@ -82,10 +125,15 @@ export default function Navbar() {
       }
     };
 
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scrollend", handleScrollEnd);
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       io.current?.disconnect();
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scrollend", handleScrollEnd);
       window.removeEventListener("keydown", handleKeyDown);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -198,6 +198,12 @@ body::before {
   color: var(--t1);
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+.dock-link.active:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 .dock-label {
   font-weight: 500;
@@ -381,6 +387,30 @@ body::before {
   .hero-name {
     font-size: 1.65rem;
   }
+  .hero-actions {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+  .hero-actions-left {
+    gap: 0.4rem;
+  }
+  .hero-actions-right {
+    gap: 0.4rem;
+  }
+  .hero-actions-left .ic {
+    width: 36px;
+    height: 36px;
+  }
+  .hero-actions-left .ic svg {
+    width: 15px;
+    height: 15px;
+  }
+  .hero-actions-right .btn {
+    height: 36px;
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
+    gap: 0.35rem;
+  }
 }
 @media (max-width: 480px) {
   .hero-avatar {
@@ -392,6 +422,29 @@ body::before {
   }
   .hero-name {
     font-size: 1.5rem;
+  }
+  .hero-actions {
+    gap: 0.35rem;
+  }
+  .hero-actions-left {
+    gap: 0.3rem;
+  }
+  .hero-actions-right {
+    gap: 0.3rem;
+  }
+  .hero-actions-left .ic {
+    width: 34px;
+    height: 34px;
+  }
+  .hero-actions-left .ic svg {
+    width: 14px;
+    height: 14px;
+  }
+  .hero-actions-right .btn {
+    height: 34px;
+    padding: 0 0.55rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
   }
 }
 .hero-status-emoji {
@@ -1286,13 +1339,13 @@ body::before {
 }
 
 .exp-dot.active {
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+  background: var(--t1);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
 }
 
 .exp-dot.done {
-  background: #ef4444;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+  background: var(--t2);
+  box-shadow: none;
 }
 
 .exp-content {
@@ -1524,6 +1577,10 @@ body::before {
   background: rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.12);
 }
+[data-theme='light'] .dock-link.active:hover {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.2);
+}
 [data-theme='light'] .theme-toggle-btn:hover {
   background: rgba(0, 0, 0, 0.04);
 }
@@ -1606,5 +1663,9 @@ body::before {
 /* Subtle noise opacity adjustment */
 [data-theme='light'] body::before {
   opacity: 0.02;
+}
+
+[data-theme='light'] .exp-dot.active {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
 }
 
