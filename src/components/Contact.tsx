@@ -43,7 +43,7 @@ export default function Contact() {
         </h2>
 
         <p className="contact-sub" data-reveal data-delay="2">
-          Whether it&apos;s a project, an opportunity, or just a conversation —
+          Whether it&apos;s a project, an opportunity, or just a conversation -
           I&apos;m always open to connecting.
         </p>
 
