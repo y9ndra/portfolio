@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio
 
-## Getting Started
+A responsive, high-performance, and visually stunning developer portfolio built using **Next.js 16 (App Router)** and **Tailwind CSS v4**. It features interactive theme switching, scroll reveal animations, a live GitHub activity calendar, and a dynamic page views tracker backed by Upstash Redis.
 
-First, run the development server:
+## Screenshot
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+![Portfolio Landing Page (Dark Theme)](public/assets/images/screenshot.png)
+
+---
+
+## Features
+
+- **Dynamic Theme Switcher**: Instantly toggle between a sleek, futuristic dark theme (default) and a clean, high-contrast light theme.
+- **Micro-interactions & SFX**: Auditory click feedback and subtle hover effects to elevate the user experience.
+- **Scroll-Reveal Animations**: Fluid fade-in animations on scroll implemented via custom React Intersection Observer hooks.
+- **Dynamic Views Analytics**: Real-time counter of portfolio views using Next.js Route Handlers powered by Redis (`ioredis` client) with an in-memory local fallback.
+- **Live GitHub Calendar**: Integrates a clean contribution calendar directly into the page.
+- **Responsive Layout**: Designed mobile-first for flawless presentation on all screens.
+- **Clean Structure & Componentization**: Fully modular code separated into concise components.
+
+---
+
+## Tech Stack
+
+- **Core Framework**: [Next.js 16 (App Router)](https://nextjs.org/) & [React 19](https://react.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & Vanilla CSS with custom theme tokens
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Database/Cache**: Upstash Redis via `ioredis` (for the profile views counter)
+- **Deployment**: Vercel
+
+---
+
+## Project Structure
+
+```text
+├── src/
+│   ├── app/                 
+│   │   ├── api/
+│   │   │   └── views/         
+│   │   ├── globals.css         
+│   │   └── layout.tsx       
+│   │
+│   ├── components/           
+│   │   ├── Hero.tsx           
+│   │   ├── Skills.tsx          
+│   │   ├── Projects.tsx       
+│   │   ├── Experience.tsx      
+│   │   ├── Contact.tsx        
+│   │   ├── GithubCalendar.tsx  
+│   │   └── ClickSound.tsx      
+│   │
+│   ├── data/
+│   │   └── portfolio.ts       
+│   │
+│   └── hooks/
+│       └── useScrollReveal.ts  
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Setup & Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Clone the repository
+```bash
+git clone https://github.com/y9ndra/portfolio.git
+cd portfolio
+```
 
-## Learn More
+### 2. Install dependencies
+```bash
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Setup Environment Variables
+To enable the dynamic views counter, create a `.env.local` file in the root of the project:
+```env
+KV_REDIS_URL="rediss://default:your-token@your-redis-instance.upstash.io:6379"
+```
+*(If no environment variable is provided, the API automatically falls back to an in-memory counter for local development.)*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Run the development server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Build & Production
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To build a production bundle and run the server locally:
+```bash
+npm run build
+npm run start
+```
