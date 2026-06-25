@@ -1290,6 +1290,41 @@ body::before {
 .gc-key.lvl-3 { background: #7c7c7c; }
 .gc-key.lvl-4 { background: #efefef; }
 
+/* GitHub Calendar Skeleton Loader */
+@keyframes gc-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.gc-skeleton-bar {
+  background: linear-gradient(
+    90deg,
+    var(--bg-3) 25%,
+    var(--border-h) 50%,
+    var(--bg-3) 75%
+  );
+  background-size: 200% 100%;
+  animation: gc-shimmer 1.6s infinite linear;
+}
+
+.gc-skeleton-day {
+  background: var(--bg-3) !important;
+  animation: gc-pulse 2s infinite ease-in-out;
+}
+
+@keyframes gc-pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
 /* ═══════════════════════════════════════════
    WORK EXPERIENCE TIMELINE
 ═══════════════════════════════════════════ */

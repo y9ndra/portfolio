@@ -106,10 +106,59 @@ export default function GithubCalendar() {
 
   if (loading) {
     return (
-      <div className="gc-wrap corner-box gc-loading" style={{ height: "148px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.75rem", color: "var(--t3)" }}>
-          Loading Contributions...
-        </p>
+      <div className="gc-wrap corner-box" style={{ opacity: 0.7 }}>
+        {/* Header Skeleton */}
+        <div className="gc-head">
+          <div className="gc-title" style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+            <span className="gc-skeleton-bar" style={{ width: "35px", height: "12px", borderRadius: "3px" }} />
+            <span style={{ fontSize: "0.65rem", color: "var(--t3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Contributions</span>
+          </div>
+          <div className="gc-period">
+            <CAL_ICON /> Last Year
+          </div>
+        </div>
+
+        {/* Months labels */}
+        <div className="gc-months">
+          {months.map((m, i) => (
+            <span key={`${m}-${i}`}>{m}</span>
+          ))}
+        </div>
+
+        {/* Grid container with scrolling for mobile */}
+        <div className="gc-scroll">
+          <div className="gc-grid">
+            {Array.from({ length: 53 }).map((_, wIdx) => (
+              <div key={wIdx} className="gc-col">
+                {Array.from({ length: 7 }).map((_, dIdx) => (
+                  <div
+                    key={dIdx}
+                    className="gc-day gc-skeleton-day"
+                    style={{
+                      animationDelay: `${(wIdx + dIdx) * 15}ms`,
+                    }}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="gc-foot">
+          <span className="gc-user" style={{ opacity: 0.5, pointerEvents: "none" }}>
+            @y9ndra <LINK_ICON />
+          </span>
+          <div className="gc-legend">
+            <span>Less</span>
+            <span className="gc-key lvl-0" />
+            <span className="gc-key lvl-0" style={{ opacity: 0.8 }} />
+            <span className="gc-key lvl-0" style={{ opacity: 0.6 }} />
+            <span className="gc-key lvl-0" style={{ opacity: 0.4 }} />
+            <span className="gc-key lvl-0" style={{ opacity: 0.2 }} />
+            <span>More</span>
+          </div>
+        </div>
       </div>
     );
   }
