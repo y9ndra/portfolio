@@ -49,7 +49,9 @@ export default function Hero() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
-    setMounted(true);
+    const mountTimer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
     const updateClock = () => {
       const now = new Date();
       setTime(
@@ -64,7 +66,10 @@ export default function Hero() {
     };
     updateClock();
     const timer = setInterval(updateClock, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(mountTimer);
+      clearInterval(timer);
+    };
   }, []);
 
   return (

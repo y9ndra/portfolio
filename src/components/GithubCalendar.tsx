@@ -152,10 +152,10 @@ export default function GithubCalendar() {
           <div className="gc-legend">
             <span>Less</span>
             <span className="gc-key lvl-0" />
-            <span className="gc-key lvl-0" style={{ opacity: 0.8 }} />
-            <span className="gc-key lvl-0" style={{ opacity: 0.6 }} />
-            <span className="gc-key lvl-0" style={{ opacity: 0.4 }} />
-            <span className="gc-key lvl-0" style={{ opacity: 0.2 }} />
+            <span className="gc-key lvl-1" />
+            <span className="gc-key lvl-2" />
+            <span className="gc-key lvl-3" />
+            <span className="gc-key lvl-4" />
             <span>More</span>
           </div>
         </div>

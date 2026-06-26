@@ -30,8 +30,12 @@ export default function Navbar() {
       savedTheme ||
       (document.documentElement.getAttribute("data-theme") as "light" | "dark") ||
       "dark";
-    setTheme(currentTheme);
-    setMounted(true);
+    
+    const timer = setTimeout(() => {
+      setTheme(currentTheme);
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleTheme = () => {
@@ -140,7 +144,7 @@ export default function Navbar() {
   }, [isHome]);
 
   return (
-    <nav className="navbar-dock">
+    <nav className="navbar-dock" role="navigation" aria-label="Main Navigation">
       <div className="dock-inner">
         <ul className="dock-links">
           {LINKS.map(({ label, id }) => (
@@ -148,6 +152,8 @@ export default function Navbar() {
               <button
                 className={`dock-link${active === id ? " active" : ""}`}
                 onClick={() => go(id)}
+                aria-label={`Navigate to ${label}`}
+                aria-current={active === id ? "page" : undefined}
               >
                 <span className="dock-label">{label}</span>
               </button>
