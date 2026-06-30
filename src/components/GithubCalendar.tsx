@@ -118,29 +118,30 @@ export default function GithubCalendar() {
           </div>
         </div>
 
-        {/* Months labels */}
-        <div className="gc-months">
-          {months.map((m, i) => (
-            <span key={`${m}-${i}`}>{m}</span>
-          ))}
-        </div>
-
         {/* Grid container with scrolling for mobile */}
         <div className="gc-scroll">
-          <div className="gc-grid">
-            {Array.from({ length: 53 }).map((_, wIdx) => (
-              <div key={wIdx} className="gc-col">
-                {Array.from({ length: 7 }).map((_, dIdx) => (
-                  <div
-                    key={dIdx}
-                    className="gc-day gc-skeleton-day"
-                    style={{
-                      animationDelay: `${(wIdx + dIdx) * 15}ms`,
-                    }}
-                  />
-                ))}
-              </div>
-            ))}
+          <div style={{ minWidth: "580px" }}>
+            {/* Months labels */}
+            <div className="gc-months">
+              {months.map((m, i) => (
+                <span key={`${m}-${i}`}>{m}</span>
+              ))}
+            </div>
+            <div className="gc-grid">
+              {Array.from({ length: 53 }).map((_, wIdx) => (
+                <div key={wIdx} className="gc-col">
+                  {Array.from({ length: 7 }).map((_, dIdx) => (
+                    <div
+                      key={dIdx}
+                      className="gc-day gc-skeleton-day"
+                      style={{
+                        animationDelay: `${(wIdx + dIdx) * 15}ms`,
+                      }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -176,27 +177,28 @@ export default function GithubCalendar() {
         </div>
       </div>
 
-      {/* Months labels */}
-      <div className="gc-months">
-        {months.map((m, i) => (
-          <span key={`${m}-${i}`}>{m}</span>
-        ))}
-      </div>
-
       {/* Grid container with scrolling for mobile */}
       <div className="gc-scroll">
-        <div className="gc-grid">
-          {calendarGrid.map((week, wIdx) => (
-            <div key={wIdx} className="gc-col">
-              {week.map((day, dIdx) => (
-                <div
-                  key={dIdx}
-                  className={`gc-day lvl-${day.level}`}
-                  title={`${day.count} contributions on ${day.date}`}
-                />
-              ))}
-            </div>
-          ))}
+        <div style={{ minWidth: "580px" }}>
+          {/* Months labels */}
+          <div className="gc-months">
+            {months.map((m, i) => (
+              <span key={`${m}-${i}`}>{m}</span>
+            ))}
+          </div>
+          <div className="gc-grid">
+            {calendarGrid.map((week, wIdx) => (
+              <div key={wIdx} className="gc-col">
+                {week.map((day, dIdx) => (
+                  <div
+                    key={dIdx}
+                    className={`gc-day lvl-${day.level}`}
+                    title={`${day.count} contributions on ${day.date}`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

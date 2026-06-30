@@ -1265,10 +1265,41 @@ body::before {
 .gc-scroll {
   width: 100%;
   overflow-x: auto;
-  scrollbar-width: none;
+  padding-bottom: 8px;
 }
+@supports not selector(::-webkit-scrollbar) {
+  .gc-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+}
+
 .gc-scroll::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+.gc-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 9999px;
+}
+.gc-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+}
+.gc-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='light'] .gc-scroll {
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+[data-theme='light'] .gc-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+[data-theme='light'] .gc-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+}
+[data-theme='light'] .gc-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
 }
 .gc-grid {
   display: flex;
