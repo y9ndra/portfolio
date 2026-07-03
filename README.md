@@ -2,7 +2,6 @@
 
 A responsive, high-performance, and visually stunning developer portfolio built using **Next.js 16 (App Router)** and **Tailwind CSS v4**. It features interactive theme switching, scroll reveal animations, a live GitHub activity calendar, and a dynamic page views tracker backed by Upstash Redis.
 
-## Screenshot
 
 ![Portfolio Landing Page (Dark Theme)](public/assets/images/screenshot.png)
 
