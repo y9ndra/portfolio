@@ -9,7 +9,8 @@ const LINKS = [
   { label: "Experience",    id: "experience",    key: "2" },
   { label: "Skills",        id: "skills",        key: "3" },
   { label: "Projects",      id: "projects",      key: "4" },
-  { label: "Contact",       id: "contact",       key: "5" },
+  { label: "Blog",          id: "blog",          key: "5" },
+  { label: "Contact",       id: "contact",       key: "6" },
 ];
 
 export default function Navbar() {

@@ -133,3 +133,114 @@ export const EXPERIENCES = [
     ],
   },
 ];
+
+export const BLOGS = [
+  {
+    id: "node-js-the-accidental-backend",
+    title: "Node.js : The Accidental Backend",
+    date: "Jul 2026",
+    description: "A deep dive into the history, execution model, and unexpected rise of Node.js as a dominant force in backend development.",
+    tags: ["Node.js", "Backend", "JavaScript", "History"],
+    image: "/assets/images/Accidental-Backend.png",
+    readTime: "22 min read",
+    parts: [
+      {
+        id: "node-js-the-accidental-backend-part-1",
+        title: "Part 1: The Accidental Success",
+        description: "Exploring the genesis of Node.js, the integration of Chrome's V8 engine, and the design of the non-blocking event loop.",
+        chapterPreviews: [
+          "The Birth of a Mistake",
+          "Chrome's Secret Weapon",
+          "The Magic of the Loop",
+          "The Unintended Standard",
+          "The Monolithic Myth"
+        ]
+      },
+      {
+        id: "node-js-the-accidental-backend-part-2",
+        title: "Part 2: The Modern Powerhouse",
+        description: "Exploring the npm package ecosystem, scaling in the enterprise, the transition to modern ES Modules, runtime rivals, and next-gen paradigms.",
+        chapterPreviews: [
+          "The Package Explosion",
+          "Enterprise Takeover",
+          "Under the Hood Evolution",
+          "Rising Rivals",
+          "The Future of the Accidental Giant"
+        ]
+      }
+    ]
+  },
+  {
+    id: "node-js-the-accidental-backend-part-1",
+    title: "Node.js : The Accidental Backend (Part 1)",
+    date: "Jul 2026",
+    description: "Part 1 of a deep dive into the history, execution model, and unexpected rise of Node.js as a dominant force in backend development.",
+    tags: ["Node.js", "Backend", "JavaScript", "History"],
+    image: "/assets/images/Accidental-Backend.png",
+    readTime: "10 min read",
+    chapters: [
+      {
+        title: "Chapter 1: The Birth of a Mistake",
+        subtitle: "How Ryan Dahl's quest for progress bars accidentally sparked a server-side JavaScript revolution.",
+        content: "Ryan Dahl originally created Node.js not to build general-purpose backend applications, but to solve a specific, seemingly minor problem: file upload progress bars. In 2009, web servers struggled with concurrent connections, blocking threads for every open socket. By combining Google's V8 engine with an event loop, Dahl created a runtime that handled I/O asynchronously, paving the way for real-time web applications."
+      },
+      {
+        title: "Chapter 2: Chrome's Secret Weapon",
+        subtitle: "How the V8 JavaScript engine broke free from the browser sandbox.",
+        content: "Before 2008, JavaScript was widely considered a slow, client-side scripting language for browser alerts. Google's release of the Chrome browser and its open-source V8 engine changed everything. V8 compiled JavaScript directly to native machine code, providing the speed and performance that made server-side JavaScript not just possible, but highly competitive with languages like Java and C++."
+      },
+      {
+        title: "Chapter 3: The Magic of the Loop",
+        subtitle: "Demystifying non-blocking I/O and the single-threaded event loop.",
+        content: "Unlike traditional multi-threaded web servers that spawn a new thread for each connection, Node.js runs on a single main thread. It achieves concurrency through non-blocking system calls and an event loop (libuv). When Node.js performs a file read or network request, it delegates the operation to the operating system and continues executing, calling the registered callback only when the operation completes."
+      },
+      {
+        title: "Chapter 4: The Unintended Standard",
+        subtitle: "How Express and the early community shaped Node.js into a backend powerhouse.",
+        content: "While Node's core APIs were low-level, developers quickly built abstractions. The emergence of TJ Holowaychuk's Express framework in 2010 defined the routing and middleware patterns that remain standard today. Express made building APIs simple and accessible, drawing thousands of frontend developers into the backend ecosystem and establishing Node.js as the default choice for quick server setups."
+      },
+      {
+        title: "Chapter 5: The Monolithic Myth",
+        subtitle: "Early scalability, callbacks, and the struggles of growing up.",
+        content: "As Node.js applications grew, so did their complexity. Early developers faced the dreaded 'callback hell'—deeply nested asynchronous operations that made code hard to read and debug. Furthermore, the single-threaded nature of Node meant that CPU-bound operations could block the entire server. This chapter explores how the community navigated these early scalability bottlenecks."
+      }
+    ]
+  },
+  {
+    id: "node-js-the-accidental-backend-part-2",
+    title: "Node.js : The Accidental Backend (Part 2)",
+    date: "Jul 2026",
+    description: "Part 2 exploring the package ecosystem explosion, enterprise adoption at scale, modern runtime competitors, and the legacy/future of Node.",
+    tags: ["Node.js", "Backend", "Ecosystem", "Scaling"],
+    image: "/assets/images/Accidental-Backend.png",
+    readTime: "12 min read",
+    chapters: [
+      {
+        title: "Chapter 1: The Package Explosion",
+        subtitle: "The rise of npm and the double-edged sword of dependencies.",
+        content: "Isaac Z. Schlueter created npm (Node Package Manager) in 2010, which became the largest software registry in the world. While npm enabled unprecedented code reuse and rapid prototyping, it also introduced security challenges, bloated node_modules directories, and dependency reliability issues—making modern package management a complex balancing act."
+      },
+      {
+        title: "Chapter 2: Enterprise Takeover",
+        subtitle: "How Netflix, PayPal, and Walmart shifted to Node.js at scale.",
+        content: "Despite initial skepticism about JavaScript on the server, major enterprises began adopting Node.js. PayPal replaced its Java stack with Node.js and saw double the request throughput with half the development effort. Netflix moved its startup scripts to Node, slashing boot times. These success stories cemented Node.js as a production-grade enterprise runtime."
+      },
+      {
+        title: "Chapter 3: Under the Hood Evolution",
+        subtitle: "From callback hell to Promises, Async/Await, and modern ES Modules.",
+        content: "Node's syntax and runtime capabilities evolved dramatically to support enterprise codebases. Callback-based APIs were wrapped in Promises, and the addition of Async/Await made asynchronous code look and behave like synchronous code. The transition to ES Modules (import/export) standard brought Node.js align with browser standards, closing the syntax gap."
+      },
+      {
+        title: "Chapter 4: Rising Rivals",
+        subtitle: "Comparing Node.js with next-generation runtimes like Deno and Bun.",
+        content: "In recent years, new contenders have emerged to address Node's historical limitations. Deno, created by Ryan Dahl himself, focuses on security, TypeScript support, and web standards. Bun, written from scratch in Zig and powered by JavascriptCore, targets raw speed. We analyze how these competitors are pushing Node.js to innovate faster."
+      },
+      {
+        title: "Chapter 5: The Future of the Accidental Giant",
+        subtitle: "Serverless architectures, edge computing, and Node's lasting legacy.",
+        content: "As infrastructure shifts from long-running servers to serverless functions and edge computing, Node.js remains a primary runtime. Modern Node.js versions include native test runners, watch modes, and built-in SQLite integration. The accidental backend runtime continues to adapt, proving that the software built on it will shape the web for decades to come."
+      }
+    ]
+  }
+];
+
