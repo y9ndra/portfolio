@@ -141,7 +141,7 @@ export const BLOGS = [
     date: "Jul 2026",
     description: "The story of how a browser scripting language accidentally became one of the world's most influential backend runtimes.",
     tags: ["Node.js", "Backend", "JavaScript", "History"],
-    image: "/assets/images/Accidental-Backend.png",
+    image: "/assets/images/Accidental-Backend.jpg",
     readTime: "22 min read",
     parts: [
       {
@@ -166,7 +166,7 @@ export const BLOGS = [
     date: "Jul 2026",
     description: "Before JavaScript could become a backend language, it first had to escape the only place it had ever known.",
     tags: ["Node.js", "Backend", "JavaScript", "History"],
-    image: "/assets/images/Accidental-Backend.png",
+    image: "/assets/images/Accidental-Backend.jpg",
     readTime: "10 min read",
     chapters: [
       {
