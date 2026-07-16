@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import BlogReader from "./BlogReader";
 import BlogLanding from "./BlogLanding";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.dev";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.me";
 
 export async function generateStaticParams() {
   return BLOGS.map((b) => ({ id: b.id }));

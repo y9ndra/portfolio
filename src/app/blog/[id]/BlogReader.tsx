@@ -1053,7 +1053,7 @@ function ShareButton({ title, description }: { title: string; description: strin
     const url = typeof window !== "undefined" ? window.location.href : "";
     if (navigator.share) {
       try {
-        await navigator.share({ title, text: description, url });
+        await navigator.share({ title, url });
       } catch {
         // user dismissed
       }
