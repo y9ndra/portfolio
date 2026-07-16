@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { BLOGS } from "@/data/portfolio";
 import { notFound } from "next/navigation";
 import BlogReader from "./BlogReader";
 import BlogLanding from "./BlogLanding";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.dev";
 
 export async function generateStaticParams() {
   return BLOGS.map((b) => ({ id: b.id }));
@@ -9,6 +12,41 @@ export async function generateStaticParams() {
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const blog = BLOGS.find((b) => b.id === id);
+
+  if (!blog) return {};
+
+  const imageUrl = blog.image
+    ? `${BASE_URL}${blog.image}`
+    : `${BASE_URL}/assets/images/profile+v6.png`;
+
+  return {
+    title: `${blog.title} — Yugendhra E`,
+    description: blog.description,
+    openGraph: {
+      title: blog.title,
+      description: blog.description,
+      type: "article",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: blog.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.title,
+      description: blog.description,
+      images: [imageUrl],
+    },
+  };
 }
 
 export default async function BlogDetailPage({ params }: PageProps) {

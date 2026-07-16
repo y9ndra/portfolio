@@ -784,7 +784,7 @@ body::before {
 
 .proj-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
@@ -961,7 +961,7 @@ body::before {
 
 .blog-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
@@ -973,6 +973,17 @@ body::before {
   letter-spacing: -0.01em;
 }
 .blog-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.blog-detail-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.blog-detail-meta-left {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -990,6 +1001,7 @@ body::before {
   padding: 3px 10px;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1.2;
 }
 .blog-desc { font-size: 0.8rem; color: var(--t2); line-height: 1.6; }
 
@@ -2169,6 +2181,31 @@ body::before {
 [data-theme='light'] .blog-pagination-btn:hover {
   border-color: var(--accent, #7c6bff);
   background: rgba(0, 0, 0, 0.04);
+}
+
+/* Share Button */
+.blog-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  color: var(--t2);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.blog-share-btn:hover {
+  border-color: var(--accent, #7c6bff);
+  color: var(--t1);
+  background: var(--bg-3);
 }
 
 /* Blog Landing Page Styles */
