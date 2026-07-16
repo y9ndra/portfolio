@@ -20,11 +20,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!blog) return {};
 
-  const imageUrl = blog.image
-    ? `${BASE_URL}${blog.image}`
-    : `${BASE_URL}/assets/images/profile+v6.png`;
+  const imageUrl = blog.image || "/assets/images/profile+v6.png";
 
   return {
+    metadataBase: new URL(BASE_URL),
     title: `${blog.title} — Yugendhra E`,
     description: blog.description,
     openGraph: {
