@@ -10,6 +10,7 @@ interface MetaTags {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+  ogSiteName?: string;
   twitterCard?: string;
   twitterTitle?: string;
   twitterDescription?: string;
@@ -48,6 +49,7 @@ export default function OGTestingPage() {
           ogTitle: getMeta('meta[property="og:title"]'),
           ogDescription: getMeta('meta[property="og:description"]'),
           ogImage: getMeta('meta[property="og:image"]'),
+          ogSiteName: getMeta('meta[property="og:site_name"]'),
           twitterCard: getMeta('meta[name="twitter:card"]'),
           twitterTitle: getMeta('meta[name="twitter:title"]'),
           twitterDescription: getMeta('meta[name="twitter:description"]'),
@@ -156,6 +158,9 @@ export default function OGTestingPage() {
                       </div>
                     )}
                     <div style={{ padding: "0 0.25rem" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#8696a0", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em", marginBottom: "0.2rem" }}>
+                        {metaTags.ogSiteName || "Yugendhra E"}
+                      </div>
                       <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.2rem", color: "#e9edef" }}>
                         {metaTags.ogTitle || "No Title Tag Found"}
                       </div>
@@ -193,7 +198,7 @@ export default function OGTestingPage() {
                   )}
                   <div style={{ padding: "0.75rem 1rem", color: "#e7e9ea", fontFamily: "var(--font-sans-alt)" }}>
                     <div style={{ fontSize: "0.75rem", color: "#71767b", marginBottom: "0.25rem", textTransform: "lowercase" }}>
-                      yugendhra.me
+                      yugendhra.me • {metaTags.ogSiteName || "Yugendhra E"}
                     </div>
                     <div style={{ fontSize: "0.88rem", fontWeight: 600, marginBottom: "0.25rem" }}>
                       {metaTags.twitterTitle || metaTags.ogTitle || "No Title Found"}
@@ -222,6 +227,10 @@ export default function OGTestingPage() {
                     </tr>
                   </thead>
                   <tbody>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <td style={{ padding: "0.75rem", color: "var(--accent)" }}>og:site_name</td>
+                      <td style={{ padding: "0.75rem", color: "var(--t2)" }}>{metaTags.ogSiteName || "—"}</td>
+                    </tr>
                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <td style={{ padding: "0.75rem", color: "var(--accent)" }}>og:title</td>
                       <td style={{ padding: "0.75rem", color: "var(--t2)" }}>{metaTags.ogTitle || "—"}</td>

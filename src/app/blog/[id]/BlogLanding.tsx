@@ -138,19 +138,28 @@ export default function BlogLanding({ blog }: BlogLandingProps) {
   const [views, setViews] = useState<number | null>(null);
 
   useEffect(() => {
-    // Record view of the overall series landing page
-    fetch("/api/views", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: blog.id }),
-    })
+    const viewedKey = `viewed_blog_${blog.id}`;
+    const hasViewed = localStorage.getItem(viewedKey) === "true";
+
+    const fetchPromise = hasViewed
+      ? fetch(`/api/views?id=${encodeURIComponent(blog.id)}`) // GET only
+      : fetch("/api/views", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: blog.id }),
+        }); // POST (increment)
+
+    fetchPromise
       .then((res) => res.json())
       .then((data) => {
         if (data && typeof data.views === "number") {
           setViews(data.views);
+          if (!hasViewed) {
+            localStorage.setItem(viewedKey, "true");
+          }
         }
       })
-      .catch((err) => console.error("Error recording overall view:", err));
+      .catch((err) => console.error("Error fetching overall views:", err));
   }, [blog.id]);
 
   return (

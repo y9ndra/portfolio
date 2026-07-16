@@ -14,8 +14,14 @@ export default function Footer() {
 
   useEffect(() => {
     const key = "last_known_global_views";
+    const viewedKey = "viewed_portfolio";
+    const hasViewed = localStorage.getItem(viewedKey) === "true";
 
-    fetch("/api/views", { method: "POST" })
+    const fetchPromise = hasViewed
+      ? fetch("/api/views") // GET only
+      : fetch("/api/views", { method: "POST" }); // POST (increment)
+
+    fetchPromise
       .then((res) => {
         if (!res.ok) throw new Error("API failed");
         return res.json();
@@ -24,6 +30,9 @@ export default function Footer() {
         const count = data.views;
         setViews(count);
         localStorage.setItem(key, count.toString());
+        if (!hasViewed) {
+          localStorage.setItem(viewedKey, "true");
+        }
       })
       .catch((err) => {
         console.error("View count fetch failed:", err);

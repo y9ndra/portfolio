@@ -46,6 +46,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Yugendhra E" }],
   openGraph: {
+    siteName: "Yugendhra E",
     title: "Yugendhra E — Software Developer",
     description:
       "Building scalable backend systems and full-stack applications.",

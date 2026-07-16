@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${blog.title} — Yugendhra E`,
     description: blog.description,
     openGraph: {
+      siteName: "Yugendhra E",
       title: blog.title,
       description: blog.description,
       type: "article",
