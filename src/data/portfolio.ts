@@ -139,106 +139,409 @@ export const BLOGS = [
     id: "node-js-the-accidental-backend",
     title: "Node.js : The Accidental Backend",
     date: "Jul 2026",
-    description: "A deep dive into the history, execution model, and unexpected rise of Node.js as a dominant force in backend development.",
+    description: "The story of how a browser scripting language accidentally became one of the world's most influential backend runtimes.",
     tags: ["Node.js", "Backend", "JavaScript", "History"],
     image: "/assets/images/Accidental-Backend.png",
     readTime: "22 min read",
     parts: [
       {
         id: "node-js-the-accidental-backend-part-1",
-        title: "Part 1: The Accidental Success",
-        description: "Exploring the genesis of Node.js, the integration of Chrome's V8 engine, and the design of the non-blocking event loop.",
+        title: "Part 1: The Escape",
+        description: "Before JavaScript could become a backend language, it first had to escape the only place it had ever known.",
+        readTime: "10 min read",
         chapterPreviews: [
-          "The Birth of a Mistake",
-          "Chrome's Secret Weapon",
-          "The Magic of the Loop",
-          "The Unintended Standard",
-          "The Monolithic Myth"
-        ]
-      },
-      {
-        id: "node-js-the-accidental-backend-part-2",
-        title: "Part 2: The Modern Powerhouse",
-        description: "Exploring the npm package ecosystem, scaling in the enterprise, the transition to modern ES Modules, runtime rivals, and next-gen paradigms.",
-        chapterPreviews: [
-          "The Package Explosion",
-          "Enterprise Takeover",
-          "Under the Hood Evolution",
-          "Rising Rivals",
-          "The Future of the Accidental Giant"
+          "Before the Escape",
+          "1. A Language Built in 10 Days",
+          "2. Trapped Inside The Browser",
+          "3. The Engine That Changed Everything",
+          "4. The Birth Of Node.js",
+          "The Story Continues..."
         ]
       }
     ]
   },
   {
     id: "node-js-the-accidental-backend-part-1",
-    title: "Node.js : The Accidental Backend (Part 1)",
+    title: "Part 1: The Escape",
     date: "Jul 2026",
-    description: "Part 1 of a deep dive into the history, execution model, and unexpected rise of Node.js as a dominant force in backend development.",
+    description: "Before JavaScript could become a backend language, it first had to escape the only place it had ever known.",
     tags: ["Node.js", "Backend", "JavaScript", "History"],
     image: "/assets/images/Accidental-Backend.png",
     readTime: "10 min read",
     chapters: [
       {
-        title: "Chapter 1: The Birth of a Mistake",
-        subtitle: "How Ryan Dahl's quest for progress bars accidentally sparked a server-side JavaScript revolution.",
-        content: "Ryan Dahl originally created Node.js not to build general-purpose backend applications, but to solve a specific, seemingly minor problem: file upload progress bars. In 2009, web servers struggled with concurrent connections, blocking threads for every open socket. By combining Google's V8 engine with an event loop, Dahl created a runtime that handled I/O asynchronously, paving the way for real-time web applications."
+        title: "Before the Escape",
+        content: `As a Node.js developer,
+
+we use Node.js every day.
+
+We type \`node app.js\`.
+
+Build APIs.
+
+Deploy applications.
+
+But only a few of us think about this.
+
+**Why does Node.js even exist?**
+
+JavaScript wasn't created for servers.
+
+It wasn't supposed to power backend applications.
+
+So...
+
+how did it become one of the most popular backend runtimes?
+
+To know that,
+
+we have to go back to where everything began.
+
+[interactive-1994]`
       },
       {
-        title: "Chapter 2: Chrome's Secret Weapon",
-        subtitle: "How the V8 JavaScript engine broke free from the browser sandbox.",
-        content: "Before 2008, JavaScript was widely considered a slow, client-side scripting language for browser alerts. Google's release of the Chrome browser and its open-source V8 engine changed everything. V8 compiled JavaScript directly to native machine code, providing the speed and performance that made server-side JavaScript not just possible, but highly competitive with languages like Java and C++."
+        title: "Chapter 1 : A Language Built in 10 Days",
+        content: `Let's move to 1994, where web pages were just static pages.
+
+No movement, no interactions, no animations—nothing like what we have today.
+
+The webpages looked like a sheet of paper on the web.
+
+[web-comparison]
+
+When some interaction was done,
+
+a button was clicked,
+
+every single time, the entire page had to be replaced by another.
+
+The server had to send a new page to the browser.
+
+It was basically connected pages,
+
+from one page to another.
+
+That's when two major companies tried to conquer the browser market—Netscape Navigator and Microsoft Internet Explorer.
+
+Netscape Navigator was used by many people in the mid-1990s.
+
+The Problem: Netscape thought that web pages looked boring and needed to be made more interactive.
+
+They needed a scripting language for their browser.
+
+Meet **Brendan Eich.**
+
+[brendan-eich-card]
+
+In 1995, Netscape hired Brendan Eich, who had extensive experience in compilers.
+
+They gave him the task of creating a scripting language for their browser.
+
+The deadline given to Brendan was too short.
+
+He had to build the language in a very limited amount of time.
+
+That's where the myth comes from:
+
+A language built in 10 days.
+
+Actually, Brendan didn't build JavaScript entirely in 10 days.
+
+He built the first working version in 10 days using his knowledge of compilers and programming language theory.
+
+JavaScript now helped make web pages feel alive.
+
+JavaScript actually solved Netscape's problem.
+
+It could respond to a button click.
+
+It could validate forms.
+
+But...
+
+there was a catch.
+
+JavaScript could only perform all of this inside a browser.
+
+It couldn't read a file.
+
+It couldn't create a web server.
+
+It solved a major problem, but at the same time, it had a major limitation too.
+
+JavaScript was
+
+Trapped Inside the Browser.`
       },
       {
-        title: "Chapter 3: The Magic of the Loop",
-        subtitle: "Demystifying non-blocking I/O and the single-threaded event loop.",
-        content: "Unlike traditional multi-threaded web servers that spawn a new thread for each connection, Node.js runs on a single main thread. It achieves concurrency through non-blocking system calls and an event loop (libuv). When Node.js performs a file read or network request, it delegates the operation to the operating system and continues executing, calling the registered callback only when the operation completes."
+        title: "Chapter 2 : Trapped Inside The Browser",
+        content: `Now, JavaScript had become the language of the web.
+
+It could handle clicks.
+
+Submit forms.
+
+But...
+
+it couldn't read files.
+
+It couldn't create a server.
+
+Why?
+
+Didn't JavaScript have the ability to do that?
+
+Actually, JavaScript is just a language.
+
+It can't access HTML, CSS, buttons, or any of them on its own.
+
+All of those are provided to JavaScript by the browser.
+
+For example,
+
+When we write:
+
+\`\`\`
+document.getElementById()
+\`\`\`
+
+It's not a JavaScript object.
+
+It's provided by the browser.
+
+If the browser can provide these, why can't it provide APIs so that JavaScript can access files?
+
+This is where **security** becomes a question.
+
+If the browser gave access to the files in the system, then any random website could access your files, passwords, and private data.
+
+So, the browser created a room in which JavaScript could do only limited things.
+
+[sandbox-diagram]
+
+Back then, developers used:
+
+- Java
+- PHP
+- Python
+- Ruby
+
+for backend development.
+
+Not JavaScript
+
+The reason?
+
+There wasn't an environment that could help JavaScript run outside the browser.
+
+Could someone take JavaScript outside the browser?
+
+It may sound easy to say, but it wasn't.
+
+The browser didn't just execute JavaScript.
+
+It also had...
+
+**a JavaScript engine.**
+
+JavaScript had lived inside the browser for years, not because it was weak, but because it was the only place it could live.
+
+Outside the browser, JavaScript had nowhere to go.
+
+Until a browser vendor built something.
+
+[evolution-timeline]
+
+It wasn't a language.
+
+It wasn't a new browser.
+
+It was an engine.
+
+**The Engine That Changed Everything.**`
       },
       {
-        title: "Chapter 4: The Unintended Standard",
-        subtitle: "How Express and the early community shaped Node.js into a backend powerhouse.",
-        content: "While Node's core APIs were low-level, developers quickly built abstractions. The emergence of TJ Holowaychuk's Express framework in 2010 defined the routing and middleware patterns that remain standard today. Express made building APIs simple and accessible, drawing thousands of frontend developers into the backend ecosystem and establishing Node.js as the default choice for quick server setups."
+        title: "Chapter 3 : The Engine That Changed Everything",
+        content: `Now, JavaScript needed a new place outside the browser.
+
+But there was another problem.
+
+JavaScript wasn't that fast, even inside the browser.
+
+If it was going to power something bigger than just the browser, it first needed a better engine.
+
+What's an engine?
+
+Why do we need it?
+
+An engine is basically a translator that converts JavaScript code into machine code.
+
+[engine-flow]
+
+Different browsers had different engines to execute JavaScript, but the problem was performance.
+
+The problem:
+
+JavaScript read a line, then translated it, then read another line, then translated it again...
+
+Enter **Google.**
+
+In 2008, Google needed a browser that was faster, more stable, and offered better performance.
+
+To achieve this, they introduced **Google Chrome** with a JavaScript engine
+
+**V8 Engine**
+
+V8 was different from how engines had worked so far.
+
+It introduced **Just-In-Time (JIT) Compilation**.
+
+It combined both interpretation and compilation.
+
+Interpret the code so that the page could start running faster, then compile the frequently executed code for better performance.
+
+[interpreter-vs-jit]
+
+This actually changed how people saw JavaScript.
+
+Until now, it was just a lightweight scripting language.
+
+But V8 changed everything by making it significantly faster.
+
+Though Google built V8 to make Chrome better, a new and more powerful engine had emerged.
+
+Imagine you're an engineer in 2008.
+
+Now you have an engine that can run JavaScript outside the browser.
+
+What will you do?
+
+Do we still need to keep it inside the browser?
+
+Someone thought the same way.
+
+**Ryan Dahl**
+
+He didn't see V8 as just an engine.
+
+He saw the foundation of a server.
+
+The one question that changed the entire story:
+
+**What if JavaScript didn't need a browser anymore?**
+
+**The Birth of Node.js**`
       },
       {
-        title: "Chapter 5: The Monolithic Myth",
-        subtitle: "Early scalability, callbacks, and the struggles of growing up.",
-        content: "As Node.js applications grew, so did their complexity. Early developers faced the dreaded 'callback hell'—deeply nested asynchronous operations that made code hard to read and debug. Furthermore, the single-threaded nature of Node meant that CPU-bound operations could block the entire server. This chapter explores how the community navigated these early scalability bottlenecks."
-      }
-    ]
-  },
-  {
-    id: "node-js-the-accidental-backend-part-2",
-    title: "Node.js : The Accidental Backend (Part 2)",
-    date: "Jul 2026",
-    description: "Part 2 exploring the package ecosystem explosion, enterprise adoption at scale, modern runtime competitors, and the legacy/future of Node.",
-    tags: ["Node.js", "Backend", "Ecosystem", "Scaling"],
-    image: "/assets/images/Accidental-Backend.png",
-    readTime: "12 min read",
-    chapters: [
-      {
-        title: "Chapter 1: The Package Explosion",
-        subtitle: "The rise of npm and the double-edged sword of dependencies.",
-        content: "Isaac Z. Schlueter created npm (Node Package Manager) in 2010, which became the largest software registry in the world. While npm enabled unprecedented code reuse and rapid prototyping, it also introduced security challenges, bloated node_modules directories, and dependency reliability issues—making modern package management a complex balancing act."
+        title: "Chapter 4 : The Birth Of Node.js",
+        content: `Google had built one of the fastest JavaScript engine ever created.
+
+Developers now saw a better browser.
+
+Except for one person.
+
+That person was trying to solve a different problem.
+
+Meet **Ryan Dahl**.
+
+[ryan-dahl-card]
+
+A software engineer who spent a lot of time building network applications.
+
+While working on web servers, he noticed something.
+
+Servers spent too much time...
+
+**Waiting.**
+
+Servers waited for files.
+
+Waited for databases.
+
+Waited for network requests.
+
+The waiting took too much time.
+
+Ryan Dahl questioned,
+
+Why can't the waiting time be invested in doing useful work?
+
+#### The Problem: C10K
+
+The C10K problem.
+
+What does this mean?
+
+The C10K problem asked:
+
+How can a server efficiently handle **10,000 simultaneous client connections?**
+
+[c10k-problem-card]
+
+At that time, many server models created a single thread or process for each connection, which was quite expensive.
+
+Ryan wanted something better.
+
+Now Ryan had found a problem, and he also had the V8 engine with better performance.
+
+He asked himself,
+
+What if I used this engine, not inside Chrome, but inside a server?
+
+And...
+
+the first release of **Node.js** happened in **2009**.
+
+For the first time, JavaScript could:
+
+- Read files.
+- Create servers.
+- Communicate with databases.
+- Build backend applications.
+
+Ryan didn't want Node.js to make JavaScript the next great backend language.
+
+He just wanted a server that spent less time waiting.
+
+In many ways, backend JavaScript wasn't the original destination.
+
+It was an unexpected result...
+
+of solving a different problem.
+
+And that's how a language built to make web pages interactive...
+
+accidentally became one of the world's most influential backend technologies.
+
+### Node.js: The Accidental Backend`
       },
       {
-        title: "Chapter 2: Enterprise Takeover",
-        subtitle: "How Netflix, PayPal, and Walmart shifted to Node.js at scale.",
-        content: "Despite initial skepticism about JavaScript on the server, major enterprises began adopting Node.js. PayPal replaced its Java stack with Node.js and saw double the request throughput with half the development effort. Netflix moved its startup scripts to Node, slashing boot times. These success stories cemented Node.js as a production-grade enterprise runtime."
-      },
-      {
-        title: "Chapter 3: Under the Hood Evolution",
-        subtitle: "From callback hell to Promises, Async/Await, and modern ES Modules.",
-        content: "Node's syntax and runtime capabilities evolved dramatically to support enterprise codebases. Callback-based APIs were wrapped in Promises, and the addition of Async/Await made asynchronous code look and behave like synchronous code. The transition to ES Modules (import/export) standard brought Node.js align with browser standards, closing the syntax gap."
-      },
-      {
-        title: "Chapter 4: Rising Rivals",
-        subtitle: "Comparing Node.js with next-generation runtimes like Deno and Bun.",
-        content: "In recent years, new contenders have emerged to address Node's historical limitations. Deno, created by Ryan Dahl himself, focuses on security, TypeScript support, and web standards. Bun, written from scratch in Zig and powered by JavascriptCore, targets raw speed. We analyze how these competitors are pushing Node.js to innovate faster."
-      },
-      {
-        title: "Chapter 5: The Future of the Accidental Giant",
-        subtitle: "Serverless architectures, edge computing, and Node's lasting legacy.",
-        content: "As infrastructure shifts from long-running servers to serverless functions and edge computing, Node.js remains a primary runtime. Modern Node.js versions include native test runners, watch modes, and built-in SQLite integration. The accidental backend runtime continues to adapt, proving that the software built on it will shape the web for decades to come."
+        title: "The Story Continues...",
+        content: `JavaScript had finally escaped the browser.
+
+A browser engine had unexpectedly become the heart of a backend runtime.
+
+Now,
+
+we know why Node.js exists.
+
+But...
+
+how does Node.js actually work?
+
+If JavaScript is running on a single thread,
+
+who reads the files?
+
+Who waits for databases?
+
+Who handles thousands of incoming requests?
+
+For that,
+
+we need to know what's
+
+###Behind the Curtain.`
       }
     ]
   }
