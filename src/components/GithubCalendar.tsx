@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { PERSONAL } from "@/data/portfolio";
 
 const CAL_ICON = () => (
@@ -27,15 +27,14 @@ interface DayData {
 }
 
 interface ApiResponseDay {
-  color: string;
-  contributionCount: number;
-  contributionLevel: "NONE" | "FIRST_QUARTILE" | "SECOND_QUARTILE" | "THIRD_QUARTILE" | "FOURTH_QUARTILE";
   date: string;
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
 }
 
 interface ApiResponse {
-  contributions: ApiResponseDay[][];
-  totalContributions: number;
+  total: Record<string, number>;
+  contributions: ApiResponseDay[];
 }
 
 export default function GithubCalendar() {
@@ -43,6 +42,9 @@ export default function GithubCalendar() {
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [calendarGrid, setCalendarGrid] = useState<DayData[][]>([]);
+  const [months, setMonths] = useState<string[]>([
+    "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"
+  ]);
 
   // Fetch real data on mount
   useEffect(() => {
@@ -50,43 +52,58 @@ export default function GithubCalendar() {
     
     async function fetchContributions() {
       try {
-        const res = await fetch("https://github-contributions-api.deno.dev/y9ndra.json");
+        const res = await fetch("https://github-contributions-api.jogruber.de/v4/y9ndra?y=last");
         if (!res.ok) throw new Error("Failed to fetch github calendar data");
         const data: ApiResponse = await res.json();
         
         if (!active) return;
 
         if (data.contributions && data.contributions.length > 0) {
-          const levelMap: Record<string, number> = {
-            NONE: 0,
-            FIRST_QUARTILE: 1,
-            SECOND_QUARTILE: 2,
-            THIRD_QUARTILE: 3,
-            FOURTH_QUARTILE: 4,
-          };
+          const grid: DayData[][] = [];
+          let currentWeek: DayData[] = [];
 
-          const grid: DayData[][] = data.contributions.map((week) =>
-            week.map((day) => {
-              const parts = day.date.split("-");
-              const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-              const formattedDate = dateObj.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              });
-              return {
-                date: formattedDate,
-                level: levelMap[day.contributionLevel] ?? 0,
-                count: day.contributionCount,
-              };
-            })
-          );
+          data.contributions.forEach((day) => {
+            const parts = day.date.split("-");
+            const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const formattedDate = dateObj.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+
+            const dayData: DayData = {
+              date: formattedDate,
+              level: day.level,
+              count: day.count,
+            };
+
+            if (dateObj.getDay() === 0 && currentWeek.length > 0) {
+              grid.push(currentWeek);
+              currentWeek = [];
+            }
+            currentWeek.push(dayData);
+          });
+
+          if (currentWeek.length > 0) {
+            grid.push(currentWeek);
+          }
 
           // Slice exactly the last 53 weeks to fit our UI layout
           const finalGrid = grid.slice(-53);
           
+          // Calculate dynamic month labels
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const firstDateParts = data.contributions[0].date.split("-");
+          const startMonth = parseInt(firstDateParts[1], 10) - 1;
+          const dynamicMonths: string[] = [];
+          for (let i = 0; i < 12; i++) {
+            dynamicMonths.push(monthNames[(startMonth + i) % 12]);
+          }
+
           setCalendarGrid(finalGrid);
-          setTotalCount(data.totalContributions || 0);
+          setMonths(dynamicMonths);
+          const total = data.total?.lastYear ?? Object.values(data.total || {})[0] ?? 0;
+          setTotalCount(total);
           setLoading(false);
         }
       } catch (err) {
@@ -101,8 +118,6 @@ export default function GithubCalendar() {
       active = false;
     };
   }, []);
-
-  const months = ["Jun", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 
   if (loading) {
     return (
