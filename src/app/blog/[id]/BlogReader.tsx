@@ -28,35 +28,41 @@ interface BlogReaderProps {
 }
 
 // Simple Markdown Parser for Blog Content
-const parseInlineMarkdown = (text: string) => {
-  const parts = [];
-  let currentIdx = 0;
+const parseInlineMarkdown = (text: string): React.ReactNode => {
+  if (!text) return text;
   
-  // Match **bold** or `code`
-  const regex = /(\*\*.*?\*\*|`.*?`)/g;
+  // Match `code` or **bold**
+  const regex = /(`.*?`|\*\*.*?\*\*)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
   let match;
-  
+
   while ((match = regex.exec(text)) !== null) {
-    const matchStr = match[0];
-    const matchIdx = match.index;
-    
-    if (matchIdx > currentIdx) {
-      parts.push(text.substring(currentIdx, matchIdx));
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
     }
-    
-    if (matchStr.startsWith("**") && matchStr.endsWith("**")) {
-      parts.push(<strong key={matchIdx}>{matchStr.slice(2, -2)}</strong>);
-    } else if (matchStr.startsWith("`") && matchStr.endsWith("`")) {
-      parts.push(<code key={matchIdx} className="blog-inline-code">{matchStr.slice(1, -1)}</code>);
+    const token = match[0];
+    if (token.startsWith("`") && token.endsWith("`")) {
+      parts.push(
+        <code key={match.index} className="blog-inline-code">
+          {token.slice(1, -1)}
+        </code>
+      );
+    } else if (token.startsWith("**") && token.endsWith("**")) {
+      const inner = token.slice(2, -2);
+      parts.push(
+        <strong key={match.index}>
+          {parseInlineMarkdown(inner)}
+        </strong>
+      );
     }
-    
-    currentIdx = regex.lastIndex;
+    lastIndex = regex.lastIndex;
   }
-  
-  if (currentIdx < text.length) {
-    parts.push(text.substring(currentIdx));
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
   }
-  
+
   return parts.length > 0 ? parts : text;
 };
 
@@ -71,6 +77,15 @@ const renderChapterContent = (text: string) => {
     // Code block
     if (trimmed.startsWith("```") && trimmed.endsWith("```")) {
       const code = trimmed.replace(/```/g, "").trim();
+      if (code.includes("JavaScript starts work") && code.includes("Event Loop")) {
+        return <EventLoopSequenceFlowDiagram key={bIdx} />;
+      }
+      if (code.includes("Network") && code.includes("libuv Thread Pool")) {
+        return <LibuvThreadPoolComparisonDiagram key={bIdx} />;
+      }
+      if (code.includes("waits for network") && code.includes("Operating System")) {
+        return null;
+      }
       return (
         <pre key={bIdx} className="blog-code-block">
           <code>{code}</code>
@@ -78,6 +93,11 @@ const renderChapterContent = (text: string) => {
       );
     }
     
+    // Intercept "###Behind the Curtain." to render animated arrow pointing to next part
+    if (trimmed === "###Behind the Curtain.") {
+      return <BehindCurtainArrow key={bIdx} />;
+    }
+
     // Headings inside content (e.g. ##, ###, ####)
     if (trimmed.startsWith("#")) {
       const level = trimmed.match(/^#+/)?.[0].length || 1;
@@ -100,6 +120,70 @@ const renderChapterContent = (text: string) => {
       );
     }
     
+    // Intercept "Node.js is single-threaded." to display the cliffhanger visual statement
+    if (trimmed === '**"Node.js is single-threaded."**' || trimmed === '"Node.js is single-threaded."') {
+      return <SingleThreadedStatement key={bIdx} />;
+    }
+
+    // Intercept "the entire system has to wait...." to display the blocking sequence flow visual
+    if (trimmed === "the entire system has to wait....") {
+      return (
+        <React.Fragment key={bIdx}>
+          <p className="blog-content-p">{parseInlineMarkdown(trimmed)}</p>
+          <BlockingThreadVisualization />
+        </React.Fragment>
+      );
+    }
+
+    // Intercept "JavaScript in Node.js runs on a single main thread." to display the Main Thread Execution visual
+    if (trimmed === "**JavaScript in Node.js runs on a single main thread.**" || trimmed === "JavaScript in Node.js runs on a single main thread.") {
+      return (
+        <React.Fragment key={bIdx}>
+          <p className="blog-content-p">{parseInlineMarkdown(trimmed)}</p>
+          <MainThreadExecutionVisual />
+        </React.Fragment>
+      );
+    }
+
+    // Intercept "It doesn't sit there and read files." to display delegation work visual
+    if (trimmed === "It doesn't sit there and read files.") {
+      return (
+        <React.Fragment key={bIdx}>
+          <p className="blog-content-p">{parseInlineMarkdown(trimmed)}</p>
+          <DelegationThreadVisual />
+        </React.Fragment>
+      );
+    }
+
+    // Intercept "This is where the Event Loop fits in." to display Event Loop messenger flow visual
+    if (trimmed === "This is where the Event Loop fits in.") {
+      return (
+        <React.Fragment key={bIdx}>
+          <p className="blog-content-p">{parseInlineMarkdown(trimmed)}</p>
+          <EventLoopMessengerVisual />
+        </React.Fragment>
+      );
+    }
+
+    // Intercept "uses a pool of worker threads." to display the complete request architecture diagram
+    if (trimmed === "uses a pool of worker threads.") {
+      return (
+        <React.Fragment key={bIdx}>
+          <p className="blog-content-p">{parseInlineMarkdown(trimmed)}</p>
+          <FinalNodeArchitectureDiagram />
+        </React.Fragment>
+      );
+    }
+
+    // Intercept "The Accidental Backend." to display it large and centered
+    if (trimmed === "**The Accidental Backend.**" || trimmed === "The Accidental Backend.") {
+      return (
+        <p key={bIdx} className="blog-content-p" style={{ fontSize: "1.65rem", fontWeight: 800, textAlign: "center", margin: "3rem 0", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>
+          The Accidental Backend.
+        </p>
+      );
+    }
+
     // Check if it's the 1994 interactive widget
     if (trimmed === "[interactive-1994]") {
       return <TimeTravel1994 key={bIdx} />;
@@ -143,6 +227,27 @@ const renderChapterContent = (text: string) => {
     // Check if it's the C10K problem card
     if (trimmed === "[c10k-problem-card]") {
       return <C10KProblemCard key={bIdx} />;
+    }
+
+    // Part 2 Interactive Diagrams
+    if (trimmed === "[curtain-diagram]") {
+      return <CurtainDiagram key={bIdx} />;
+    }
+
+    if (trimmed === "[callstack-demo]") {
+      return <CallStackDemo key={bIdx} />;
+    }
+
+    if (trimmed === "[node-architecture-diagram]") {
+      return <NodeArchitectureDiagram key={bIdx} />;
+    }
+
+    if (trimmed === "[thread-pool-diagram]") {
+      return <ThreadPoolDiagram key={bIdx} />;
+    }
+
+    if (trimmed === "[event-loop-diagram]") {
+      return <EventLoopDiagram key={bIdx} />;
     }
     
     // Regular paragraph
@@ -1022,6 +1127,1832 @@ function BrendanEichCard() {
   );
 }
 
+// CurtainDiagram Component for Part 2 Intro
+function CurtainDiagram() {
+  return (
+    <div 
+      className="sbx-card" 
+      style={{ 
+        margin: "2rem 0", 
+        overflow: "hidden", 
+        background: "var(--bg-3)", 
+        border: "2px solid var(--border)", 
+        borderRadius: "10px",
+        padding: "0.4rem"
+      }}
+    >
+      <div 
+        style={{
+          width: "100%",
+          position: "relative",
+          minHeight: "230px",
+          background: "var(--bg-1)",
+          border: "2px solid var(--border)",
+          borderRadius: "8px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "1.75rem 1.25rem"
+        }}
+      >
+        {/* PROMINENT VISIBLE FRONT SERVER BADGE (POSITIONED ABOVE) */}
+        <div style={{
+          position: "relative",
+          zIndex: 4,
+          background: "var(--bg-2)",
+          border: "1.5px solid var(--border)",
+          padding: "0.65rem 1.6rem",
+          borderRadius: "6px",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.8)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          marginTop: "0.25rem"
+        }}>
+          <span style={{ fontFamily: "var(--font-mono, monospace)", fontWeight: 700, fontSize: "0.95rem", color: "var(--t1)", letterSpacing: "0.05em" }}>
+            Server
+          </span>
+          <span style={{ fontSize: "0.75rem", color: "var(--t3)", fontFamily: "var(--font-mono, monospace)", borderLeft: "1px solid var(--border)", paddingLeft: "0.75rem" }}>
+            node app.js
+          </span>
+        </div>
+
+        {/* Down Connecting Cable */}
+        <div style={{ width: "2px", height: "28px", background: "var(--border)", zIndex: 3, marginTop: "0.25rem" }} />
+
+        {/* BARELY VISIBLE COMPONENTS BEHIND THE CURTAIN (POSITIONED LOWER) */}
+        <div style={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0.75rem",
+          opacity: 0.18,
+          filter: "blur(0.4px)",
+          zIndex: 1,
+          marginTop: "auto"
+        }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr 1fr",
+            gap: "0.65rem",
+            width: "100%"
+          }}>
+            <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.85rem 0.4rem", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>V8 Engine</div>
+              <div style={{ fontSize: "0.68rem", color: "var(--t3)", marginTop: "0.2rem" }}>JS Execution</div>
+            </div>
+
+            <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.85rem 0.4rem", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>Event Loop</div>
+              <div style={{ fontSize: "0.68rem", color: "var(--t3)", marginTop: "0.2rem" }}>Coordinator</div>
+            </div>
+
+            <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.85rem 0.4rem", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>libuv</div>
+              <div style={{ fontSize: "0.68rem", color: "var(--t3)", marginTop: "0.2rem" }}>Thread Pool</div>
+            </div>
+
+            <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.85rem 0.4rem", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>OS Kernel</div>
+              <div style={{ fontSize: "0.68rem", color: "var(--t3)", marginTop: "0.2rem" }}>Async I/O</div>
+            </div>
+          </div>
+        </div>
+
+        {/* CURTAIN FABRIC TEXTURE OVERLAY */}
+        <div style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 2,
+          pointerEvents: "none",
+          border: "2px solid var(--border)",
+          borderRadius: "8px",
+          background: `
+            repeating-linear-gradient(
+              90deg,
+              rgba(255, 255, 255, 0.03) 0px,
+              rgba(0, 0, 0, 0.82) 22px,
+              rgba(255, 255, 255, 0.03) 44px,
+              rgba(0, 0, 0, 0.88) 66px
+            )
+          `
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// SingleThreadedStatement Component for Part 2 Chapter 1 Cliffhanger
+function SingleThreadedStatement() {
+  const [glitch, setGlitch] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGlitch(true);
+      setTimeout(() => setGlitch(false), 150);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div 
+      style={{
+        margin: "2.5rem 0",
+        padding: "2.5rem 1.5rem",
+        background: "var(--bg-2)",
+        border: "2px dashed var(--border)",
+        borderRadius: "10px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center"
+      }}
+    >
+      <div 
+        style={{
+          fontFamily: "var(--font-mono, monospace)",
+          fontSize: "1.45rem",
+          fontWeight: 800,
+          color: "var(--t1)",
+          lineHeight: "1.35",
+          letterSpacing: "-0.02em",
+          marginBottom: "1.25rem"
+        }}
+      >
+        {glitch ? '"N0de.js 1s s1ngle-threaded."' : '"Node.js is single-threaded."'}
+      </div>
+
+      <div 
+        style={{
+          fontFamily: "var(--font-mono, monospace)",
+          fontSize: "0.9rem",
+          fontWeight: 700,
+          background: "var(--bg-1)",
+          border: "2px solid var(--border)",
+          padding: "0.45rem 1.25rem",
+          borderRadius: "4px",
+          color: "var(--t1)",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.3rem",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          animation: "pulseThread 2s infinite ease-in-out"
+        }}
+      >
+        TRUE? <span style={{ animation: "blinkCursor 1s infinite steps(2, start)" }}>_</span>
+      </div>
+
+      <style>{`
+        @keyframes pulseThread {
+          0%, 100% { opacity: 0.8; border-color: var(--border); }
+          50% { opacity: 1; border-color: var(--t1); }
+        }
+        @keyframes blinkCursor {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// EventLoopMessengerVisual Component for Part 2 Chapter 3 Event Loop Intro
+function EventLoopMessengerVisual() {
+  const [step, setStep] = useState<"idle" | "ready" | "notifying" | "done">("idle");
+
+  const runSimulation = () => {
+    if (step !== "idle") return;
+    
+    // Step 1: Background task finishes, needs to notify JavaScript
+    setStep("ready");
+    
+    // Step 2: Event Loop picks it up and carries the notification
+    setTimeout(() => {
+      setStep("notifying");
+    }, 1200);
+
+    // Step 3: JavaScript receives notification and runs callback
+    setTimeout(() => {
+      setStep("done");
+    }, 2400);
+
+    // Reset
+    setTimeout(() => {
+      setStep("idle");
+    }, 4500);
+  };
+
+  return (
+    <div className="sbx-card">
+      <div className="sbx-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+          <span className="sbx-heading">The Notification Loop</span>
+        </div>
+        <button 
+          onClick={runSimulation}
+          disabled={step !== "idle"}
+          className="c10k-sim-btn"
+          style={{
+            padding: "0.45rem 1rem",
+            fontSize: "0.72rem",
+            fontFamily: "var(--font-mono, monospace)"
+          }}
+          type="button"
+        >
+          {step === "idle" && "Simulate Task"}
+          {step === "ready" && "Task Completed..."}
+          {step === "notifying" && "Notifying..."}
+          {step === "done" && "Notified!"}
+        </button>
+      </div>
+
+      <div 
+        style={{
+          padding: "1.75rem 1.25rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}
+      >
+        {/* JAVASCRIPT BLOCK */}
+        <div style={{
+          background: step === "done" ? "var(--bg-3)" : "var(--bg-2)",
+          border: step === "done" ? "2px solid var(--t1)" : "1.5px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.75rem 1.75rem",
+          fontFamily: "var(--font-mono, monospace)",
+          fontWeight: 700,
+          fontSize: "0.9rem",
+          color: "var(--t1)",
+          transition: "all 0.3s ease",
+          boxShadow: step === "done" ? "0 4px 12px rgba(0,0,0,0.5)" : "none",
+          textAlign: "center"
+        }}>
+          <div>JavaScript Thread</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--t3)", marginTop: "0.15rem" }}>
+            {step === "done" ? "Executing Callback" : "Running JS Execution"}
+          </div>
+        </div>
+
+        {/* CONNECTION LINE DOWN */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+          <div style={{ 
+            width: "2px", 
+            height: "24px", 
+            background: step === "notifying" || step === "done" ? "var(--t1)" : "var(--border)",
+            transition: "all 0.3s ease"
+          }} />
+          <div style={{
+            width: 0,
+            height: 0,
+            borderLeft: "5px solid transparent",
+            borderRight: "5px solid transparent",
+            borderTop: `6px solid ${step === "notifying" || step === "done" ? "var(--t1)" : "var(--border)"}`,
+            marginTop: "-1px",
+            transition: "all 0.3s ease"
+          }} />
+        </div>
+
+        {/* EVENT LOOP MESSAGE TRANSLATOR */}
+        <div style={{
+          background: step === "notifying" ? "var(--bg-3)" : "var(--bg-2)",
+          border: step === "notifying" ? "2px solid var(--t1)" : "1.5px solid var(--border)",
+          borderRadius: "8px",
+          padding: "0.85rem 2rem",
+          minWidth: "220px",
+          textAlign: "center",
+          boxShadow: step === "notifying" ? "0 4px 12px rgba(0,0,0,0.5)" : "none",
+          transition: "all 0.3s ease",
+          position: "relative"
+        }}>
+          <div style={{ fontFamily: "var(--font-mono, monospace)", fontWeight: 800, fontSize: "0.95rem", color: "var(--t1)", letterSpacing: "0.05em" }}>
+            Event Loop
+          </div>
+          <div style={{ fontSize: "0.72rem", color: "var(--t3)", fontFamily: "var(--font-mono, monospace)", marginTop: "0.2rem" }}>
+            {step === "idle" && "Polling Background Task..."}
+            {step === "ready" && "Noticed Finished Task!"}
+            {step === "notifying" && 'Asking: "Is anything ready?"'}
+            {step === "done" && "Task Dispatched"}
+          </div>
+        </div>
+
+        {/* CONNECTION LINE DOWN */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+          <div style={{ 
+            width: "2px", 
+            height: "24px", 
+            background: step === "ready" || step === "notifying" ? "var(--t1)" : "var(--border)",
+            transition: "all 0.3s ease"
+          }} />
+          <div style={{
+            width: 0,
+            height: 0,
+            borderLeft: "5px solid transparent",
+            borderRight: "5px solid transparent",
+            borderBottom: `6px solid ${step === "ready" || step === "notifying" ? "var(--t1)" : "var(--border)"}`,
+            transform: "rotate(180deg)",
+            marginTop: "-1px",
+            transition: "all 0.3s ease"
+          }} />
+        </div>
+
+        {/* BACKGROUND WORK NOTIFIER */}
+        <div style={{
+          background: step === "ready" ? "var(--bg-3)" : "var(--bg-2)",
+          border: step === "ready" ? "2px solid var(--t1)" : "1.5px dashed var(--border)",
+          borderRadius: "6px",
+          padding: "0.75rem 1.5rem",
+          fontFamily: "var(--font-mono, monospace)",
+          fontSize: "0.82rem",
+          fontWeight: 700,
+          color: "var(--t2)",
+          textAlign: "center",
+          transition: "all 0.3s ease"
+        }}>
+          <div>Background Task</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--t3)", marginTop: "0.15rem" }}>
+            {step === "idle" && "Reading file bytes asynchronously..."}
+            {step === "ready" && "Task Completed! Signaling Event Loop..."}
+            {step === "notifying" && "Signaled"}
+            {step === "done" && "Idle"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// BehindCurtainArrow Component — animated curling arrow at end of Part 1
+function BehindCurtainArrow() {
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.15 }
+    );
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", marginTop: "2.5rem", marginBottom: "0", paddingBottom: "0" }}>
+      {/* The heading text — left aligned, unchanged */}
+      <h4 className="blog-content-h3" style={{ marginBottom: "0" }}>Behind the Curtain.</h4>
+
+      {/* Full-width SVG arrow overlay: starts right of text, loops, sweeps to bottom-right */}
+      <svg
+        viewBox="0 0 600 150"
+        width="100%"
+        height="150"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ display: "block", marginTop: "-0.5rem", marginBottom: "0", paddingBottom: "0", overflow: "visible" }}
+        aria-hidden
+      >
+        <style>{`
+          @keyframes bca-draw {
+            0%   { stroke-dashoffset: 1100; }
+            100% { stroke-dashoffset: 0; }
+          }
+          @keyframes bca-head {
+            0%, 78% { opacity: 0; }
+            100%     { opacity: 1; }
+          }
+          .bca-path {
+            stroke-dasharray: 1100;
+            stroke-dashoffset: 1100;
+            animation: ${isVisible ? "bca-draw 2s cubic-bezier(0.3, 0, 0.2, 1) forwards" : "none"};
+          }
+          .bca-head {
+            opacity: 0;
+            animation: ${isVisible ? "bca-head 2s cubic-bezier(0.3, 0, 0.2, 1) forwards" : "none"};
+          }
+        `}</style>
+
+        {/*
+          Path:
+          - Starts exactly next to the period of "Behind the Curtain." (x=190, y=18)
+          - Sweeps up and right, then loops clockwise (tilted left, matching hand-drawn style)
+          - Exits sweeping down-right
+          - Ends at x=460, y=135 pointing down-right at the target card
+        */}
+        <path
+          className="bca-path"
+          d="      M 130 20
+    C 155 42, 185 52, 215 50
+    C 245 48, 275 32, 305 30
+    C 330 28, 350 42, 352 62
+    C 355 84, 342 102, 322 106
+    C 300 110, 280 96, 280 78
+    C 280 58, 300 43, 325 38
+    C 355 32, 390 38, 415 52
+    C 445 68, 462 94, 470 120
+    C 476 138, 478 151, 480 160"
+          stroke="var(--t2)"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* Arrowhead pointing down-right along path tangent */}
+        <g className="bca-head">
+          <path
+            d=" M 465 150
+    C 470 154, 475 158, 480 160
+    C 484 154, 489 148, 494 142"
+            stroke="var(--t2)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+// LibuvThreadPoolComparisonDiagram Component for Part 2 Chapter 4
+function LibuvThreadPoolComparisonDiagram() {
+  return (
+    <div className="sbx-card" style={{ margin: "2rem 0" }}>
+      <div className="sbx-header">
+        <span className="sbx-heading">I/O Offloading Paths</span>
+      </div>
+      
+      <div 
+        style={{
+          padding: "2rem 1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          background: "var(--bg-1)",
+          fontFamily: "var(--font-mono, monospace)"
+        }}
+      >
+        {/* Node.js Root */}
+        <div style={{
+          background: "var(--bg-2)",
+          border: "2px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.6rem 2rem",
+          fontWeight: 700,
+          fontSize: "0.9rem",
+          color: "var(--t1)",
+          textAlign: "center"
+        }}>
+          Node.js
+        </div>
+
+        {/* Cable Down */}
+        <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+        <div style={{ width: "66%", height: "2px", background: "var(--border)" }} />
+
+        {/* 2 branch cables */}
+        <div style={{ width: "66%", display: "flex", justifyContent: "space-between", height: "16px" }}>
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+        </div>
+
+        {/* 2 main branch descriptors */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", width: "100%" }}>
+          {/* Left Branch */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.5rem 0.75rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t2)",
+              textAlign: "center"
+            }}>
+              Network I/O
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+              <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+              <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "5px solid var(--border)", marginTop: "-1px" }} />
+            </div>
+
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 1.25rem",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              color: "var(--t1)",
+              textAlign: "center"
+            }}>
+              Operating System
+            </div>
+          </div>
+
+          {/* Right Branch */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.5rem 0.75rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t2)",
+              textAlign: "center"
+            }}>
+              Certain operations
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+              <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+              <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "5px solid var(--border)", marginTop: "-1px" }} />
+            </div>
+
+            <div style={{
+              background: "var(--bg-2)",
+              border: "2px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 1.25rem",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              color: "var(--t1)",
+              textAlign: "center"
+            }}>
+              libuv Thread Pool
+            </div>
+
+            {/* Split from Thread Pool to File/DNS/Crypto */}
+            <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+            <div style={{ width: "80%", height: "2px", background: "var(--border)" }} />
+            <div style={{ width: "80%", display: "flex", justifyContent: "space-between", height: "16px" }}>
+              <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+              <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+              <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+            </div>
+
+            {/* 3 Workers Boxes */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", width: "100%" }}>
+              <div style={{ background: "var(--bg-2)", border: "1.5px dashed var(--border)", borderRadius: "4px", padding: "0.4rem 0.2rem", fontSize: "0.7rem", textAlign: "center", fontWeight: 700, color: "var(--t2)" }}>
+                File I/O
+              </div>
+              <div style={{ background: "var(--bg-2)", border: "1.5px dashed var(--border)", borderRadius: "4px", padding: "0.4rem 0.2rem", fontSize: "0.7rem", textAlign: "center", fontWeight: 700, color: "var(--t2)" }}>
+                DNS
+              </div>
+              <div style={{ background: "var(--bg-2)", border: "1.5px dashed var(--border)", borderRadius: "4px", padding: "0.4rem 0.2rem", fontSize: "0.7rem", textAlign: "center", fontWeight: 700, color: "var(--t2)" }}>
+                Crypto
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// FinalNodeArchitectureDiagram Component for Part 2 Chapter 4 Finale
+function FinalNodeArchitectureDiagram() {
+  const [opType, setOpType] = useState<"network" | "file">("network");
+  const [step, setStep] = useState<"idle" | "javascript" | "main-thread" | "nodejs" | "offload" | "event-loop" | "done">("idle");
+
+  const runLifecycle = () => {
+    if (step !== "idle") return;
+
+    setStep("javascript");
+    
+    setTimeout(() => setStep("main-thread"), 800);
+    setTimeout(() => setStep("nodejs"), 1600);
+    setTimeout(() => setStep("offload"), 2400);
+    setTimeout(() => setStep("event-loop"), 3200);
+    setTimeout(() => setStep("done"), 4000);
+    setTimeout(() => setStep("idle"), 5600);
+  };
+
+  const getGlowStyle = (activeSteps: typeof step[]) => {
+    const isActive = activeSteps.includes(step);
+    return {
+      transition: "all 0.4s ease",
+      border: isActive ? "2px solid var(--t1)" : "1.5px solid var(--border)",
+      background: isActive ? "var(--bg-3)" : "var(--bg-2)",
+      boxShadow: isActive ? "0 4px 12px rgba(255, 255, 255, 0.15)" : "none",
+      color: isActive ? "var(--t1)" : "var(--t2)"
+    };
+  };
+
+  const getArrowColor = (activeSteps: typeof step[]) => {
+    return activeSteps.includes(step) ? "var(--t1)" : "var(--border)";
+  };
+
+  return (
+    <div className="sbx-card" style={{ margin: "2rem 0" }}>
+      <div className="sbx-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+          <span className="sbx-heading">Complete Request Architecture Trace</span>
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <select 
+            value={opType} 
+            onChange={(e) => setOpType(e.target.value as "network" | "file")}
+            disabled={step !== "idle"}
+            style={{
+              padding: "0.35rem 0.5rem",
+              background: "var(--bg-2)",
+              border: "1px solid var(--border)",
+              borderRadius: "4px",
+              color: "var(--t1)",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.72rem",
+              cursor: "pointer"
+            }}
+          >
+            <option value="network">Network (OS path)</option>
+            <option value="file">File/Crypto (libuv path)</option>
+          </select>
+          <button 
+            onClick={runLifecycle}
+            disabled={step !== "idle"}
+            className="c10k-sim-btn"
+            style={{
+              padding: "0.45rem 1rem",
+              fontSize: "0.72rem",
+              fontFamily: "var(--font-mono, monospace)"
+            }}
+            type="button"
+          >
+            {step === "idle" ? "Trace Lifecycle" : "Tracing..."}
+          </button>
+        </div>
+      </div>
+      
+      <div 
+        style={{
+          padding: "2rem 1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          background: "var(--bg-1)",
+          fontFamily: "var(--font-mono, monospace)"
+        }}
+      >
+        {/* JavaScript Box */}
+        <div style={{
+          ...getGlowStyle(["javascript"]),
+          borderRadius: "6px",
+          padding: "0.6rem 2rem",
+          fontWeight: 700,
+          fontSize: "0.85rem",
+          textAlign: "center"
+        }}>
+          JavaScript
+        </div>
+
+        {/* Down Arrow */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+          <div style={{ width: "2px", height: "16px", background: getArrowColor(["javascript"]), transition: "background 0.4s ease" }} />
+          <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${getArrowColor(["javascript"])}`, marginTop: "-1px", transition: "border-color 0.4s ease" }} />
+        </div>
+
+        {/* Main Thread Box */}
+        <div style={{
+          ...getGlowStyle(["main-thread"]),
+          borderRadius: "6px",
+          padding: "0.5rem 1.5rem",
+          fontSize: "0.8rem",
+          fontWeight: 700,
+          textAlign: "center"
+        }}>
+          Main Thread
+        </div>
+
+        {/* Down Arrow */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+          <div style={{ width: "2px", height: "16px", background: getArrowColor(["main-thread"]), transition: "background 0.4s ease" }} />
+          <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${getArrowColor(["main-thread"])}`, marginTop: "-1px", transition: "border-color 0.4s ease" }} />
+        </div>
+
+        {/* Node.js Box */}
+        <div style={{
+          ...getGlowStyle(["nodejs"]),
+          borderRadius: "6px",
+          padding: "0.6rem 2rem",
+          fontWeight: 700,
+          fontSize: "0.9rem",
+          textAlign: "center"
+        }}>
+          Node.js
+        </div>
+
+        {/* Split to OS / libuv */}
+        <div style={{ width: "2px", height: "16px", background: getArrowColor(["nodejs"]), transition: "background 0.4s ease" }} />
+        <div style={{ width: "66%", height: "2px", background: getArrowColor(["nodejs"]), transition: "background 0.4s ease" }} />
+        <div style={{ width: "66%", display: "flex", justifyContent: "space-between", height: "16px" }}>
+          <div style={{ width: "2px", height: "100%", background: getArrowColor(["nodejs", "offload"]), transition: "background 0.4s ease" }} />
+          <div style={{ width: "2px", height: "100%", background: getArrowColor(["nodejs", "offload"]), transition: "background 0.4s ease" }} />
+        </div>
+
+        {/* Two Columns Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", width: "100%" }}>
+          {/* OS Column */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", opacity: opType === "network" ? 1 : 0.4, transition: "opacity 0.4s ease" }}>
+            <div style={{
+              ...getGlowStyle(["offload"]),
+              borderRadius: "6px",
+              padding: "0.45rem 1rem",
+              fontSize: "0.76rem",
+              fontWeight: 700,
+              textAlign: "center"
+            }}>
+              OS
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+              <div style={{ width: "2px", height: "16px", background: getArrowColor(["offload"]), transition: "background 0.4s ease" }} />
+              <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${getArrowColor(["offload"])}`, marginTop: "-1px", transition: "border-color 0.4s ease" }} />
+            </div>
+
+            <div style={{
+              ...getGlowStyle(["offload"]),
+              borderRadius: "6px",
+              padding: "0.5rem 1rem",
+              fontSize: "0.76rem",
+              fontWeight: 700,
+              textAlign: "center"
+            }}>
+              Network I/O
+            </div>
+          </div>
+
+          {/* libuv Column */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", opacity: opType === "file" ? 1 : 0.4, transition: "opacity 0.4s ease" }}>
+            <div style={{
+              ...getGlowStyle(["offload"]),
+              borderRadius: "6px",
+              padding: "0.45rem 1rem",
+              fontSize: "0.76rem",
+              fontWeight: 700,
+              textAlign: "center"
+            }}>
+              libuv
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+              <div style={{ width: "2px", height: "16px", background: getArrowColor(["offload"]), transition: "background 0.4s ease" }} />
+              <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${getArrowColor(["offload"])}`, marginTop: "-1px", transition: "border-color 0.4s ease" }} />
+            </div>
+
+            <div style={{
+              ...getGlowStyle(["offload"]),
+              borderRadius: "6px",
+              padding: "0.5rem 1rem",
+              fontSize: "0.76rem",
+              fontWeight: 700,
+              textAlign: "center"
+            }}>
+              Thread Pool
+            </div>
+          </div>
+        </div>
+
+        {/* Merge path back down */}
+        <div style={{ width: "2px", height: "16px", background: getArrowColor(["offload"]), transition: "background 0.4s ease", marginTop: "0.5rem" }} />
+        <div style={{ width: "66%", height: "2px", background: getArrowColor(["offload"]), transition: "background 0.4s ease" }} />
+        <div style={{ width: "66%", display: "flex", justifyContent: "space-between", height: "12px" }}>
+          <div style={{ width: "2px", height: "100%", background: getArrowColor(["offload", "event-loop"]), transition: "background 0.4s ease" }} />
+          <div style={{ width: "2px", height: "100%", background: getArrowColor(["offload", "event-loop"]), transition: "background 0.4s ease" }} />
+        </div>
+        <div style={{ width: "2px", height: "20px", background: getArrowColor(["event-loop"]), transition: "background 0.4s ease" }} />
+        <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${getArrowColor(["event-loop"])}`, marginTop: "-1px", transition: "border-color 0.4s ease" }} />
+
+        {/* Event Loop Box */}
+        <div style={{
+          ...getGlowStyle(["event-loop"]),
+          borderRadius: "6px",
+          padding: "0.6rem 1.5rem",
+          fontWeight: 700,
+          fontSize: "0.85rem",
+          textAlign: "center"
+        }}>
+          Event Loop
+        </div>
+
+        {/* Down Arrow */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+          <div style={{ width: "2px", height: "16px", background: getArrowColor(["event-loop"]), transition: "background 0.4s ease" }} />
+          <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${getArrowColor(["event-loop"])}`, marginTop: "-1px", transition: "border-color 0.4s ease" }} />
+        </div>
+
+        {/* JavaScript Box (Bottom) */}
+        <div style={{
+          ...getGlowStyle(["done"]),
+          borderRadius: "6px",
+          padding: "0.5rem 1.5rem",
+          fontWeight: 700,
+          fontSize: "0.85rem",
+          textAlign: "center"
+        }}>
+          {step === "done" ? "JavaScript (Callback Executed!)" : "JavaScript"}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// EventLoopSequenceFlowDiagram Component for Part 2 Chapter 3
+function EventLoopSequenceFlowDiagram() {
+  return (
+    <div className="sbx-card" style={{ margin: "2rem 0" }}>
+      <div className="sbx-header">
+        <span className="sbx-heading">Event Loop Coordination Cycle</span>
+      </div>
+      
+      <div 
+        style={{
+          padding: "2rem 1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          background: "var(--bg-1)",
+          fontFamily: "var(--font-mono, monospace)"
+        }}
+      >
+        {/* START Node */}
+        <div style={{
+          background: "var(--bg-2)",
+          border: "2px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.6rem 1.5rem",
+          fontWeight: 700,
+          fontSize: "0.85rem",
+          color: "var(--t1)",
+          textAlign: "center"
+        }}>
+          JavaScript
+        </div>
+
+        {/* Arrow Down */}
+        <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+
+        {/* Starts Work Box */}
+        <div style={{
+          background: "var(--bg-2)",
+          border: "1.5px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.5rem 1.25rem",
+          fontSize: "0.8rem",
+          fontWeight: 700,
+          color: "var(--t2)",
+          textAlign: "center"
+        }}>
+          Starts some work
+        </div>
+
+        {/* Branching Lines */}
+        <div style={{ width: "2px", height: "16px", background: "var(--border)" }} />
+        <div style={{ width: "70%", height: "2px", background: "var(--border)" }} />
+        
+        <div style={{ width: "70%", display: "flex", justifyContent: "space-between", height: "20px" }}>
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+        </div>
+
+        {/* Two Columns Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", width: "100%", position: "relative" }}>
+          
+          {/* Left Path: JS Continues */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 0.8rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t1)",
+              textAlign: "center",
+              marginTop: "0.5rem"
+            }}>
+              JavaScript continues
+            </div>
+            
+            {/* Long Vertical line down to merge */}
+            <div style={{ width: "2px", height: "216px", background: "var(--border)", borderLeft: "1px dashed var(--border)" }} />
+          </div>
+
+          {/* Right Path: Async Delegation & Completion */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            
+            {/* Work Handled Elsewhere */}
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 0.8rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t2)",
+              textAlign: "center",
+              marginTop: "0.5rem"
+            }}>
+              Work handled elsewhere
+            </div>
+
+            {/* Down Arrow */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.2rem 0" }}>
+              <div style={{ width: "2px", height: "16px", background: "var(--border)" }} />
+              <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "5px solid var(--border)", marginTop: "-1px" }} />
+            </div>
+
+            {/* Work Finishes */}
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px dashed var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 0.8rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t2)",
+              textAlign: "center"
+            }}>
+              Work finishes
+            </div>
+
+            {/* Down Arrow */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+              <div style={{ width: "2px", height: "16px", background: "var(--border)" }} />
+              <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "5px solid var(--border)", marginTop: "-1px" }} />
+            </div>
+
+            {/* Event Loop notices */}
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 0.8rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t1)",
+              textAlign: "center",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
+            }}>
+              Event Loop
+            </div>
+
+            {/* Down Arrow */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.2rem 0" }}>
+              <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Merge Lines */}
+        <div style={{ width: "70%", display: "flex", justifyContent: "space-between", height: "10px" }}>
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+        </div>
+        <div style={{ width: "70%", height: "2px", background: "var(--border)" }} />
+        <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+        <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "5px solid var(--border)", marginTop: "-1px" }} />
+
+        {/* Handle Result Box */}
+        <div style={{
+          background: "var(--bg-2)",
+          border: "2px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.6rem 1.25rem",
+          fontSize: "0.8rem",
+          fontWeight: 700,
+          color: "var(--t1)",
+          textAlign: "center",
+          marginTop: "0.25rem"
+        }}>
+          JavaScript handles the result
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// DelegationThreadVisual Component for Part 2 Chapter 2
+function DelegationThreadVisual() {
+  return (
+    <div 
+      className="sbx-card" 
+      style={{ 
+        margin: "1.75rem 0", 
+        overflow: "hidden", 
+        background: "var(--bg-3)", 
+        border: "2px solid var(--border)", 
+        borderRadius: "10px",
+        padding: "0.4rem"
+      }}
+    >
+      <div 
+        style={{
+          width: "100%",
+          background: "var(--bg-1)",
+          border: "2px solid var(--border)",
+          borderRadius: "8px",
+          padding: "1.5rem 1.25rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}
+      >
+        {/* Title */}
+        <div style={{ width: "100%", textAlign: "left", marginBottom: "1.25rem" }}>
+          <div style={{ fontFamily: "var(--font-mono, monospace)", fontWeight: 700, fontSize: "0.85rem", color: "var(--t2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            The Delegation Flow
+          </div>
+          <div style={{ width: "100%", height: "1px", background: "var(--border)", marginTop: "0.4rem" }} />
+        </div>
+
+        {/* 2 Column Flow (Main Thread vs Background) */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", width: "100%", position: "relative" }}>
+          
+          {/* Main Thread Column */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ fontFamily: "var(--font-mono, monospace)", fontWeight: 800, fontSize: "0.75rem", color: "var(--t2)", marginBottom: "0.85rem", textTransform: "uppercase" }}>
+              Main Thread
+            </div>
+            
+            {/* Step 1 Box */}
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 0.8rem",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t1)",
+              textAlign: "center"
+            }}>
+              fs.readFile(...)
+            </div>
+
+            {/* Vertical Flow Arrow */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+              <div style={{ width: "2px", height: "30px", background: "var(--border)" }} />
+              <div style={{
+                width: 0,
+                height: 0,
+                borderLeft: "4px solid transparent",
+                borderRight: "4px solid transparent",
+                borderTop: "5px solid var(--border)",
+                marginTop: "-1px"
+              }} />
+              <span style={{ fontSize: "0.62rem", fontFamily: "var(--font-mono, monospace)", color: "var(--t3)", marginTop: "0.15rem" }}>
+                Immediately Free
+              </span>
+            </div>
+
+            {/* Step 2 Box */}
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "6px",
+              padding: "0.6rem 0.8rem",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "var(--t1)",
+              textAlign: "center"
+            }}>
+              Execute Next JS Block
+            </div>
+          </div>
+
+          {/* Background / Delegation Column */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ fontFamily: "var(--font-mono, monospace)", fontWeight: 800, fontSize: "0.75rem", color: "var(--t2)", marginBottom: "0.85rem", textTransform: "uppercase" }}>
+              Background
+            </div>
+
+            {/* Empty space matching alignment */}
+            <div style={{ height: "36px" }} />
+
+            {/* Background Work Box */}
+            <div style={{
+              background: "var(--bg-2)",
+              border: "1.5px dashed var(--border)",
+              borderRadius: "6px",
+              padding: "0.85rem 0.8rem",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.76rem",
+              fontWeight: 700,
+              color: "var(--t2)",
+              textAlign: "center",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
+            }}>
+              Read file bytes from disk
+            </div>
+          </div>
+
+          {/* DELEGATION ROW / CONNECTOR LINE (OVERLAY ARROW FROM LEFT TO RIGHT) */}
+          <div style={{
+            position: "absolute",
+            top: "54px",
+            left: "50%",
+            width: "35%",
+            height: "2px",
+            background: "var(--border)",
+            borderTop: "1px dashed var(--border)",
+            transform: "translateX(-50%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end"
+          }}>
+            <span style={{
+              fontSize: "0.58rem",
+              fontFamily: "var(--font-mono, monospace)",
+              color: "var(--t2)",
+              background: "var(--bg-1)",
+              padding: "0.05rem 0.3rem",
+              border: "1px solid var(--border)",
+              borderRadius: "3px",
+              position: "absolute",
+              left: "50%",
+              transform: "translate(-50%, -12px)",
+              whiteSpace: "nowrap"
+            }}>
+              Delegate
+            </span>
+            <div style={{
+              width: 0,
+              height: 0,
+              borderTop: "4px solid transparent",
+              borderBottom: "4px solid transparent",
+              borderLeft: "6px solid var(--border)",
+              marginRight: "-2px"
+            }} />
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// MainThreadExecutionVisual Component for Part 2 Chapter 2
+function MainThreadExecutionVisual() {
+  return (
+    <div 
+      style={{ 
+        margin: "2rem 0", 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center",
+        width: "100%"
+      }}
+    >
+      {/* TOP NODE.JS CARD */}
+      <div style={{
+        background: "var(--bg-2)",
+        border: "1.5px solid var(--border)",
+        borderRadius: "6px",
+        padding: "0.6rem 1.5rem",
+        fontFamily: "var(--font-mono, monospace)",
+        fontWeight: 700,
+        fontSize: "0.92rem",
+        color: "var(--t1)"
+      }}>
+        Node.js
+      </div>
+
+      {/* CONNECTING ARROW */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0.25rem 0" }}>
+        <div style={{ width: "2px", height: "16px", background: "var(--border)" }} />
+        <div style={{
+          width: 0,
+          height: 0,
+          borderLeft: "5px solid transparent",
+          borderRight: "5px solid transparent",
+          borderTop: "6px solid var(--border)",
+          marginTop: "-1px"
+        }} />
+      </div>
+
+      {/* MAIN THREAD CONTAINER */}
+      <div style={{
+        background: "var(--bg-2)",
+        border: "2px solid var(--border)",
+        borderRadius: "8px",
+        padding: "1.25rem 2rem",
+        minWidth: "220px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        boxShadow: "0 4px 14px rgba(0,0,0,0.4)"
+      }}>
+        {/* Main Thread Header */}
+        <div style={{
+          fontFamily: "var(--font-mono, monospace)",
+          fontWeight: 800,
+          fontSize: "0.85rem",
+          color: "var(--t1)",
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          marginBottom: "0.85rem",
+          borderBottom: "1px solid var(--border)",
+          paddingBottom: "0.3rem",
+          width: "100%",
+          textAlign: "center"
+        }}>
+          Main Thread
+        </div>
+
+        {/* JS execution items */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
+          <div style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.78rem", color: "var(--t2)", background: "var(--bg-1)", padding: "0.3rem 0.8rem", borderRadius: "4px", border: "1px solid var(--border)" }}>
+            Execute JS
+          </div>
+          
+          <div style={{ color: "var(--t3)", fontSize: "0.75rem", fontFamily: "var(--font-mono, monospace)" }}>↓</div>
+
+          <div style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.78rem", color: "var(--t2)", background: "var(--bg-1)", padding: "0.3rem 0.8rem", borderRadius: "4px", border: "1px solid var(--border)" }}>
+            Execute JS
+          </div>
+
+          <div style={{ color: "var(--t3)", fontSize: "0.75rem", fontFamily: "var(--font-mono, monospace)" }}>↓</div>
+
+          <div style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.78rem", color: "var(--t2)", background: "var(--bg-1)", padding: "0.3rem 0.8rem", borderRadius: "4px", border: "1px solid var(--border)" }}>
+            Execute JS
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// BlockingThreadVisualization Component for Part 2 Chapter 2
+function BlockingThreadVisualization() {
+  return (
+    <div 
+      className="sbx-card" 
+      style={{ 
+        margin: "1.75rem 0", 
+        overflow: "hidden", 
+        background: "var(--bg-3)", 
+        border: "2px solid var(--border)", 
+        borderRadius: "10px",
+        padding: "0.4rem"
+      }}
+    >
+      <div 
+        style={{
+          width: "100%",
+          background: "var(--bg-1)",
+          border: "2px solid var(--border)",
+          borderRadius: "8px",
+          padding: "1.75rem 1.25rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}
+      >
+        {/* THREAD TITLE & BAR */}
+        <div style={{ width: "100%", textAlign: "left", marginBottom: "1.25rem" }}>
+          <div style={{ fontFamily: "var(--font-mono, monospace)", fontWeight: 700, fontSize: "0.85rem", color: "var(--t2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            JavaScript Thread
+          </div>
+          <div style={{ width: "100%", height: "1px", background: "var(--border)", marginTop: "0.4rem" }} />
+        </div>
+
+        {/* SEQUENCE FLOW */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+          {/* Request Box */}
+          <div style={{
+            background: "var(--bg-2)",
+            border: "1px solid var(--border)",
+            borderRadius: "6px",
+            padding: "0.6rem 1.5rem",
+            fontFamily: "var(--font-mono, monospace)",
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            color: "var(--t1)"
+          }}>
+            Request
+          </div>
+
+          {/* Arrow Down */}
+          <div style={{ width: "2px", height: "20px", background: "var(--border)" }} />
+
+          {/* Read File Box */}
+          <div style={{
+            background: "var(--bg-2)",
+            border: "1.5px dashed var(--border)",
+            borderRadius: "6px",
+            padding: "0.75rem 1.75rem",
+            fontFamily: "var(--font-mono, monospace)",
+            fontWeight: 700,
+            fontSize: "0.88rem",
+            color: "var(--t1)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
+          }}>
+            Read File (Blocking)
+          </div>
+
+          {/* Waiting Line & Blinking Text */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", margin: "0.5rem 0" }}>
+            <div style={{ width: "2px", height: "70px", background: "var(--border)", borderLeft: "1px dashed var(--border)" }} />
+            
+            <div style={{
+              position: "absolute",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "var(--bg-1)",
+              border: "1.5px solid var(--border)",
+              borderRadius: "4px",
+              padding: "0.3rem 0.8rem",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              color: "var(--t2)",
+              letterSpacing: "0.1em",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+              animation: "blinkWaiting 1.5s infinite steps(2, start)"
+            }}>
+              WAITING...
+            </div>
+          </div>
+
+          {/* Continue Box */}
+          <div style={{
+            background: "var(--bg-2)",
+            border: "1px solid var(--border)",
+            borderRadius: "6px",
+            padding: "0.6rem 1.5rem",
+            fontFamily: "var(--font-mono, monospace)",
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            color: "var(--t1)"
+          }}>
+            Continue Execution
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes blinkWaiting {
+          0%, 100% { opacity: 0.5; border-color: var(--border); }
+          50% { opacity: 1; border-color: var(--t1); color: var(--t1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// CallStackDemo Component for Part 2
+function CallStackDemo() {
+  const [mode, setMode] = useState<"sync" | "async">("sync");
+  const [stack, setStack] = useState<string[]>([]);
+  const [status, setStatus] = useState("Idle");
+  const [isBusy, setIsBusy] = useState(false);
+  const [reqsServed, setReqsServed] = useState(0);
+  const [reqsBlocked, setReqsBlocked] = useState(0);
+
+  const runDemo = (selectedMode: "sync" | "async") => {
+    setMode(selectedMode);
+    setIsBusy(true);
+    setReqsServed(0);
+    setReqsBlocked(0);
+
+    if (selectedMode === "sync") {
+      setStack(["main()", "fs.readFileSync('file.pdf')"]);
+      setStatus("FROZEN! Main thread is synchronously waiting for disk I/O. Stack is stuck.");
+      setTimeout(() => {
+        setStack(["main()"]);
+        setTimeout(() => {
+          setStack([]);
+          setStatus("Complete.");
+          setIsBusy(false);
+        }, 800);
+      }, 3000);
+    } else {
+      setStack(["main()", "fs.readFile('file.pdf', cb)"]);
+      setStatus("Delegated fs.readFile to libuv C++ layer. Call stack cleared immediately!");
+      setTimeout(() => {
+        setStack(["main()"]);
+        setTimeout(() => {
+          setStack([]);
+          setStatus("Call Stack FREE. Main thread ready for incoming requests!");
+          setTimeout(() => {
+            setStack(["cb(err, data)"]);
+            setStatus("I/O finished in background! Callback pushed to stack.");
+            setTimeout(() => {
+              setStack([]);
+              setStatus("Complete.");
+              setIsBusy(false);
+            }, 1000);
+          }, 1500);
+        }, 400);
+      }, 500);
+    }
+  };
+
+  const handleIncomingReq = () => {
+    if (isBusy && mode === "sync") {
+      setReqsBlocked((b) => b + 1);
+    } else {
+      setReqsServed((s) => s + 1);
+    }
+  };
+
+  return (
+    <div className="c10k-container corner-box" style={{ margin: "1.75rem 0" }}>
+      <div className="c10k-header">
+        <div>
+          <h4 className="c10k-title">Interactive Call Stack: Synchronous vs Asynchronous I/O</h4>
+          <p className="c10k-subtitle">See how blocking operations freeze the single thread versus non-blocking delegation.</p>
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button 
+            className={`c10k-sim-btn ${mode === "sync" ? "active" : ""}`} 
+            onClick={() => runDemo("sync")}
+            disabled={isBusy}
+            type="button"
+          >
+            Run fs.readFileSync() (Blocking)
+          </button>
+          <button 
+            className={`c10k-sim-btn ${mode === "async" ? "active" : ""}`} 
+            onClick={() => runDemo("async")}
+            disabled={isBusy}
+            type="button"
+          >
+            Run fs.readFile() (Async)
+          </button>
+        </div>
+      </div>
+
+      <div style={{ padding: "1.25rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          <div>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--t2)", marginBottom: "0.75rem" }}>
+              Call Stack Frame (V8)
+            </div>
+            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border)", borderRadius: "8px", minHeight: "140px", padding: "0.75rem", display: "flex", flexDirection: "column-reverse", gap: "0.4rem" }}>
+              {stack.length === 0 ? (
+                <div style={{ color: "var(--t3)", fontSize: "0.8rem", textAlign: "center", margin: "auto" }}>[ Call Stack Empty ]</div>
+              ) : (
+                stack.map((item, idx) => (
+                  <div key={idx} style={{ background: mode === "sync" && item.includes("readFileSync") ? "rgba(220, 38, 38, 0.2)" : "var(--bg-2)", border: `1px solid ${mode === "sync" && item.includes("readFileSync") ? "#ef4444" : "var(--border)"}`, borderRadius: "4px", padding: "0.5rem 0.75rem", fontSize: "0.8rem", fontFamily: "var(--font-mono, monospace)", color: "var(--t1)" }}>
+                    {item}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--t2)", marginBottom: "0.75rem" }}>
+                Thread Traffic Simulator
+              </div>
+              <button 
+                onClick={handleIncomingReq} 
+                className="c10k-sim-btn" 
+                style={{ width: "100%", padding: "0.6rem" }}
+                type="button"
+              >
+                Send HTTP User Request ⚡
+              </button>
+              <div style={{ marginTop: "0.75rem", fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <div>Requests Served: <strong style={{ color: "var(--t1)" }}>{reqsServed}</strong></div>
+                <div>Requests Blocked / Dropped: <strong style={{ color: reqsBlocked > 0 ? "#ef4444" : "var(--t3)" }}>{reqsBlocked}</strong></div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: "1rem", padding: "0.6rem 0.8rem", background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "6px", fontSize: "0.78rem", color: "var(--t2)" }}>
+              <strong>Status:</strong> {status}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// NodeArchitectureDiagram Component for Part 2 Chapter 1
+function NodeArchitectureDiagram() {
+  return (
+    <div 
+      className="sbx-card" 
+      style={{ 
+        margin: "2rem 0", 
+        overflow: "hidden", 
+        background: "var(--bg-3)", 
+        border: "2px solid var(--border)", 
+        borderRadius: "10px",
+        padding: "0.4rem"
+      }}
+    >
+      <div 
+        style={{
+          width: "100%",
+          background: "var(--bg-1)",
+          border: "2px solid var(--border)",
+          borderRadius: "8px",
+          padding: "2rem 1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}
+      >
+        {/* TOP NODE.JS SERVER BOX */}
+        <div style={{
+          background: "var(--bg-2)",
+          border: "2px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.75rem 2rem",
+          fontFamily: "var(--font-mono, monospace)",
+          fontWeight: 700,
+          fontSize: "1rem",
+          color: "var(--t1)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem"
+        }}>
+          Node.js Runtime
+        </div>
+
+        {/* CONNECTING LINE DOWN */}
+        <div style={{ width: "2px", height: "24px", background: "var(--border)" }} />
+
+        {/* HORIZONTAL BRANCH LINE */}
+        <div style={{ width: "75%", height: "2px", background: "var(--border)", borderTop: "1px dashed var(--border)" }} />
+
+        {/* 3 BRANCH LINES */}
+        <div style={{ width: "75%", display: "flex", justifyContent: "space-between", height: "20px" }}>
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+          <div style={{ width: "2px", height: "100%", background: "var(--border)" }} />
+        </div>
+
+        {/* 3 CORE COMPONENTS */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", width: "100%" }}>
+          {/* V8 Box */}
+          <div style={{ 
+            background: "var(--bg-2)", 
+            border: "1.5px solid var(--border)", 
+            borderRadius: "6px", 
+            padding: "1rem 0.75rem", 
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.3rem",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+          }}>
+            <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>V8 Engine</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--t3)", fontFamily: "var(--font-mono, monospace)" }}>JavaScript Interpreter</div>
+          </div>
+
+          {/* APIs Box */}
+          <div style={{ 
+            background: "var(--bg-2)", 
+            border: "1.5px solid var(--border)", 
+            borderRadius: "6px", 
+            padding: "1rem 0.75rem", 
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.3rem",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+          }}>
+            <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>Bindings</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--t3)", fontFamily: "var(--font-mono, monospace)" }}>Core Node APIs</div>
+          </div>
+
+          {/* libuv Box */}
+          <div style={{ 
+            background: "var(--bg-2)", 
+            border: "1.5px solid var(--border)", 
+            borderRadius: "6px", 
+            padding: "1rem 0.75rem", 
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.3rem",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+          }}>
+            <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>libuv</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--t3)", fontFamily: "var(--font-mono, monospace)" }}>Asynchronous I/O</div>
+          </div>
+        </div>
+
+        {/* CONNECTING LINE FROM LIBUV DOWN TO OS */}
+        <div style={{ 
+          width: "100%", 
+          display: "flex", 
+          justifyContent: "flex-end", 
+          paddingRight: "calc(16.66% - 1px)" 
+        }}>
+          <div style={{ width: "2px", height: "24px", background: "var(--border)", borderLeft: "1px dashed var(--border)" }} />
+        </div>
+
+        {/* OS BOX */}
+        <div style={{
+          width: "33.3%",
+          alignSelf: "flex-end",
+          background: "var(--bg-2)",
+          border: "1.5px solid var(--border)",
+          borderRadius: "6px",
+          padding: "0.9rem 0.75rem",
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0.25rem",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+        }}>
+          <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>OS Kernel</div>
+          <div style={{ fontSize: "0.68rem", color: "var(--t3)", fontFamily: "var(--font-mono, monospace)" }}>epoll / kqueue / IOCP</div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ThreadPoolDiagram Component for Part 2
+function ThreadPoolDiagram() {
+  const [workers, setWorkers] = useState([
+    { id: 1, status: "Idle", task: null as string | null },
+    { id: 2, status: "Idle", task: null as string | null },
+    { id: 3, status: "Idle", task: null as string | null },
+    { id: 4, status: "Idle", task: null as string | null },
+  ]);
+  const [completedCount, setCompletedCount] = useState(0);
+
+  const dispatchTask = (taskName: string) => {
+    const idleIdx = workers.findIndex((w) => w.status === "Idle");
+    if (idleIdx === -1) return;
+
+    setWorkers((prev) => {
+      const next = [...prev];
+      next[idleIdx] = { ...next[idleIdx], status: "Busy", task: taskName };
+      return next;
+    });
+
+    setTimeout(() => {
+      setWorkers((prev) => {
+        const next = [...prev];
+        next[idleIdx] = { ...next[idleIdx], status: "Idle", task: null };
+        return next;
+      });
+      setCompletedCount((c) => c + 1);
+    }, 2500);
+  };
+
+  return (
+    <div className="sbx-card" style={{ margin: "1.75rem 0" }}>
+      <div className="sbx-header">
+        <span className="sbx-badge">C++</span>
+        <span className="sbx-heading">libuv Worker Thread Pool Simulator (UV_THREADPOOL_SIZE=4)</span>
+      </div>
+      <div style={{ padding: "1.25rem" }}>
+        <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button 
+            className="c10k-sim-btn" 
+            onClick={() => dispatchTask("crypto.pbkdf2()")}
+            type="button"
+          >
+            Dispatch Heavy Crypto Task 🔒
+          </button>
+          <button 
+            className="c10k-sim-btn" 
+            onClick={() => dispatchTask("fs.readFile()")}
+            type="button"
+          >
+            Dispatch Disk Read Task 📁
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          {workers.map((worker) => (
+            <div 
+              key={worker.id} 
+              style={{ 
+                background: worker.status === "Busy" ? "rgba(59, 130, 246, 0.1)" : "var(--bg-3)", 
+                border: worker.status === "Busy" ? "1px solid #3b82f6" : "1px solid var(--border)", 
+                borderRadius: "8px", 
+                padding: "0.75rem 1rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--t1)" }}>Worker Thread #{worker.id}</div>
+                <div style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono, monospace)", color: worker.status === "Busy" ? "#3b82f6" : "var(--t3)" }}>
+                  {worker.task ? `Processing ${worker.task}...` : "Idle (Waiting for task)"}
+                </div>
+              </div>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, padding: "0.15rem 0.4rem", borderRadius: "4px", background: worker.status === "Busy" ? "#3b82f6" : "var(--border)", color: worker.status === "Busy" ? "#fff" : "var(--t2)" }}>
+                {worker.status}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: "1rem", fontSize: "0.78rem", color: "var(--t2)", background: "var(--bg-2)", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
+          Total Tasks Completed Off Main Thread: <strong style={{ color: "var(--t1)" }}>{completedCount}</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// EventLoopDiagram Component for Part 2
+function EventLoopDiagram() {
+  const [activePhase, setActivePhase] = useState(0);
+  const phases = [
+    { title: "1. Timers", detail: "Executes callbacks scheduled by setTimeout() and setInterval()" },
+    { title: "2. Pending Callbacks", detail: "Executes deferred I/O callbacks from previous loop iteration" },
+    { title: "3. Idle, Prepare", detail: "Internal libuv housekeeping phase" },
+    { title: "4. Poll Phase", detail: "Retrieves new I/O events (sockets, connections) and executes callbacks" },
+    { title: "5. Check Phase", detail: "Executes callbacks registered with setImmediate()" },
+    { title: "6. Close Callbacks", detail: "Executes close handlers like socket.on('close')" }
+  ];
+
+  const stepPhase = () => {
+    setActivePhase((p) => (p + 1) % phases.length);
+  };
+
+  return (
+    <div className="sbx-card" style={{ margin: "1.75rem 0" }}>
+      <div className="sbx-header">
+        <span className="sbx-badge">LOOP</span>
+        <span className="sbx-heading">The 6 Phases of the Node.js Event Loop</span>
+      </div>
+      <div style={{ padding: "1.25rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--t2)" }}>
+            Click step to advance the Event Loop pointer through its 6 phases.
+          </p>
+          <button className="c10k-sim-btn active" onClick={stepPhase} type="button">
+            Step Loop Phase ↻
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+          {phases.map((phase, idx) => (
+            <div 
+              key={idx}
+              style={{
+                padding: "0.75rem 0.9rem",
+                borderRadius: "8px",
+                border: activePhase === idx ? "1px solid var(--t1)" : "1px solid var(--border)",
+                background: activePhase === idx ? "var(--bg-2)" : "var(--bg-3)",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div style={{ fontSize: "0.82rem", fontWeight: 700, color: activePhase === idx ? "var(--t1)" : "var(--t2)" }}>
+                {phase.title} {activePhase === idx && "👈 ACTIVE"}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--t3)", marginTop: "0.25rem" }}>
+                {phase.detail}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: "1rem", padding: "0.75rem", background: "var(--bg-2)", border: "1px dashed var(--border)", borderRadius: "8px" }}>
+          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--t1)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            ⚡ Microtask Queue Interruption:
+          </div>
+          <div style={{ fontSize: "0.78rem", color: "var(--t2)", marginTop: "0.2rem" }}>
+            Between EVERY phase transition, Node.js empties the Microtask Queue (<code>process.nextTick</code> and <code>Promise.then</code>) before proceeding to the next phase!
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const ArrowLeft = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M10 3L5 8l5 5" />
@@ -1255,7 +3186,7 @@ export default function BlogReader({ blog, prevBlog, nextBlog }: BlogReaderProps
             </div>
 
             {/* Pagination Navigation */}
-            <div className="blog-pagination">
+            <div className="blog-pagination" style={blog.id === "node-js-the-accidental-backend-part-1" ? { marginTop: "0.5rem" } : undefined}>
               {prevBlog ? (
                 <Link href={`/blog/${prevBlog.id}`} className="blog-pagination-btn">
                   <span className="blog-pagination-label">

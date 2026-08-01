@@ -115,7 +115,22 @@ function PartCard({ part, idx }: { part: BlogPart; idx: number }) {
       
       <div className="blog-landing-card-content">
         <div className="blog-landing-card-header">
-          <h3 className="blog-landing-card-title">{part.title}</h3>
+          <h3 className="blog-landing-card-title">
+            {(() => {
+              const colonIdx = part.title.indexOf(":");
+              if (colonIdx !== -1) {
+                return (
+                  <>
+                    <span style={{ display: "block", fontSize: "0.75em", fontWeight: 600, opacity: 0.6, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: "0.15rem" }}>
+                      {part.title.slice(0, colonIdx + 1)}
+                    </span>
+                    {part.title.slice(colonIdx + 1).trim()}
+                  </>
+                );
+              }
+              return part.title;
+            })()}
+          </h3>
           <div className="blog-landing-card-meta">
             <span>{part.readTime}</span>
             <span style={{ margin: "0 0.4rem", opacity: 0.5 }}>•</span>
@@ -199,6 +214,7 @@ export default function BlogLanding({ blog }: BlogLandingProps) {
           <div className="blog-detail-meta" style={{ marginTop: "0.5rem", marginBottom: "1rem" }}>
             <div className="blog-detail-meta-left">
               <span className="blog-meta-item">{blog.date}</span>
+              <span className="blog-meta-item">{blog.readTime}</span>
               <span className="blog-meta-item">
                 {views !== null ? `${views.toLocaleString()} views` : "— views"}
               </span>

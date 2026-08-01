@@ -78,7 +78,7 @@ function BlogCard({ id, title, description, tags, image, date, readTime, delay }
           <div className="blog-row">
             <h3 className="blog-name">{title}</h3>
             <div className="blog-meta">
-              <span className="blog-meta-item">{date}</span>
+              <span className="blog-meta-item">{readTime}</span>
               <span className="blog-meta-item">
                 <EyeIcon />
                 {views !== null ? views.toLocaleString() : "—"}

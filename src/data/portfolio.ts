@@ -142,7 +142,7 @@ export const BLOGS = [
     description: "The story of how a browser scripting language accidentally became one of the world's most influential backend runtimes.",
     tags: ["Node.js", "Backend", "JavaScript", "History"],
     image: "/assets/images/Accidental-Backend.jpg",
-    readTime: "22 min read",
+    readTime: "20 min read",
     parts: [
       {
         id: "node-js-the-accidental-backend-part-1",
@@ -156,6 +156,20 @@ export const BLOGS = [
           "3. The Engine That Changed Everything",
           "4. The Birth Of Node.js",
           "The Story Continues..."
+        ]
+      },
+      {
+        id: "node-js-the-accidental-backend-part-2",
+        title: "Part 2: Behind The Curtain",
+        description: "Now we know why Node.js exists. It's time to see what actually happens behind the curtain.",
+        readTime: "10 min read",
+        chapterPreviews: [
+          "Before We Look Behind",
+          "1. More Than Just a Runtime",
+          "2. The Single-Threaded Myth",
+          "3. The Event Loop",
+          "4. The Hidden Workers",
+          "The Curtain Falls"
         ]
       }
     ]
@@ -542,6 +556,455 @@ For that,
 we need to know what's
 
 ###Behind the Curtain.`
+      }
+    ]
+  },
+  {
+    id: "node-js-the-accidental-backend-part-2",
+    title: "Part 2: Behind The Curtain",
+    date: "Jul 2026",
+    description: "Now we know why Node.js exists. It's time to see what actually happens behind the curtain.",
+    tags: ["Node.js", "Backend", "JavaScript", "Architecture", "Event Loop"],
+    image: "/assets/images/Accidental-Backend.jpg",
+    readTime: "10 min read",
+    chapters: [
+      {
+        title: "Before We Look Behind",
+        content: `We now know that JavaScript escaped the browser.
+
+We know how Node.js came into existence.
+
+But....
+
+we still haven't answered the big question.
+
+**What actually happens when we type \`node app.js\`?**
+
+[curtain-diagram]
+
+We start a server.
+
+A request arrives.
+
+The database responds.
+
+The API returns data.
+
+Everything seems good.
+
+But...
+
+underneath all of this,
+
+something big is happening.
+
+If JavaScript runs on a single thread,
+
+who's doing all the waiting?
+
+Who's reading the file?
+
+Before we look behind,
+
+there's one thing we need to understand.
+
+Node.js is far more than just JavaScript and the V8 engine.
+
+And that's where the story continues....`
+      },
+      {
+        title: "Chapter 1 : More Than Just a Runtime",
+        content: `We now know why JavaScript was created.
+
+But...
+
+did Ryan Dahl simply take V8 from the browser and name it Node.js?
+
+Not really.
+
+If V8 was enough,
+
+how can JavaScript read files?
+
+How can it create servers?
+
+How can it talk to databases?
+
+V8 is just an engine.
+
+Its only job is to execute JavaScript code.
+
+That's what Google made it for.
+
+It can't read files.
+
+Or create servers.
+
+Or communicate with databases.
+
+Then how can JavaScript do all this?
+
+JavaScript came out of the browser,
+
+but...
+
+it still needed a way to do all these things.
+
+It needed an environment.
+
+That's what Node.js is.
+
+It's not just V8.
+
+Not just JavaScript.
+
+It's an entire environment built around V8.
+
+It's actually a bridge between JavaScript and the world.
+
+To make this happen,
+
+Node.js brings several different components together as a runtime.
+
+[node-architecture-diagram]
+
+Now we know that Node.js is not just a runtime.
+
+It's an entire environment.
+
+But before we learn how that environment works,
+
+we need to clarify one thing.
+
+It's a sentence every single Node.js developer would have heard:
+
+**"Node.js is single-threaded."**
+
+Is it really?
+
+**The Single-Threaded Myth**`
+      },
+      {
+        title: "Chapter 2 : The Single-Threaded Myth",
+        content: `Node.js is single-threaded......
+
+Most of us hear this, accept it, and move on.
+
+Some among us actually want to know:
+
+**Why?**
+
+What does that mean?
+
+Let's ask ourselves a question.
+
+If Node.js is single-threaded,
+
+what happens when a file is opened?
+
+Will Node.js wait?
+
+If so,
+
+the entire system has to wait....
+
+So something's wrong.
+
+What's that?
+
+Actually,
+
+the term we heard wasn't wrong.
+
+But...
+
+it's incomplete.
+
+**JavaScript in Node.js runs on a single main thread.**
+
+This single phrase changes everything.
+
+What does this phrase actually mean?
+
+What is a main thread?
+
+The main thread's job is to:
+
+Execute JavaScript.
+
+Finish one piece of JavaScript.
+
+Move to the next piece.
+
+It doesn't sit there and read files.
+
+Alright.
+
+If this too doesn't do these things,
+
+then...
+
+who's reading the file?
+
+Who's waiting for databases?
+
+Who's handling the network?
+
+Before knowing that,
+
+we need to understand another thing.
+
+And this is where we meet...
+
+**The Event Loop**`
+      },
+      {
+        title: "Chapter 3 : The Event Loop",
+        content: `If JavaScript isn't waiting,
+
+then how does it know when something is finished?
+
+Who's telling JavaScript that the work is done?
+
+This is where the Event Loop fits in.
+
+The Event Loop is like a messenger to JavaScript.
+
+It doesn't do the work,
+
+like executing JavaScript or waiting for files.
+
+Its job is to notice when work is ready to be handled
+
+and let JavaScript continue with it.
+
+It's like a coordinator that keeps the process moving.
+
+When the work is finished,
+
+it tells JavaScript that it's ready to be handled.
+
+\`\`\`
+JavaScript starts work
+          ↓
+Work is handled elsewhere
+          ↓
+JavaScript continues
+          ↓
+Work finishes
+          ↓
+Event Loop notices
+          ↓
+JavaScript handles the result
+\`\`\`
+
+Why "Loop"?
+
+Because it never stops checking.
+
+It checks.
+
+Again.
+
+And again.
+
+And again.
+
+If something is ready,
+
+it lets JavaScript execute it.
+
+Looks cool.
+
+But we still haven't got the answer.
+
+If the Event Loop also didn't read files,
+
+then who actually does that work?
+
+This is where we meet...
+
+**The Hidden Workers.**`
+      },
+      {
+        title: "Chapter 4 : The Hidden Workers",
+        content: `Imagine a request comes to JavaScript.
+
+What happens now?
+
+The JavaScript main thread doesn't have to do everything itself.
+
+It can hand certain work to other parts of the system.
+
+The main thread shouldn't stop doing everything because one task takes time.
+
+Then who does all this?
+
+**Enter the Operating System.**
+
+For many network operations, Node.js can rely on the OS's own asynchronous I/O capabilities.
+
+\`\`\`
+JavaScript
+    │
+    ▼
+ Node.js
+    │
+    ▼
+Operating System
+    │
+    │ waits for network
+    ▼
+Data arrives
+\`\`\`
+
+The JavaScript main thread can leave the work to the OS.
+
+Once the work is completed,
+
+the Event Loop can indicate that it's ready,
+
+and JavaScript can continue with it.
+
+But some operations aren't naturally handled through the OS's asynchronous mechanisms.
+
+Then who handles those operations?
+
+Here comes...
+
+**libuv's Thread Pool.**
+
+libuv has a pool of worker threads
+
+where certain operations can be handled.
+
+By default,
+
+the libuv thread pool has 4 worker threads.
+
+Its size can also be modified.
+
+It helps handle certain operations like:
+
+- Filesystem operations
+- Some DNS operations
+- Some cryptographic operations
+- Other operations that need background workers
+
+But the thing is...
+
+**not every asynchronous operation goes through the thread pool.**
+
+\`\`\`
+                Node.js
+                   │
+             ┌─────┴─────┐
+             │           │
+          Network      Some I/O
+             │           │
+             ▼           ▼
+          OS I/O     libuv Thread Pool
+\`\`\`
+
+So....
+
+JavaScript execution happens on one main thread.
+
+But the runtime itself works with the operating system
+
+and, when needed,
+
+uses a pool of worker threads.
+
+Moving back to what Ryan needed...
+
+He noticed that servers spent too much time waiting.
+
+He wanted an architecture in which
+
+the main thread didn't have to sit around doing nothing while work was waiting.
+
+And that's where this architecture fits well.
+
+Instead of...
+
+waiting....
+
+waiting....
+
+waiting....
+
+the main JavaScript thread can keep moving
+
+while other parts of the system handle the work.
+
+The main thread,
+
+the Event Loop,
+
+libuv,
+
+the Operating System...
+
+everything is structured in a way that keeps the JavaScript thread from being blocked by every operation.
+
+And by knowing this...
+
+**The Curtain Falls.**`
+      },
+      {
+        title: "The Curtain Falls",
+        content: `We started with a simple question.
+
+**Why does Node.js even exist?**
+
+JavaScript was created to make web pages interactive.
+
+It lived inside a browser.
+
+But then...
+
+it escaped the browser.
+
+V8 sped it up.
+
+Ryan gave it an environment.
+
+Node.js helped JavaScript interact with the world.
+
+But that's only the beginning.
+
+Behind that simple \`node app.js\`,
+
+there's something big happening.
+
+JavaScript runs on a single main thread.
+
+The Event Loop keeps it moving.
+
+libuv helps coordinate the work.
+
+The OS handles what it can.
+
+What looked like one thread doing everything
+
+was never really alone.
+
+And that's what makes Node.js interesting.
+
+A language built in 10 days...
+
+trapped inside a browser...
+
+escaped through an engine...
+
+found a new home...
+
+JavaScript didn't set out to become a backend.
+
+It simply found itself there.
+
+**The Accidental Backend.**`
       }
     ]
   }
