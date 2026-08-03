@@ -3287,7 +3287,10 @@ export default function BlogReader({ blog, prevBlog, nextBlog }: BlogReaderProps
                   <span className="blog-pagination-title">{nextBlog.title}</span>
                 </Link>
               ) : (
-                <div style={{ flex: 1 }} />
+                <Link href={`/blog/${blog.id.replace(/-part-\d+$/, "")}`} className="blog-pagination-btn" style={{ textAlign: "right", alignItems: "flex-end" }}>
+                  <span className="blog-pagination-label">Blog Overview →</span>
+                  <span className="blog-pagination-title">Back to Overview</span>
+                </Link>
               )}
             </div>
 
