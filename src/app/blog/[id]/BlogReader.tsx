@@ -175,13 +175,9 @@ const renderChapterContent = (text: string) => {
       );
     }
 
-    // Intercept "The Accidental Backend." to display it large and centered
+    // Intercept "The Accidental Backend." to display it large, centered, and typed out on scroll
     if (trimmed === "**The Accidental Backend.**" || trimmed === "The Accidental Backend.") {
-      return (
-        <p key={bIdx} className="blog-content-p" style={{ fontSize: "1.65rem", fontWeight: 800, textAlign: "center", margin: "3rem 0", color: "var(--t1)", fontFamily: "var(--font-mono, monospace)" }}>
-          The Accidental Backend.
-        </p>
-      );
+      return <AccidentalBackendTyping key={bIdx} />;
     }
 
     // Check if it's the 1994 interactive widget
@@ -1582,6 +1578,88 @@ function BehindCurtainArrow() {
         </g>
       </svg>
     </div>
+  );
+}
+
+// AccidentalBackendTyping Component — scroll-triggered typing animation for final line
+function AccidentalBackendTyping() {
+  const [text, setText] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLParagraphElement>(null);
+  const fullText = "The Accidental Backend.";
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    
+    let currentIndex = 0;
+    let timeoutId: NodeJS.Timeout;
+
+    const type = () => {
+      if (currentIndex < fullText.length) {
+        setText(fullText.slice(0, currentIndex + 1));
+        currentIndex++;
+        const randomDelay = Math.random() * 80 + 70; // humanized typing delays
+        timeoutId = setTimeout(type, randomDelay);
+      }
+    };
+
+    type();
+    return () => clearTimeout(timeoutId);
+  }, [isVisible]);
+
+  const isDone = text.length === fullText.length;
+
+  return (
+    <p
+      ref={containerRef}
+      className="blog-content-p"
+      style={{
+        fontSize: "1.65rem",
+        fontWeight: 800,
+        textAlign: "center",
+        margin: "3rem 0 0",
+        color: "var(--t1)",
+        fontFamily: "var(--font-mono, monospace)",
+        minHeight: "2.5rem",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }}
+    >
+      <span>{text}</span>
+      <span
+        style={{
+          display: "inline-block",
+          marginLeft: "4px",
+          width: "8px",
+          height: "1.45rem",
+          backgroundColor: "var(--accent, #7c6bff)",
+          animation: "blink 1s step-end infinite",
+          opacity: isDone ? 0.3 : 1
+        }}
+      />
+      <style>{`
+        @keyframes blink {
+          from, to { background-color: transparent }
+          50% { background-color: var(--accent, #7c6bff) }
+        }
+      `}</style>
+    </p>
   );
 }
 
@@ -3186,7 +3264,13 @@ export default function BlogReader({ blog, prevBlog, nextBlog }: BlogReaderProps
             </div>
 
             {/* Pagination Navigation */}
-            <div className="blog-pagination" style={blog.id === "node-js-the-accidental-backend-part-1" ? { marginTop: "0.5rem" } : undefined}>
+            <div className="blog-pagination" style={
+              blog.id === "node-js-the-accidental-backend-part-1" 
+                ? { marginTop: "0.5rem" } 
+                : blog.id === "node-js-the-accidental-backend-part-2"
+                  ? { marginTop: "1rem" }
+                  : undefined
+            }>
               {prevBlog ? (
                 <Link href={`/blog/${prevBlog.id}`} className="blog-pagination-btn">
                   <span className="blog-pagination-label">
