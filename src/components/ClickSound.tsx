@@ -7,7 +7,7 @@ export default function ClickSound() {
 
   useEffect(() => {
     // Instantiate Audio on the client-side
-    audioRef.current = new Audio("/assets/sound/clicksoundv2.wav");
+    audioRef.current = new Audio("/assets/sound/clicksoundv2.mp3");
     
     const playClick = () => {
       const audio = audioRef.current;
