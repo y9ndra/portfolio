@@ -2,19 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, User2, Briefcase, Cpu, FolderGit2, BookOpen, Mail, X } from "lucide-react";
 
 const LINKS = [
-  { label: "About",         id: "about",         key: "1" },
-  { label: "Experience",    id: "experience",    key: "2" },
-  { label: "Skills",        id: "skills",        key: "3" },
-  { label: "Projects",      id: "projects",      key: "4" },
-  { label: "Blog",          id: "blog",          key: "5" },
-  { label: "Contact",       id: "contact",       key: "6" },
+  { label: "About",         id: "about",         key: "1", icon: User2 },
+  { label: "Experience",    id: "experience",    key: "2", icon: Briefcase },
+  { label: "Skills",        id: "skills",        key: "3", icon: Cpu },
+  { label: "Projects",      id: "projects",      key: "4", icon: FolderGit2 },
+  { label: "Blog",          id: "blog",          key: "5", icon: BookOpen },
+  { label: "Contact",       id: "contact",       key: "6", icon: Mail },
 ];
 
 export default function Navbar() {
   const [active, setActive] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const io = useRef<IntersectionObserver | null>(null);
   const ignoreScroll = useRef(false);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -24,6 +26,49 @@ export default function Navbar() {
 
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
+
+  // Calculate position in the semi-circular arc
+  const getCoordinates = (index: number, total: number) => {
+    const radius = 125; // px radius of the arc
+    const startAngle = 165; // left-most angle (in degrees)
+    const endAngle = 15; // right-most angle (in degrees)
+    const angleStep = (endAngle - startAngle) / (total - 1);
+    const angleRad = ((startAngle + index * angleStep) * Math.PI) / 180;
+    
+    const x = Math.round(radius * Math.cos(angleRad));
+    const y = Math.round(-radius * Math.sin(angleRad)); // negative moves it UP
+    
+    return { x, y };
+  };
+
+  // Scroll Progress Listener (Universal across pages)
+  useEffect(() => {
+    const handleProgress = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        setScrollProgress((window.scrollY / totalHeight) * 100);
+      } else {
+        setScrollProgress(0);
+      }
+    };
+    
+    window.addEventListener("scroll", handleProgress, { passive: true });
+    handleProgress();
+    
+    return () => window.removeEventListener("scroll", handleProgress);
+  }, []);
+
+  // Auto-collapse radial menu on actual scroll
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScrollCollapse = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener("scroll", handleScrollCollapse, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollCollapse);
+  }, [isOpen]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -38,6 +83,7 @@ export default function Navbar() {
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+  const navRef = useRef<HTMLDivElement | null>(null);
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -45,6 +91,27 @@ export default function Navbar() {
     document.documentElement.setAttribute("data-theme", nextTheme);
     localStorage.setItem("theme", nextTheme);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   const go = (id: string) => {
     setActive(id);
@@ -145,40 +212,135 @@ export default function Navbar() {
   }, [isHome]);
 
   return (
-    <nav className="navbar-dock" role="navigation" aria-label="Main Navigation">
-      <div className="dock-inner">
-        <ul className="dock-links">
-          {LINKS.map(({ label, id }) => (
-            <li key={id} className="dock-item">
-              <button
-                className={`dock-link${active === id ? " active" : ""}`}
-                onClick={() => go(id)}
-                aria-label={`Navigate to ${label}`}
-                aria-current={active === id ? "page" : undefined}
-              >
-                <span className="dock-label">{label}</span>
-              </button>
-            </li>
-          ))}
-          <li className="dock-item">
-            <span className="dock-sep" />
-          </li>
-          <li className="dock-item">
-            <button
-              className="theme-toggle-btn"
-              onClick={toggleTheme}
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+    <nav 
+      ref={navRef}
+      className={`navbar-radial ${isOpen ? "open" : ""}`}
+      role="navigation" 
+      aria-label="Main Navigation"
+    >
+      {/* 6 Radial Section Buttons + Floating Theme Toggle */}
+      <div className="radial-arc-container">
+        {LINKS.map((link, idx) => {
+          const { x, y } = getCoordinates(idx, LINKS.length);
+          const isLinkActive = active === link.id;
+          
+          return (
+            <div
+              key={link.id}
+              className={`radial-item ${isLinkActive ? "active" : ""}`}
+              style={{
+                transform: isOpen 
+                  ? `translate(${x}px, ${y}px) scale(1)` 
+                  : `translate(0, 0) scale(0)`,
+                opacity: isOpen ? 1 : 0,
+                transitionDelay: isOpen ? `${idx * 20}ms` : "0ms",
+              }}
             >
-              {mounted && theme === "dark" ? (
-                <Sun className="theme-toggle-icon text-amber-400 animate-pulse-slow" size={15} />
-              ) : mounted && theme === "light" ? (
-                <Moon className="theme-toggle-icon text-indigo-500" size={15} />
-              ) : (
-                <span style={{ width: 15, height: 15 }} />
-              )}
-            </button>
-          </li>
-        </ul>
+              {/* Tooltip showing label on hover */}
+              <span className="radial-tooltip">{link.label}</span>
+              
+              {/* Button */}
+              <button
+                className="radial-btn"
+                onClick={() => {
+                  go(link.id);
+                  setIsOpen(false);
+                }}
+                aria-label={link.label}
+              >
+                <link.icon size={17} />
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Floating Theme Toggle (straight up at half-radius) */}
+        <div
+          className="radial-item radial-theme-float"
+          style={{
+            transform: isOpen 
+              ? "translate(0px, -62px) scale(1)" 
+              : "translate(0px, 0px) scale(0)",
+            opacity: isOpen ? 1 : 0,
+            transitionDelay: isOpen ? "120ms" : "0ms",
+          }}
+        >
+          <span className="radial-tooltip">Theme</span>
+          <button
+            className="radial-btn"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {mounted && theme === "dark" ? (
+              <Sun className="text-amber-400 animate-pulse-slow" size={16} />
+            ) : mounted && theme === "light" ? (
+              <Moon className="text-indigo-500" size={16} />
+            ) : (
+              <span style={{ width: 16, height: 16 }} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Central Interactive Toggle */}
+      <div className="radial-center-wrap">
+        <button
+          className={`radial-central-control ${isOpen ? "mode-circle" : "mode-pill"}`}
+          onClick={(e) => {
+            if (isOpen) {
+              e.stopPropagation();
+              setIsOpen(false);
+            } else {
+              setIsOpen(true);
+            }
+          }}
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+        >
+          {/* Collapsed Pill Content */}
+          <div 
+            className="content-pill" 
+            style={{ 
+              opacity: isOpen ? 0 : 1,
+              pointerEvents: isOpen ? "none" : "auto"
+            }}
+          >
+            <span className="radial-pill-text">
+              {LINKS.find(l => l.id === active)?.label || "About"}
+            </span>
+            <div className="radial-pill-progress">
+              <svg width="22" height="22" viewBox="0 0 24 24">
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  className="progress-ring-bg"
+                  fill="none"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  className="progress-ring-fill"
+                  fill="none"
+                  strokeDasharray="56.54"
+                  strokeDashoffset={56.54 - (scrollProgress / 100) * 56.54}
+                  transform="rotate(-90 12 12)"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Expanded Circle Content */}
+          <div 
+            className="content-circle" 
+            style={{ 
+              opacity: isOpen ? 1 : 0,
+              pointerEvents: isOpen ? "auto" : "none"
+            }}
+          >
+            <X size={17} />
+          </div>
+        </button>
       </div>
     </nav>
   );
