@@ -1498,12 +1498,12 @@ body::before {
   width: 8px;
   height: 8px;
   border-radius: 1px;
-  background: #141414;
+  background: rgba(255, 255, 255, 0.01);
   transition: transform 0.1s ease, background-color 0.1s ease;
   cursor: pointer;
   position: relative;
 }
-.gc-day.lvl-0 { background: #141414; }
+.gc-day.lvl-0 { background: rgba(255, 255, 255, 0.01); }
 .gc-day.lvl-1 { background: #262626; }
 .gc-day.lvl-2 { background: #404040; }
 .gc-day.lvl-3 { background: #7c7c7c; }
@@ -1555,7 +1555,7 @@ body::before {
   height: 8px;
   border-radius: 1px;
 }
-.gc-key.lvl-0 { background: #141414; }
+.gc-key.lvl-0 { background: rgba(255, 255, 255, 0.01); }
 .gc-key.lvl-1 { background: #262626; }
 .gc-key.lvl-2 { background: #404040; }
 .gc-key.lvl-3 { background: #7c7c7c; }
@@ -1919,7 +1919,7 @@ body::before {
 
 /* GitHub Contributions Calendar colors for Light Theme (grayscale) */
 [data-theme='light'] .gc-day.lvl-0,
-[data-theme='light'] .gc-key.lvl-0 { background: #ebedf0; }
+[data-theme='light'] .gc-key.lvl-0 { background: rgba(0, 0, 0, 0.01); }
 [data-theme='light'] .gc-day.lvl-1,
 [data-theme='light'] .gc-key.lvl-1 { background: #c6c6c6; }
 [data-theme='light'] .gc-day.lvl-2,
