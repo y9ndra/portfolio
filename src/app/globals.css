@@ -2277,6 +2277,12 @@ body::before {
   flex-wrap: wrap;
 }
 
+@media (max-width: 600px) {
+  .blog-pagination {
+    flex-direction: column-reverse;
+  }
+}
+
 .blog-pagination-btn {
   display: inline-flex;
   flex-direction: column;

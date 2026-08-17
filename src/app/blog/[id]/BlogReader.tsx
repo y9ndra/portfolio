@@ -1623,6 +1623,10 @@ function AccidentalBackendTyping() {
   }, [isVisible]);
 
   const isDone = text.length === fullText.length;
+  
+  const words = text.split(" ");
+  const lastWord = words[words.length - 1];
+  const precedingText = words.slice(0, -1).join(" ");
 
   return (
     <p
@@ -1635,24 +1639,26 @@ function AccidentalBackendTyping() {
         margin: "3rem 0 0",
         color: "var(--t1)",
         fontFamily: "var(--font-mono, monospace)",
-        minHeight: "2.5rem",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
+        minHeight: "4.5rem",
+        lineHeight: "1.3"
       }}
     >
-      <span>{text}</span>
-      <span
-        style={{
-          display: "inline-block",
-          marginLeft: "4px",
-          width: "8px",
-          height: "1.45rem",
-          backgroundColor: "var(--accent, #7c6bff)",
-          animation: "blink 1s step-end infinite",
-          opacity: isDone ? 0.3 : 1
-        }}
-      />
+      {precedingText}{precedingText ? " " : ""}
+      <span style={{ whiteSpace: "nowrap" }}>
+        {lastWord}
+        <span
+          style={{
+            display: "inline-block",
+            marginLeft: "4px",
+            width: "8px",
+            height: "1.45rem",
+            backgroundColor: "var(--accent, #7c6bff)",
+            animation: "blink 1s step-end infinite",
+            opacity: isDone ? 0.3 : 1,
+            verticalAlign: "middle"
+          }}
+        />
+      </span>
       <style>{`
         @keyframes blink {
           from, to { background-color: transparent }
