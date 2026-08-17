@@ -26,6 +26,47 @@ export default function Navbar() {
 
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
+  const userInteracted = useRef(false);
+
+  // Idea 1: Quick Reveal animation on initial load
+  useEffect(() => {
+    const handleInteraction = () => {
+      userInteracted.current = true;
+    };
+    
+    window.addEventListener("scroll", handleInteraction, { once: true, passive: true });
+    window.addEventListener("mousedown", handleInteraction, { once: true, passive: true });
+    window.addEventListener("keydown", handleInteraction, { once: true, passive: true });
+
+    const timerOpen = setTimeout(() => {
+      if (!userInteracted.current && window.scrollY < 50) {
+        setIsOpen(true);
+      }
+    }, 1000); // Delay slightly to allow page load transitions to finish
+
+    const timerClose = setTimeout(() => {
+      if (!userInteracted.current) {
+        setIsOpen(false);
+      }
+    }, 3200); // Stay open for 2.2 seconds
+
+    return () => {
+      window.removeEventListener("scroll", handleInteraction);
+      window.removeEventListener("mousedown", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+      clearTimeout(timerOpen);
+      clearTimeout(timerClose);
+    };
+  }, []);
+
+  // Set active route highlights for sub-routes
+  useEffect(() => {
+    if (pathname.startsWith("/blog")) {
+      setActive("blog");
+    } else if (pathname.startsWith("/projects")) {
+      setActive("projects");
+    }
+  }, [pathname]);
 
   // Calculate position in the semi-circular arc
   const getCoordinates = (index: number, total: number) => {
@@ -43,20 +84,40 @@ export default function Navbar() {
 
   // Scroll Progress Listener (Universal across pages)
   useEffect(() => {
+    const isSubRoute = pathname.startsWith("/blog") || pathname.startsWith("/projects");
+    
     const handleProgress = () => {
+      if (isSubRoute) {
+        return;
+      }
+      
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
       if (totalHeight > 0) {
-        setScrollProgress((window.scrollY / totalHeight) * 100);
+        const currentProgress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(currentProgress);
+        sessionStorage.setItem("homeScrollProgress", currentProgress.toString());
       } else {
         setScrollProgress(0);
       }
     };
     
-    window.addEventListener("scroll", handleProgress, { passive: true });
-    handleProgress();
+    if (isSubRoute) {
+      const saved = sessionStorage.getItem("homeScrollProgress");
+      if (saved) {
+        setScrollProgress(parseFloat(saved));
+      } else {
+        const sectionId = pathname.startsWith("/blog") ? "blog" : "projects";
+        const idx = LINKS.findIndex(l => l.id === sectionId);
+        const ratio = idx !== -1 ? (idx / (LINKS.length - 1)) * 100 : 80;
+        setScrollProgress(ratio);
+      }
+    } else {
+      window.addEventListener("scroll", handleProgress, { passive: true });
+      handleProgress();
+    }
     
     return () => window.removeEventListener("scroll", handleProgress);
-  }, []);
+  }, [pathname]);
 
   // Auto-collapse radial menu on actual scroll
   useEffect(() => {
@@ -243,6 +304,7 @@ export default function Navbar() {
               <button
                 className="radial-btn"
                 onClick={() => {
+                  userInteracted.current = true;
                   go(link.id);
                   setIsOpen(false);
                 }}
@@ -268,7 +330,10 @@ export default function Navbar() {
           <span className="radial-tooltip">Theme</span>
           <button
             className="radial-btn"
-            onClick={toggleTheme}
+            onClick={() => {
+              userInteracted.current = true;
+              toggleTheme();
+            }}
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           >
             {mounted && theme === "dark" ? (
@@ -287,6 +352,7 @@ export default function Navbar() {
         <button
           className={`radial-central-control ${isOpen ? "mode-circle" : "mode-pill"}`}
           onClick={(e) => {
+            userInteracted.current = true;
             if (isOpen) {
               e.stopPropagation();
               setIsOpen(false);

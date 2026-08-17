@@ -22,8 +22,11 @@ export default function Footer() {
       : fetch("/api/views", { method: "POST" }); // POST (increment)
 
     fetchPromise
-      .then((res) => {
-        if (!res.ok) throw new Error("API failed");
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`API failed with status ${res.status}: ${text}`);
+        }
         return res.json();
       })
       .then((data) => {
@@ -35,7 +38,7 @@ export default function Footer() {
         }
       })
       .catch((err) => {
-        console.error("View count fetch failed:", err);
+        console.error("View count fetch failed:", err.message || err);
         const stored = localStorage.getItem(key) || localStorage.getItem("portfolio_views");
         const count = stored ? parseInt(stored, 10) + 1 : 1;
         localStorage.setItem(key, count.toString());
