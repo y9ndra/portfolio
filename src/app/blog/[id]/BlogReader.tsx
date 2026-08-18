@@ -3137,6 +3137,7 @@ export default function BlogReader({ blog, prevBlog, nextBlog }: BlogReaderProps
   }, [blog]);
 
   useEffect(() => {
+    let lastActive = -1;
     const handleScroll = () => {
       // Calculate reading progress
       const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -3160,6 +3161,11 @@ export default function BlogReader({ blog, prevBlog, nextBlog }: BlogReaderProps
         }
       }
       setActiveChapter(currentActive);
+
+      if (currentActive !== lastActive) {
+        lastActive = currentActive;
+        window.dispatchEvent(new CustomEvent("blog-chapter-change", { detail: { activeChapter: currentActive } }));
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });

@@ -369,6 +369,151 @@ body::before {
   }
 }
 
+/* ───────────────────────────────────────────
+   Alternative 2: Dual-Segment Pill & HUD Styles
+   ─────────────────────────────────────────── */
+.radial-central-control.dual-segment-pill {
+  padding: 0;
+  gap: 0;
+  max-width: 340px;
+  min-width: 230px;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  overflow: visible; /* Prevent clipping the absolute-positioned HUD dropdown */
+}
+
+.pill-segment-btn {
+  background: transparent;
+  border: none;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.segment-left {
+  flex-shrink: 0;
+  padding-left: 1.1rem;
+  padding-right: 0.75rem;
+  gap: 0.45rem;
+  border-top-left-radius: 9999px;
+  border-bottom-left-radius: 9999px;
+}
+
+.segment-left:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pill-segment-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+/* Chapter Radial Buttons */
+.chapter-radial-btn {
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.segment-right {
+  flex-grow: 1;
+  padding-left: 0.75rem;
+  padding-right: 1.1rem;
+  gap: 0.45rem;
+  justify-content: space-between;
+  overflow: hidden;
+  border-top-right-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+}
+
+.segment-right:hover,
+.segment-right.dropdown-open {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chapter-pill-num {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.chapter-pill-divider {
+  color: rgba(255, 255, 255, 0.15);
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.chapter-pill-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--t1);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.chapter-pill-chevron {
+  color: var(--t3);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chapter-pill-chevron.rotated {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* Light Theme overrides matching existing style rules */
+[data-theme='light'] .pill-segment-divider {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme='light'] .pill-segment-btn:hover,
+[data-theme='light'] .segment-right.dropdown-open {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme='light'] .chapter-pill-title {
+  color: var(--t1);
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .radial-central-control.dual-segment-pill {
+    min-width: 160px;
+    max-width: 180px;
+  }
+  .segment-left {
+    padding-left: 0.9rem;
+    padding-right: 0.5rem;
+  }
+  .segment-right {
+    padding-left: 0.5rem;
+    padding-right: 0.9rem;
+  }
+  .chapter-pill-title,
+  .chapter-pill-divider {
+    display: none;
+  }
+}
+
 /* ═══════════════════════════════════════════
    SECTIONS
 ═══════════════════════════════════════════ */

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon, User2, Briefcase, Cpu, FolderGit2, BookOpen, Mail, X } from "lucide-react";
+import { Sun, Moon, User2, Briefcase, Cpu, FolderGit2, BookOpen, Mail, X, ChevronDown } from "lucide-react";
+import { BLOGS } from "@/data/portfolio";
 
 const LINKS = [
   { label: "About",         id: "about",         key: "1", icon: User2 },
@@ -27,6 +28,34 @@ export default function Navbar() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
   const userInteracted = useRef(false);
+
+  // Blog dynamic chapter navigation states
+  const [activeChapter, setActiveChapter] = useState(0);
+  const [menuMode, setMenuMode] = useState<"main" | "chapters">("main");
+
+  // Route detection & Chapter loading
+  const pathParts = pathname.replace(/\/$/, "").split("/");
+  const blogId = pathParts.length >= 3 && pathParts[1] === "blog" ? pathParts[2] : null;
+  const currentBlog = blogId ? BLOGS.find(b => b.id === blogId) : null;
+  const hasChapters = !!(currentBlog && currentBlog.chapters && currentBlog.chapters.length > 0);
+  const chapters = currentBlog?.chapters || [];
+
+  // Listen to custom event "blog-chapter-change"
+  useEffect(() => {
+    if (!hasChapters) return;
+
+    const handleChapterChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (typeof customEvent.detail?.activeChapter === "number") {
+        setActiveChapter(customEvent.detail.activeChapter);
+      }
+    };
+
+    window.addEventListener("blog-chapter-change", handleChapterChange);
+    return () => {
+      window.removeEventListener("blog-chapter-change", handleChapterChange);
+    };
+  }, [hasChapters]);
 
   // Idea 1: Quick Reveal animation on initial load
   useEffect(() => {
@@ -272,6 +301,35 @@ export default function Navbar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHome]);
 
+  const getChapterNumLabel = (index: number) => {
+    return `CH ${String(index).padStart(2, "0")}`;
+  };
+
+  const getChapterTitleLabel = (chapterTitle?: string) => {
+    if (!chapterTitle) return "";
+    let cleanTitle = chapterTitle;
+    if (cleanTitle.toLowerCase().startsWith("chapter") && cleanTitle.includes(":")) {
+      cleanTitle = cleanTitle.split(":").slice(1).join(":").trim();
+    }
+    return cleanTitle;
+  };
+
+  const getSubArcCoordinates = (index: number, total: number) => {
+    const radius = 80;
+    if (total === 1) {
+      return { x: 0, y: -radius };
+    }
+    const startAngle = 145; // left-most angle
+    const endAngle = 35;   // right-most angle
+    const angleStep = (endAngle - startAngle) / (total - 1);
+    const angleRad = ((startAngle + index * angleStep) * Math.PI) / 180;
+    
+    const x = Math.round(radius * Math.cos(angleRad));
+    const y = Math.round(-radius * Math.sin(angleRad)); // negative moves it UP
+    
+    return { x, y };
+  };
+
   return (
     <nav 
       ref={navRef}
@@ -281,20 +339,23 @@ export default function Navbar() {
     >
       {/* 6 Radial Section Buttons + Floating Theme Toggle */}
       <div className="radial-arc-container">
+        {/* Main navigation links */}
         {LINKS.map((link, idx) => {
           const { x, y } = getCoordinates(idx, LINKS.length);
           const isLinkActive = active === link.id;
+          const showLink = isOpen && (!hasChapters || menuMode === "main");
           
           return (
             <div
               key={link.id}
               className={`radial-item ${isLinkActive ? "active" : ""}`}
               style={{
-                transform: isOpen 
+                transform: showLink
                   ? `translate(${x}px, ${y}px) scale(1)` 
                   : `translate(0, 0) scale(0)`,
-                opacity: isOpen ? 1 : 0,
-                transitionDelay: isOpen ? `${idx * 20}ms` : "0ms",
+                opacity: showLink ? 1 : 0,
+                transitionDelay: showLink ? `${idx * 20}ms` : "0ms",
+                pointerEvents: showLink ? "auto" : "none",
               }}
             >
               {/* Tooltip showing label on hover */}
@@ -311,6 +372,50 @@ export default function Navbar() {
                 aria-label={link.label}
               >
                 <link.icon size={17} />
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Chapter navigation links */}
+        {hasChapters && chapters.map((ch, idx) => {
+          const { x, y } = getCoordinates(idx, chapters.length);
+          const isActive = idx === activeChapter;
+          const showChapter = isOpen && menuMode === "chapters";
+          
+          return (
+            <div
+              key={idx}
+              className={`radial-item chapter-radial-item ${isActive ? "active" : ""}`}
+              style={{
+                transform: showChapter
+                  ? `translate(${x}px, ${y}px) scale(1)` 
+                  : `translate(0, 0) scale(0)`,
+                opacity: showChapter ? 1 : 0,
+                transitionDelay: showChapter ? `${idx * 20}ms` : "0ms",
+                pointerEvents: showChapter ? "auto" : "none",
+              }}
+            >
+              {/* Tooltip showing label on hover */}
+              <span className="radial-tooltip">{getChapterTitleLabel(ch.title)}</span>
+              
+              {/* Button */}
+              <button
+                className="radial-btn chapter-radial-btn"
+                onClick={() => {
+                  userInteracted.current = true;
+                  setActiveChapter(idx);
+                  setIsOpen(false);
+                  
+                  // Scroll to target chapter section in the page
+                  const element = document.getElementById(`chapter-${idx + 1}`);
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                aria-label={idx === 0 ? "Go to Intro" : idx === chapters.length - 1 ? "Go to Outro" : `Go to chapter ${idx}`}
+              >
+                {idx === 0 ? "I" : idx === chapters.length - 1 ? "O" : idx}
               </button>
             </div>
           );
@@ -349,64 +454,139 @@ export default function Navbar() {
 
       {/* Central Interactive Toggle */}
       <div className="radial-center-wrap">
-        <button
-          className={`radial-central-control ${isOpen ? "mode-circle" : "mode-pill"}`}
-          onClick={(e) => {
-            userInteracted.current = true;
-            if (isOpen) {
-              e.stopPropagation();
-              setIsOpen(false);
-            } else {
-              setIsOpen(true);
-            }
-          }}
-          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-        >
-          {/* Collapsed Pill Content */}
-          <div 
-            className="content-pill" 
-            style={{ 
-              opacity: isOpen ? 0 : 1,
-              pointerEvents: isOpen ? "none" : "auto"
-            }}
-          >
-            <span className="radial-pill-text">
-              {LINKS.find(l => l.id === active)?.label || "About"}
-            </span>
-            <div className="radial-pill-progress">
-              <svg width="22" height="22" viewBox="0 0 24 24">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="9"
-                  className="progress-ring-bg"
-                  fill="none"
-                />
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="9"
-                  className="progress-ring-fill"
-                  fill="none"
-                  strokeDasharray="56.54"
-                  strokeDashoffset={56.54 - (scrollProgress / 100) * 56.54}
-                  transform="rotate(-90 12 12)"
-                />
-              </svg>
-            </div>
-          </div>
+        {hasChapters && !isOpen ? (
+          /* Alternative 2: Dual-Segment Pill wrapper */
+          <div className="radial-central-control mode-pill dual-segment-pill">
+            {/* Left Segment: Main Menu Toggle */}
+            <button
+              className="pill-segment-btn segment-left"
+              onClick={() => {
+                userInteracted.current = true;
+                setMenuMode("main");
+                setIsOpen(true);
+              }}
+              aria-label="Open main navigation menu"
+            >
+              <span className="radial-pill-text">
+                {LINKS.find(l => l.id === active)?.label || "About"}
+              </span>
+              <div className="radial-pill-progress">
+                <svg width="22" height="22" viewBox="0 0 24 24">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    className="progress-ring-bg"
+                    fill="none"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    className="progress-ring-fill"
+                    fill="none"
+                    strokeDasharray="56.54"
+                    strokeDashoffset={56.54 - (scrollProgress / 100) * 56.54}
+                    transform="rotate(-90 12 12)"
+                  />
+                </svg>
+              </div>
+            </button>
 
-          {/* Expanded Circle Content */}
-          <div 
-            className="content-circle" 
-            style={{ 
-              opacity: isOpen ? 1 : 0,
-              pointerEvents: isOpen ? "auto" : "none"
-            }}
-          >
-            <X size={17} />
+            {/* Vertical Divider */}
+            <div className="pill-segment-divider" />
+
+            {/* Right Segment: Active Chapter & Radial Arc Trigger */}
+            <button
+              className="pill-segment-btn segment-right"
+              onClick={() => {
+                userInteracted.current = true;
+                setMenuMode("chapters");
+                setIsOpen(true);
+              }}
+              aria-label="Open chapter navigation menu"
+            >
+              {activeChapter === 0 || activeChapter === chapters.length - 1 ? (
+                /* Intro or Outro: Just the title alone */
+                <span className="chapter-pill-title" style={{ maxWidth: "180px" }}>
+                  {getChapterTitleLabel(chapters[activeChapter]?.title)}
+                </span>
+              ) : (
+                /* Standard Chapter: Number and Title */
+                <>
+                  <span className="chapter-pill-num">
+                    {getChapterNumLabel(activeChapter)}
+                  </span>
+                  <span className="chapter-pill-divider"> : </span>
+                  <span className="chapter-pill-title">
+                    {getChapterTitleLabel(chapters[activeChapter]?.title)}
+                  </span>
+                </>
+              )}
+              <ChevronDown size={12} className="chapter-pill-chevron" />
+            </button>
           </div>
-        </button>
+        ) : (
+          /* Standard Single Pill/Circle button */
+          <button
+            className={`radial-central-control ${isOpen ? "mode-circle" : "mode-pill"}`}
+            onClick={() => {
+              userInteracted.current = true;
+              if (isOpen) {
+                setIsOpen(false);
+              } else {
+                setMenuMode("main");
+                setIsOpen(true);
+              }
+            }}
+            aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          >
+            {/* Collapsed Pill Content */}
+            <div 
+              className="content-pill" 
+              style={{ 
+                opacity: isOpen ? 0 : 1,
+                pointerEvents: isOpen ? "none" : "auto"
+              }}
+            >
+              <span className="radial-pill-text">
+                {LINKS.find(l => l.id === active)?.label || "About"}
+              </span>
+              <div className="radial-pill-progress">
+                <svg width="22" height="22" viewBox="0 0 24 24">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    className="progress-ring-bg"
+                    fill="none"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    className="progress-ring-fill"
+                    fill="none"
+                    strokeDasharray="56.54"
+                    strokeDashoffset={56.54 - (scrollProgress / 100) * 56.54}
+                    transform="rotate(-90 12 12)"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Expanded Circle Content */}
+            <div 
+              className="content-circle" 
+              style={{ 
+                opacity: isOpen ? 1 : 0,
+                pointerEvents: isOpen ? "auto" : "none"
+              }}
+            >
+              <X size={17} />
+            </div>
+          </button>
+        )}
       </div>
     </nav>
   );
