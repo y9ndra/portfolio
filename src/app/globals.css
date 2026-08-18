@@ -468,6 +468,10 @@ body::before {
   vertical-align: middle;
 }
 
+.chapter-pill-title-solo {
+  max-width: 180px;
+}
+
 .chapter-pill-chevron {
   color: var(--t3);
   transition: transform 0.2s ease;
@@ -497,20 +501,27 @@ body::before {
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .radial-central-control.dual-segment-pill {
-    min-width: 160px;
-    max-width: 180px;
+    min-width: 200px;
+    max-width: 245px;
   }
   .segment-left {
-    padding-left: 0.9rem;
-    padding-right: 0.5rem;
+    padding-left: 0.8rem;
+    padding-right: 0.4rem;
   }
   .segment-right {
-    padding-left: 0.5rem;
-    padding-right: 0.9rem;
+    padding-left: 0.4rem;
+    padding-right: 0.8rem;
   }
-  .chapter-pill-title,
+  .chapter-pill-title {
+    display: inline-block;
+    max-width: 65px;
+  }
+  .chapter-pill-title-solo {
+    display: inline-block;
+    max-width: 105px;
+  }
   .chapter-pill-divider {
-    display: none;
+    display: inline-block;
   }
 }
 

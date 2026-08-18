@@ -508,7 +508,7 @@ export default function Navbar() {
             >
               {activeChapter === 0 || activeChapter === chapters.length - 1 ? (
                 /* Intro or Outro: Just the title alone */
-                <span className="chapter-pill-title" style={{ maxWidth: "180px" }}>
+                <span className="chapter-pill-title chapter-pill-title-solo">
                   {getChapterTitleLabel(chapters[activeChapter]?.title)}
                 </span>
               ) : (
