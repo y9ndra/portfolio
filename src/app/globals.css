@@ -1710,15 +1710,28 @@ body::before {
 .gc-period svg {
   color: var(--t3);
 }
-.gc-months {
+.gc-months-row {
   display: flex;
+  gap: 3px;
+  min-width: 580px;
   justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+.gc-month-col {
+  width: 8px;
+  flex-shrink: 0;
+  position: relative;
+  height: 14px;
+}
+.gc-month-label {
+  position: absolute;
+  left: 0;
+  top: 0;
   font-family: var(--font-mono, monospace);
   font-size: 0.575rem;
   color: var(--t3);
   text-transform: uppercase;
-  margin-bottom: 0.4rem;
-  padding: 0 1px;
+  white-space: nowrap;
 }
 .gc-scroll {
   width: 100%;
@@ -1769,6 +1782,8 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  width: 8px;
+  flex-shrink: 0;
 }
 .gc-day {
   width: 8px;

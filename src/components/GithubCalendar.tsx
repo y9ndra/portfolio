@@ -119,6 +119,61 @@ export default function GithubCalendar() {
     };
   }, []);
 
+  // Helper to determine month label for each column in skeleton loading state
+  const getSkeletonMonthLabels = () => {
+    const labels: string[] = Array(53).fill("");
+    const indices = [0, 4, 9, 13, 18, 22, 27, 31, 35, 40, 44, 49];
+    indices.forEach((wIdx, mIdx) => {
+      if (wIdx < 53) {
+        labels[wIdx] = months[mIdx] || "";
+      }
+    });
+    return labels;
+  };
+
+  // Helper to determine month label for each column in loaded state
+  const getLoadedMonthLabels = () => {
+    const labels: string[] = Array(calendarGrid.length).fill("");
+    let lastRenderedIndex = -10;
+
+    calendarGrid.forEach((week, wIdx) => {
+      if (!week || week.length === 0) return;
+      
+      const currentMonth = week[0].date.split(" ")[0];
+      
+      if (wIdx === 0) {
+        let nextMonthStartsSoon = false;
+        for (let i = 1; i <= 2; i++) {
+          const nextWeek = calendarGrid[i];
+          if (nextWeek && nextWeek.length > 0) {
+            const nextMonth = nextWeek[0].date.split(" ")[0];
+            if (nextMonth !== currentMonth) {
+              nextMonthStartsSoon = true;
+              break;
+            }
+          }
+        }
+        if (!nextMonthStartsSoon) {
+          labels[wIdx] = currentMonth;
+          lastRenderedIndex = wIdx;
+        }
+      } else {
+        const prevWeek = calendarGrid[wIdx - 1];
+        if (prevWeek && prevWeek.length > 0) {
+          const prevMonth = prevWeek[0].date.split(" ")[0];
+          if (currentMonth !== prevMonth) {
+            if (wIdx - lastRenderedIndex >= 3 && wIdx < calendarGrid.length - 2) {
+              labels[wIdx] = currentMonth;
+              lastRenderedIndex = wIdx;
+            }
+          }
+        }
+      }
+    });
+
+    return labels;
+  };
+
   if (loading) {
     return (
       <div className="gc-wrap corner-box" style={{ opacity: 0.7 }}>
@@ -137,9 +192,11 @@ export default function GithubCalendar() {
         <div className="gc-scroll">
           <div style={{ minWidth: "580px" }}>
             {/* Months labels */}
-            <div className="gc-months">
-              {months.map((m, i) => (
-                <span key={`${m}-${i}`}>{m}</span>
+            <div className="gc-months-row">
+              {getSkeletonMonthLabels().map((m, wIdx) => (
+                <div key={wIdx} className="gc-month-col">
+                  {m && <span className="gc-month-label">{m}</span>}
+                </div>
               ))}
             </div>
             <div className="gc-grid">
@@ -196,9 +253,11 @@ export default function GithubCalendar() {
       <div className="gc-scroll">
         <div style={{ minWidth: "580px" }}>
           {/* Months labels */}
-          <div className="gc-months">
-            {months.map((m, i) => (
-              <span key={`${m}-${i}`}>{m}</span>
+          <div className="gc-months-row">
+            {getLoadedMonthLabels().map((m, wIdx) => (
+              <div key={wIdx} className="gc-month-col">
+                {m && <span className="gc-month-label">{m}</span>}
+              </div>
             ))}
           </div>
           <div className="gc-grid">
