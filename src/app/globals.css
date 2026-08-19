@@ -1875,16 +1875,16 @@ body::before {
 }
 
 .gc-day-tooltip.align-center::after {
-  left: 50%;
+  left: calc(50% + var(--arrow-offset, 0px));
   transform: translateX(-50%);
 }
 
 .gc-day-tooltip.align-left::after {
-  left: 4px;
+  left: calc(4px + var(--arrow-offset, 0px));
 }
 
 .gc-day-tooltip.align-right::after {
-  right: 4px;
+  right: calc(4px - var(--arrow-offset, 0px));
 }
 
 /* Light Theme Overrides for Tooltips */

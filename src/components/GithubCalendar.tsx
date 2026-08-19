@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PERSONAL } from "@/data/portfolio";
 
 const CAL_ICON = () => (
@@ -46,6 +46,7 @@ export default function GithubCalendar() {
     "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"
   ]);
   const [activeDay, setActiveDay] = useState<{ wIdx: number; dIdx: number } | null>(null);
+  const activeTooltipRef = useRef<HTMLSpanElement>(null);
 
   const handleDayClick = (day: DayData, wIdx: number, dIdx: number) => {
     if (activeDay?.wIdx === wIdx && activeDay?.dIdx === dIdx) {
@@ -149,6 +150,43 @@ export default function GithubCalendar() {
         scrollEl.removeEventListener("scroll", handleScroll);
       }
     };
+  }, [activeDay]);
+
+  // Adjust active tooltip position to prevent clipping at viewport edges on mobile
+  useEffect(() => {
+    if (activeDay && activeTooltipRef.current) {
+      const tooltip = activeTooltipRef.current;
+      const padding = 12; // safety margin from viewport edges
+      
+      // Reset any previous custom transform to let browser compute original rect first
+      tooltip.style.transform = "";
+      
+      // Use requestAnimationFrame to check layout after render
+      requestAnimationFrame(() => {
+        const freshRect = tooltip.getBoundingClientRect();
+        let offset = 0;
+        
+        if (freshRect.left < padding) {
+          offset = padding - freshRect.left;
+        } else if (freshRect.right > window.innerWidth - padding) {
+          offset = window.innerWidth - padding - freshRect.right;
+        }
+        
+        if (offset !== 0) {
+          const isLeft = tooltip.classList.contains("align-left");
+          const isRight = tooltip.classList.contains("align-right");
+          
+          if (isLeft || isRight) {
+            tooltip.style.transform = `translateX(${offset}px)`;
+          } else {
+            tooltip.style.transform = `translate(-50%, 0) translateX(${offset}px)`;
+          }
+          tooltip.style.setProperty("--arrow-offset", `${-offset}px`);
+        } else {
+          tooltip.style.setProperty("--arrow-offset", "0px");
+        }
+      });
+    }
   }, [activeDay]);
 
   // Helper to determine month label for each column in skeleton loading state
@@ -311,7 +349,10 @@ export default function GithubCalendar() {
                       }}
                       onBlur={() => setActiveDay(null)}
                     >
-                      <span className={`gc-day-tooltip ${wIdx < 10 ? "align-left" : wIdx > 42 ? "align-right" : "align-center"}`}>
+                      <span
+                        ref={isActive ? activeTooltipRef : null}
+                        className={`gc-day-tooltip ${wIdx < 10 ? "align-left" : wIdx > 42 ? "align-right" : "align-center"}`}
+                      >
                         <strong>{day.count}</strong> {day.count === 1 ? "contribution" : "contributions"} on {day.date}
                       </span>
                     </div>
