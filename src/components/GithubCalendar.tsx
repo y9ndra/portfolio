@@ -45,6 +45,15 @@ export default function GithubCalendar() {
   const [months, setMonths] = useState<string[]>([
     "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"
   ]);
+  const [activeDay, setActiveDay] = useState<{ wIdx: number; dIdx: number } | null>(null);
+
+  const handleDayClick = (day: DayData, wIdx: number, dIdx: number) => {
+    if (activeDay?.wIdx === wIdx && activeDay?.dIdx === dIdx) {
+      setActiveDay(null);
+    } else {
+      setActiveDay({ wIdx, dIdx });
+    }
+  };
 
   // Fetch real data on mount
   useEffect(() => {
@@ -118,6 +127,29 @@ export default function GithubCalendar() {
       active = false;
     };
   }, []);
+
+  // Auto-close tooltip on vertical page scroll or horizontal calendar scroll
+  useEffect(() => {
+    if (!activeDay) return;
+
+    const handleScroll = () => {
+      setActiveDay(null);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    const scrollEl = document.querySelector(".gc-scroll");
+    if (scrollEl) {
+      scrollEl.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollEl) {
+        scrollEl.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [activeDay]);
 
   // Helper to determine month label for each column in skeleton loading state
   const getSkeletonMonthLabels = () => {
@@ -263,13 +295,28 @@ export default function GithubCalendar() {
           <div className="gc-grid">
             {calendarGrid.map((week, wIdx) => (
               <div key={wIdx} className="gc-col">
-                {week.map((day, dIdx) => (
-                  <div
-                    key={dIdx}
-                    className={`gc-day lvl-${day.level}`}
-                    title={`${day.count} contributions on ${day.date}`}
-                  />
-                ))}
+                {week.map((day, dIdx) => {
+                  const isActive = activeDay?.wIdx === wIdx && activeDay?.dIdx === dIdx;
+                  return (
+                    <div
+                      key={dIdx}
+                      tabIndex={0}
+                      className={`gc-day lvl-${day.level} ${isActive ? "active" : ""}`}
+                      onClick={() => handleDayClick(day, wIdx, dIdx)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          handleDayClick(day, wIdx, dIdx);
+                          e.preventDefault();
+                        }
+                      }}
+                      onBlur={() => setActiveDay(null)}
+                    >
+                      <span className={`gc-day-tooltip ${wIdx < 10 ? "align-left" : wIdx > 42 ? "align-right" : "align-center"}`}>
+                        <strong>{day.count}</strong> {day.count === 1 ? "contribution" : "contributions"} on {day.date}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>

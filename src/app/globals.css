@@ -1737,6 +1737,7 @@ body::before {
   width: 100%;
   overflow-x: auto;
   padding-bottom: 8px;
+  padding-top: 1.5rem;
 }
 @supports not selector(::-webkit-scrollbar) {
   .gc-scroll {
@@ -1762,6 +1763,7 @@ body::before {
 
 [data-theme='light'] .gc-scroll {
   scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  padding-top: 1.5rem;
 }
 [data-theme='light'] .gc-scroll::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.03);
@@ -1800,10 +1802,122 @@ body::before {
 .gc-day.lvl-3 { background: #7c7c7c; }
 .gc-day.lvl-4 { background: #efefef; }
 
+.gc-day:focus {
+  outline: none;
+}
+.gc-day:focus-visible {
+  outline: 1.5px solid var(--accent);
+  transform: scale(1.25);
+  z-index: 10;
+}
 .gc-day:hover {
   transform: scale(1.25);
   outline: 1.5px solid var(--accent);
   z-index: 10;
+}
+
+/* Interactive Calendar Tooltips */
+.gc-day-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 6px;
+  background: var(--bg-3, #1e1e1e);
+  border: 1px solid var(--border-h, #333);
+  color: var(--t1, #fff);
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.575rem;
+  font-family: var(--font-sans, sans-serif);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  text-transform: none;
+}
+
+.gc-day-tooltip strong {
+  font-weight: 600;
+  color: var(--accent, #7c6bff);
+}
+
+.gc-day:hover .gc-day-tooltip,
+.gc-day:focus-visible .gc-day-tooltip,
+.gc-day.active .gc-day-tooltip {
+  display: block;
+}
+
+/* Tooltip Position Alignments */
+.gc-day-tooltip.align-center {
+  left: 50%;
+  transform: translateX(-50%);
+  animation: gc-day-tooltip-fade-in-center 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.gc-day-tooltip.align-left {
+  left: 0;
+  animation: gc-day-tooltip-fade-in-side 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.gc-day-tooltip.align-right {
+  right: 0;
+  animation: gc-day-tooltip-fade-in-side 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Tooltip Arrow Tip */
+.gc-day-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  border-width: 4px;
+  border-style: solid;
+  border-color: var(--bg-3, #1e1e1e) transparent transparent transparent;
+}
+
+.gc-day-tooltip.align-center::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.gc-day-tooltip.align-left::after {
+  left: 4px;
+}
+
+.gc-day-tooltip.align-right::after {
+  right: 4px;
+}
+
+/* Light Theme Overrides for Tooltips */
+[data-theme='light'] .gc-day-tooltip {
+  background: var(--bg-2, #f5f5f5);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--t1, #1a1a1a);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .gc-day-tooltip::after {
+  border-color: var(--bg-2, #f5f5f5) transparent transparent transparent;
+}
+
+@keyframes gc-day-tooltip-fade-in-center {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 2px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes gc-day-tooltip-fade-in-side {
+  from {
+    opacity: 0;
+    transform: translateY(2px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .gc-foot {
   display: flex;
