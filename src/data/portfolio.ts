@@ -121,17 +121,6 @@ export const EXPERIENCES = [
       "Gained hands-on experience in UI structuring and front-end design workflows"
     ],
   },
-  {
-    company: "SystemTron",
-    role: "Web Development Intern",
-    date: "Mar 2024 – Apr 2024",
-    status: "Done",
-    logo: "/assets/images/Systemtron1.jpg",
-    description: [
-      "Developed a Netflix-inspired static website as the primary internship project",
-      "Built mini projects including a Calculator and Connect 4 Dots game to strengthen front-end fundamentals"
-    ],
-  },
 ];
 
 export const BLOGS = [
