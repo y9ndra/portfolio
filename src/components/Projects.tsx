@@ -58,6 +58,7 @@ function ProjectCard({ id, title, description, tech, github, demo, image, delay 
                 src={image}
                 alt={title}
                 fill
+                sizes="(max-width: 768px) 100vw, 240px"
                 style={{ objectFit: "contain" }}
                 onError={() => setImgErr(true)}
               />

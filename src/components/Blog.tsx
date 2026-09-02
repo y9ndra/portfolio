@@ -62,6 +62,7 @@ function BlogCard({ id, title, description, tags, image, date, readTime, delay }
                 src={image}
                 alt={title}
                 fill
+                sizes="(max-width: 768px) 100vw, 240px"
                 style={{ objectFit: "contain" }}
                 onError={() => setImgErr(true)}
               />

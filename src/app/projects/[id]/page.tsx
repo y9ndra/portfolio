@@ -49,6 +49,7 @@ export default async function ProjectDetailPage({
               src={project.image}
               alt={project.title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1000px"
               style={{ objectFit: "contain" }}
               priority
             />

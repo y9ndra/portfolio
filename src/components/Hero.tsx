@@ -80,7 +80,15 @@ export default function Hero() {
         <div className="hero-profile a0">
           <div className="hero-avatar">
             {!err ? (
-              <Image src={PERSONAL.avatar} alt="Yugendhra E" fill style={{ objectFit: "cover" }} priority onError={() => setErr(true)} />
+              <Image
+                src={PERSONAL.avatar}
+                alt="Yugendhra E"
+                fill
+                sizes="(max-width: 768px) 80px, 96px"
+                style={{ objectFit: "cover" }}
+                priority
+                onError={() => setErr(true)}
+              />
             ) : (
               <div className="hero-avatar-fallback">YE</div>
             )}

@@ -196,6 +196,7 @@ export default function BlogLanding({ blog }: BlogLandingProps) {
               src={blog.image}
               alt={blog.title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1000px"
               style={{ objectFit: "contain" }}
               priority
             />
