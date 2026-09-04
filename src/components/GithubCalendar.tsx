@@ -56,69 +56,117 @@ export default function GithubCalendar() {
     }
   };
 
-  // Fetch real data on mount
+  // Helper to parse contributions API data into grid format
+  const parseContributionData = (data: ApiResponse) => {
+    if (!data.contributions || data.contributions.length === 0) return null;
+
+    const grid: DayData[][] = [];
+    let currentWeek: DayData[] = [];
+
+    data.contributions.forEach((day) => {
+      const parts = day.date.split("-");
+      const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const formattedDate = dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+
+      const dayData: DayData = {
+        date: formattedDate,
+        level: day.level,
+        count: day.count,
+      };
+
+      if (dateObj.getDay() === 0 && currentWeek.length > 0) {
+        grid.push(currentWeek);
+        currentWeek = [];
+      }
+      currentWeek.push(dayData);
+    });
+
+    if (currentWeek.length > 0) {
+      grid.push(currentWeek);
+    }
+
+    const finalGrid = grid.slice(-53);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const firstDateParts = data.contributions[0].date.split("-");
+    const startMonth = parseInt(firstDateParts[1], 10) - 1;
+    const dynamicMonths: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      dynamicMonths.push(monthNames[(startMonth + i) % 12]);
+    }
+
+    const total = data.total?.lastYear ?? Object.values(data.total || {})[0] ?? 0;
+
+    return { finalGrid, dynamicMonths, total };
+  };
+
+  // Fetch real data on mount with Stale-While-Revalidate caching
   useEffect(() => {
     let active = true;
-    
+
+    // 1. Immediately hydrate from localStorage cache for instant 0ms rendering
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        const cachedRaw = localStorage.getItem("gh_contributions_cache");
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          if (cached?.finalGrid?.length && cached?.dynamicMonths?.length) {
+            setCalendarGrid(cached.finalGrid);
+            setMonths(cached.dynamicMonths);
+            setTotalCount(cached.total ?? 0);
+            setLoading(false);
+          }
+        }
+      } catch {
+        // Ignore cache parse error
+      }
+    });
+
+    // 2. Fetch fresh data in the background
     async function fetchContributions() {
       try {
-        const res = await fetch("https://github-contributions-api.jogruber.de/v4/y9ndra?y=last");
+        let res = await fetch("/api/contributions");
+        if (!res.ok) {
+          // Fallback to direct jogruber endpoint if internal route fails
+          res = await fetch("https://github-contributions-api.jogruber.de/v4/y9ndra?y=last");
+        }
         if (!res.ok) throw new Error("Failed to fetch github calendar data");
         const data: ApiResponse = await res.json();
-        
+
         if (!active) return;
 
-        if (data.contributions && data.contributions.length > 0) {
-          const grid: DayData[][] = [];
-          let currentWeek: DayData[] = [];
-
-          data.contributions.forEach((day) => {
-            const parts = day.date.split("-");
-            const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-            const formattedDate = dateObj.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
-
-            const dayData: DayData = {
-              date: formattedDate,
-              level: day.level,
-              count: day.count,
-            };
-
-            if (dateObj.getDay() === 0 && currentWeek.length > 0) {
-              grid.push(currentWeek);
-              currentWeek = [];
-            }
-            currentWeek.push(dayData);
-          });
-
-          if (currentWeek.length > 0) {
-            grid.push(currentWeek);
-          }
-
-          // Slice exactly the last 53 weeks to fit our UI layout
-          const finalGrid = grid.slice(-53);
-          
-          // Calculate dynamic month labels
-          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          const firstDateParts = data.contributions[0].date.split("-");
-          const startMonth = parseInt(firstDateParts[1], 10) - 1;
-          const dynamicMonths: string[] = [];
-          for (let i = 0; i < 12; i++) {
-            dynamicMonths.push(monthNames[(startMonth + i) % 12]);
-          }
-
-          setCalendarGrid(finalGrid);
-          setMonths(dynamicMonths);
-          const total = data.total?.lastYear ?? Object.values(data.total || {})[0] ?? 0;
-          setTotalCount(total);
+        const parsed = parseContributionData(data);
+        if (parsed) {
+          setCalendarGrid(parsed.finalGrid);
+          setMonths(parsed.dynamicMonths);
+          setTotalCount(parsed.total);
           setLoading(false);
+
+          // Save fresh data to cache
+          try {
+            localStorage.setItem(
+              "gh_contributions_cache",
+              JSON.stringify({
+                finalGrid: parsed.finalGrid,
+                dynamicMonths: parsed.dynamicMonths,
+                total: parsed.total,
+                savedAt: Date.now(),
+              })
+            );
+          } catch {
+            // Ignore localStorage quota errors
+          }
         }
       } catch (err) {
         console.error("Error loading github calendar data:", err);
-        setLoading(false); 
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
