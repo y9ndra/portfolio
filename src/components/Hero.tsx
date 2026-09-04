@@ -84,8 +84,8 @@ export default function Hero() {
                 src={PERSONAL.avatar}
                 alt="Yugendhra E"
                 fill
+                unoptimized
                 sizes="(max-width: 480px) 110px, (max-width: 640px) 120px, 160px"
-                quality={95}
                 style={{ objectFit: "cover" }}
                 priority
                 onError={() => setErr(true)}
