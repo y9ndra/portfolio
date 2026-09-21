@@ -106,7 +106,12 @@ function ProjectCard({ id, title, description, tech, github, demo, image, delay 
           <div className="proj-tech-section">
             <span className="proj-tech-label">Technologies Used:</span>
             <div className="proj-tags">
-              {tech.map((t) => <span key={t} className="proj-tag">{t}</span>)}
+              {tech.slice(0, 6).map((t) => <span key={t} className="proj-tag">{t}</span>)}
+              {tech.length > 6 && (
+                <span className="proj-tag proj-tag-more" title={tech.slice(6).join(", ")}>
+                  +{tech.length - 6} more
+                </span>
+              )}
             </div>
           </div>
           <span className="proj-view-more">View details →</span>
