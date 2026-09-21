@@ -1110,7 +1110,7 @@ body::before {
   font-family: var(--font-sans-alt);
   font-size: 0.725rem;
   font-weight: 600;
-  color: var(--t2);
+  color: var(--t1);
 }
 .proj-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .proj-tag {
@@ -1453,6 +1453,31 @@ body::before {
   flex-wrap: wrap;
   margin-top: 0.25rem;
 }
+.proj-detail-demo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--bg-2);
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  width: fit-content;
+}
+.proj-detail-demo-label {
+  color: var(--t3);
+  font-size: 0.65rem;
+  font-family: var(--font-mono, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.proj-detail-demo-code {
+  color: var(--accent, #7c6bff);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  background: transparent;
+}
 
 /* Stats Grid */
 .proj-detail-stats-grid {
@@ -1483,7 +1508,7 @@ body::before {
 }
 @media (min-width: 480px) {
   .proj-detail-stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
 }
 
@@ -1497,17 +1522,22 @@ body::before {
 .proj-detail-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+.proj-detail-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 .proj-detail-section-title {
-  font-family: var(--font-sans-alt);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--t3);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.5rem;
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 400;
+  color: var(--t1);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.15rem;
+  line-height: 1.25;
 }
 .proj-detail-tags {
   display: flex;
@@ -1524,8 +1554,39 @@ body::before {
   padding: 4px 12px;
 }
 
-/* Highlights */
-.proj-detail-highlights {
+/* Feature Deep-Dives / Subfeatures */
+.proj-detail-subfeatures-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.proj-detail-subfeature {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.proj-detail-subfeature:last-child {
+  margin-bottom: 0;
+}
+.proj-detail-subfeature-title {
+  font-family: var(--font-sans-alt, system-ui, sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.01em;
+}
+.proj-detail-subfeature-desc {
+  font-size: 0.92rem;
+  color: var(--t2);
+  line-height: 1.7;
+}
+.proj-detail-subfeature-desc strong {
+  color: var(--t1);
+  font-weight: 600;
+}
+
+/* Bullet list (Architecture, Stats, Highlights) */
+.proj-detail-bullet-list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -1533,21 +1594,44 @@ body::before {
   flex-direction: column;
   gap: 0.75rem;
 }
-.proj-detail-highlight-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  font-size: 0.875rem;
+.proj-detail-bullet-item {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.92rem;
   color: var(--t2);
-  line-height: 1.65;
+  line-height: 1.7;
 }
-.proj-detail-bullet {
-  flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent, #7c6bff);
-  margin-top: 0.5rem;
+.proj-detail-bullet-item::before {
+  content: '•';
+  position: absolute;
+  left: 0.2rem;
+  top: 0;
+  color: var(--t2);
+  font-size: 0.9rem;
+}
+.proj-detail-bullet-item strong {
+  color: var(--t1);
+  font-weight: 600;
+}
+.proj-detail-bullet-item code {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82em;
+  color: var(--t1);
+}
+
+/* Learned paragraph */
+.proj-detail-learned-paragraph {
+  font-size: 0.92rem;
+  color: var(--t2);
+  line-height: 1.75;
+}
+.proj-detail-learned-paragraph strong {
+  color: var(--t1);
+  font-weight: 600;
 }
 
 /* ═══════════════════════════════════════════

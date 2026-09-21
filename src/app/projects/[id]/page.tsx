@@ -99,46 +99,92 @@ export default async function ProjectDetailPage({
                   Live Demo
                 </a>
               )}
+              {"docs" in project && (project as { docs?: string }).docs && (
+                <a
+                  href={(project as { docs: string }).docs}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="proj-detail-gh-btn"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ marginRight: "0.25rem" }}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                  </svg>
+                  Swagger Docs
+                </a>
+              )}
             </div>
+
+            {/* Recruiter demo account callout */}
+            {"demoAccount" in project && (project as { demoAccount?: string }).demoAccount && (
+              <div className="proj-detail-demo-badge">
+                <span className="proj-detail-demo-label">Recruiter Demo:</span>
+                <code className="proj-detail-demo-code">{(project as { demoAccount: string }).demoAccount}</code>
+              </div>
+            )}
           </div>
 
-          {/* Tech stack */}
-          <div className="proj-detail-section a2">
-            <h2 className="proj-detail-section-title">Technologies Used</h2>
-            <div className="proj-detail-tags">
-              {project.tech.map((t) => (
-                <span key={t} className="proj-detail-tag">{t}</span>
-              ))}
-            </div>
-          </div>
-
-          {/* What was done */}
-          {"highlights" in project && Array.isArray((project as { highlights?: string[] }).highlights) && (
-            <div className="proj-detail-section a3">
-              <h2 className="proj-detail-section-title">What I Built</h2>
-              <ul className="proj-detail-highlights">
-                {(project as { highlights: string[] }).highlights.map((h, i) => (
-                  <li key={i} className="proj-detail-highlight-item">
-                    <span className="proj-detail-bullet" />
-                    {h}
-                  </li>
+          {/* Tech stack: Only shown if no Architecture breakdown exists */}
+          {!Boolean("architecture" in project && (project as { architecture?: unknown }).architecture) && (
+            <div className="proj-detail-section a2">
+              <h2 className="proj-detail-section-title">Technologies Used</h2>
+              <div className="proj-detail-tags">
+                {project.tech.map((t) => (
+                  <span key={t} className="proj-detail-tag">{t}</span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
-          {/* Stats if available */}
+          {/* Individual narrative topics (The Origin, The Problem, The Approach) */}
+          {"problem" in project && Array.isArray((project as { problem?: { title: string; description: string }[] }).problem) && (
+            (project as { problem: { title: string; description: string }[] }).problem.map((p, idx) => (
+              <div key={idx} className="proj-detail-section a2">
+                <h2 className="proj-detail-section-title">{p.title}</h2>
+                <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: p.description }} />
+              </div>
+            ))
+          )}
+
+          {/* Architecture / What I Built */}
+          {("architecture" in project && Array.isArray((project as { architecture?: string[] }).architecture)) ? (
+            <div className="proj-detail-section a3">
+              <h2 className="proj-detail-section-title">Architecture</h2>
+              <ul className="proj-detail-bullet-list">
+                {(project as { architecture: string[] }).architecture.map((item, i) => (
+                  <li key={i} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: item }} />
+                ))}
+              </ul>
+            </div>
+          ) : ("highlights" in project && Array.isArray((project as { highlights?: string[] }).highlights) && (
+            <div className="proj-detail-section a3">
+              <h2 className="proj-detail-section-title">Architecture</h2>
+              <ul className="proj-detail-bullet-list">
+                {(project as { highlights: string[] }).highlights.map((h, i) => (
+                  <li key={i} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: h }} />
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          {/* Stats */}
           {"stats" in project && Array.isArray((project as { stats?: unknown[] }).stats) && (
             <div className="proj-detail-section a4">
-              <h2 className="proj-detail-section-title">Project Stats</h2>
-              <div className="proj-detail-stats-grid">
-                {(project as { stats: { label: string; value: string }[] }).stats.map((s, idx) => (
-                  <div key={idx} className="proj-detail-stat-card">
-                    <span className="proj-detail-stat-label">{s.label}</span>
-                    <span className="proj-detail-stat-value">{s.value}</span>
-                  </div>
-                ))}
-              </div>
+              <h2 className="proj-detail-section-title">Stats</h2>
+              <ul className="proj-detail-bullet-list">
+                {(project as { stats: (string | { label: string; value: string })[] }).stats.map((s, idx) => {
+                  if (typeof s === "string") {
+                    return (
+                      <li key={idx} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: s }} />
+                    );
+                  }
+                  return (
+                    <li key={idx} className="proj-detail-bullet-item">
+                      <strong>{s.value}</strong> {s.label}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
 
@@ -146,20 +192,17 @@ export default async function ProjectDetailPage({
           {"learned" in project && (
             <div className="proj-detail-section a4">
               <h2 className="proj-detail-section-title">What I Learned</h2>
-              {Array.isArray((project as { learned?: unknown }).learned) ? (
-                <ul className="proj-detail-highlights">
+              {typeof (project as { learned?: unknown }).learned === "string" ? (
+                <p className="proj-detail-learned-paragraph">
+                  {(project as unknown as { learned: string }).learned}
+                </p>
+              ) : Array.isArray((project as { learned?: unknown }).learned) ? (
+                <ul className="proj-detail-bullet-list">
                   {(project as { learned: string[] }).learned.map((item, i) => (
-                    <li key={i} className="proj-detail-highlight-item">
-                      <span className="proj-detail-bullet" />
-                      <span dangerouslySetInnerHTML={{ __html: item }} />
-                    </li>
+                    <li key={i} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: item }} />
                   ))}
                 </ul>
-              ) : (
-                <p className="proj-detail-learned-text">
-                  {typeof (project as { learned?: unknown }).learned === "string" && (project as unknown as { learned: string }).learned}
-                </p>
-              )}
+              ) : null}
             </div>
           )}
 
