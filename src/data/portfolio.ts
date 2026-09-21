@@ -20,24 +20,94 @@ export const SKILLS = [
   },
   {
     category: "Frontend",
-    items: ["HTML", "CSS", "React", "Next.js"],
+    items: ["HTML", "CSS", "React", "Next.js", "Zustand", "TanStack Query"],
   },
   {
     category: "Backend",
-    items: ["Node.js", "Express.js", "REST APIs", "Socket.IO", "WebRTC"],
+    items: ["Node.js", "Express.js", "REST APIs", "Socket.IO", "BullMQ", "Zod", "WebRTC"],
   },
   {
     category: "Databases",
-    items: ["MongoDB", "PostgreSQL", "MySQL", "Firebase", "Supabase"],
+    items: ["MongoDB", "PostgreSQL", "MySQL", "Redis", "Firebase", "Supabase"],
   },
   {
     category: "Tools",
-    items: ["Git", "GitHub", "Render", "Vercel", "Postman", "VS Code", "Antigravity", "Windsurf"],
+    items: ["Git", "GitHub", "Docker", "Postman", "Swagger", "Jest", "Render", "Vercel", "VS Code", "Antigravity", "Windsurf"],
   },
 ];
 
 
 export const PROJECTS = [
+  {
+    id: "sotrix",
+    title: "Sotrix",
+    year: "2026",
+    description:
+      "Full-stack real-time social and messaging platform with background task processing and interactive feeds.",
+    tech: [
+      "TypeScript",
+      "React 19",
+      "Node.js",
+      "Socket.IO",
+      "Redis",
+      "Zustand",
+      "BullMQ",
+      "MongoDB",
+      "Express",
+      "TanStack Query",
+      "Zod",
+      "Vite",
+      "Motion",
+      "Sharp",
+      "Cloudinary",
+      "JWT",
+      "Bcrypt",
+      "Swagger",
+      "Docker",
+      "Jest",
+      "Supertest",
+      "Pino",
+      "Prom-client",
+      "Helmet",
+      "Vercel",
+      "Render"
+    ],
+    github: "https://github.com/y9ndra/sotrix",
+    demo: "https://sotrix.yugendhra.me",
+    docs: "https://sotrix.onrender.com/api-docs",
+    demoAccount: "demo@sotrix.dev / demo123456",
+    image: "/assets/images/sotrix-banner.jpg",
+    problem: [
+      {
+        title: "Problem",
+        description:
+          "Building a high-throughput real-time social platform exposes critical architectural bottlenecks: CPU-heavy media uploads choke Node.js's single-threaded event loop, real-time WebSocket pushes drift out of sync with REST query caches causing duplicate messages and race conditions, and persistent session storage frequently leaves apps vulnerable to XSS token theft or CSRF vectors."
+      },
+      {
+        title: "Approach",
+        description:
+          "I engineered an <strong>event-driven, decoupled platform architecture</strong> to solve these constraints:<br/>• <strong>Asynchronous Compute Isolation:</strong> Offloaded multi-stage Sharp image compression and fan-out notifications to <strong>BullMQ</strong> workers on <strong>Redis Cloud</strong>, preserving a responsive sub-15ms HTTP API thread.<br/>• <strong>Deterministic State Sync:</strong> Orchestrated <strong>Socket.IO</strong> push events directly into <strong>TanStack Query</strong> cache trees to update chat messages, typing indicators, and presence leases with <strong>zero full-feed refetches</strong>.<br/>• <strong>Zero-Trust Boundary Security:</strong> Enforced strict <strong>Zod</strong> runtime schema validation across all 45+ endpoints, backed by a dual-token sliding session lifecycle locked to <code>HttpOnly</code> cookies."
+      }
+    ],
+    architecture: [
+      "<strong>Frontend</strong> - React 19 · TypeScript · Vite · Zustand · TanStack Query · Motion micro-interactions",
+      "<strong>Real-Time</strong> - Socket.IO gateway · Redis pub/sub adapter · presence heartbeats · debounced typing channels",
+      "<strong>Backend</strong> - Express modular monolith · 45+ REST endpoints · Zod runtime validation · rate-limiting & Helmet",
+      "<strong>Workers</strong> - BullMQ distributed queues · Redis Cloud · Sharp image pipeline · async notification dispatch",
+      "<strong>Data</strong> - MongoDB Atlas (compound query indexing) · <code>User</code> & <code>Message</code> schema models · Cloudinary CDN",
+      "<strong>DevOps & QA</strong> - Multi-stage Docker containers · GitHub Actions CI/CD · Jest & Supertest suites · Render & Vercel deployment"
+    ],
+    stats: [
+      "<strong>45+ REST Endpoints</strong> across 10 modular domain services",
+      "<strong>40,000+ lines</strong> of production TypeScript, React 19, and Node.js",
+      "<strong><40ms roundtrip</strong> real-time WebSocket messaging latency",
+      "<strong>~70% payload size reduction</strong> via Sharp image compression pipeline",
+      "<strong>100% type-safe contracts</strong> via Zod runtime schema validation",
+      "Shipped live on Vercel + Render with Swagger OpenAPI docs"
+    ],
+    learned:
+      "Design around distributed system constraints, not against them. In-memory background jobs crash on server restarts; persistent Redis queues turn failures into graceful retries with exponential backoffs. Real-time WebSockets without cache synchronization create stale state; surgical query invalidation bridges the gap. Security is a defense-in-depth architecture, not an afterthought: short-lived tokens in memory paired with rotating refresh tokens locked in HttpOnly cookies defend against both XSS and CSRF."
+  },
   {
     id: "spendwise",
     title: "SpendWise",
