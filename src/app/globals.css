@@ -1532,12 +1532,12 @@ body::before {
 }
 .proj-detail-section-title {
   font-family: var(--font-serif);
-  font-size: 1.85rem;
+  font-size: 1.35rem;
   font-weight: 400;
   color: var(--t1);
   letter-spacing: -0.01em;
   margin-bottom: 0.15rem;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 .proj-detail-tags {
   display: flex;
