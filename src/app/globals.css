@@ -1631,40 +1631,6 @@ body::before {
   color: var(--t1);
 }
 
-/* Approach Pillar Cards */
-.proj-detail-pillar-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-.proj-detail-pillar-card {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  padding: 0.85rem 1.15rem;
-  font-size: 0.88rem;
-  line-height: 1.7;
-  color: var(--t2);
-  transition: border-color 0.15s, background 0.15s;
-}
-.proj-detail-pillar-card:hover {
-  border-color: var(--border-h);
-  border-left-color: var(--accent);
-  background: var(--bg-3);
-}
-.proj-detail-pillar-card strong {
-  color: var(--t1);
-  font-weight: 600;
-}
-[data-theme='light'] .proj-detail-pillar-card {
-  border-left-color: rgba(0, 0, 0, 0.35);
-}
-[data-theme='light'] .proj-detail-pillar-card:hover {
-  border-left-color: #000;
-}
-
 /* Architecture Blueprint Matrix */
 .proj-detail-arch-matrix {
   display: flex;

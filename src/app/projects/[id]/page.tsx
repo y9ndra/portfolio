@@ -143,33 +143,12 @@ export default async function ProjectDetailPage({
 
           {/* Individual narrative topics (Problem, Approach) */}
           {"problem" in project && Array.isArray((project as { problem?: { title: string; description: string }[] }).problem) && (
-            (project as { problem: { title: string; description: string }[] }).problem.map((p, idx) => {
-              const hasBullets = p.description.includes("<br/>•") || p.description.includes("<br />•");
-              if (hasBullets) {
-                const parts = p.description.split(/<br\s*\/?>\s*•\s*/);
-                const intro = parts[0];
-                const pillars = parts.slice(1);
-                return (
-                  <div key={idx} className="proj-detail-section a2">
-                    <h2 className="proj-detail-section-title">{p.title}</h2>
-                    {intro && (
-                      <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: intro }} />
-                    )}
-                    <div className="proj-detail-pillar-grid">
-                      {pillars.map((pillar, pIdx) => (
-                        <div key={pIdx} className="proj-detail-pillar-card" dangerouslySetInnerHTML={{ __html: pillar }} />
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              return (
-                <div key={idx} className="proj-detail-section a2">
-                  <h2 className="proj-detail-section-title">{p.title}</h2>
-                  <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: p.description }} />
-                </div>
-              );
-            })
+            (project as { problem: { title: string; description: string }[] }).problem.map((p, idx) => (
+              <div key={idx} className="proj-detail-section a2">
+                <h2 className="proj-detail-section-title">{p.title}</h2>
+                <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: p.description }} />
+              </div>
+            ))
           )}
 
           {/* Architecture / What I Built */}
