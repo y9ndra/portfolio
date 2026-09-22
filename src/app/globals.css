@@ -1366,8 +1366,6 @@ body::before {
 /* Banner */
 .proj-detail-banner {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
   position: relative;
   background: var(--bg-2);
   margin-top: 1.25rem;
@@ -1375,9 +1373,17 @@ body::before {
   border-radius: 8px;
   overflow: hidden;
 }
-.proj-detail-banner img {
-  object-fit: cover !important;
-  padding: 0 !important;
+.proj-detail-banner-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.proj-detail-banner:not(:has(.proj-detail-banner-img)) {
+  aspect-ratio: 16 / 9;
+}
+.proj-detail-banner:not(:has(.proj-detail-banner-img)) img {
+  object-fit: contain;
+  padding: 0;
 }
 .proj-detail-banner-overlay {
   position: absolute;

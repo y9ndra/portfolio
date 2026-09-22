@@ -62,9 +62,10 @@ export default async function ProjectDetailPage({
             <Image
               src={project.image}
               alt={project.title}
-              fill
+              width={1600}
+              height={900}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1000px"
-              style={{ objectFit: "cover" }}
+              className="proj-detail-banner-img"
               priority
             />
             <div className="proj-detail-banner-overlay" />
