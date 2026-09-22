@@ -1590,6 +1590,7 @@ body::before {
   min-height: 320px;
   overflow: hidden;
   touch-action: none;
+  transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .skills-jar-canvas {
@@ -1597,6 +1598,10 @@ body::before {
   width: 100%;
   height: 100%;
   cursor: default;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Specular reflection highlight along the curved glass silhouette */
@@ -1638,7 +1643,8 @@ body::before {
     flex-wrap: wrap;
   }
   .skills-jar-canvas-wrap {
-    height: 310px;
+    height: 360px;
+    min-height: 340px;
   }
   .skills-jar-controls {
     gap: 0.3rem;

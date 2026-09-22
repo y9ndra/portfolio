@@ -44,6 +44,8 @@ export default function SkillsJar() {
   // Organize mode refs
   const isOrganizedRef = useRef(false);
   const targetPositionsRef = useRef<Map<Matter.Body, { x: number; y: number }>>(new Map());
+  const setupBoundsRef = useRef<((forcedHeight?: number) => { width: number; height: number }) | null>(null);
+  const isMobileRef = useRef(false);
 
   // Theme detection
   const isLightRef = useRef(false);
@@ -63,14 +65,34 @@ export default function SkillsJar() {
     };
   }, [isDropdownOpen]);
 
+  // Sizing helper for responsive pill metrics across desktop and mobile
+  const getPillDimensions = useCallback((containerWidth: number) => {
+    const isMobile = containerWidth < 640;
+    return {
+      isMobile,
+      pillHeight: isMobile ? 24 : 30,
+      fontSize: isMobile ? 10.5 : 12,
+      fontStr: isMobile
+        ? '500 10.5px var(--font-mono, "JetBrains Mono", monospace)'
+        : '500 12px var(--font-mono, "JetBrains Mono", monospace)',
+      paddingX: isMobile ? 14 : 20,
+      minWidth: isMobile ? 48 : 64,
+      gapX: isMobile ? 5 : 6,
+      gapY: isMobile ? 6 : 8,
+      chamferRadius: isMobile ? 3 : 5,
+      borderRadius: isMobile ? 4 : 5,
+    };
+  }, []);
+
   // Compute clean, recruiter-friendly horizontal grid positions grouped by Category
   const computeOrganizedPositions = useCallback((width: number, height: number) => {
     const targets = new Map<Matter.Body, { x: number; y: number }>();
-    const paddingX = 16;
-    const availableWidth = Math.max(280, width - paddingX * 2);
-    const gapX = 6;
-    const gapY = 8;
-    const pillH = 30;
+    const dims = getPillDimensions(width);
+    const sidePadding = dims.isMobile ? 10 : 16;
+    const availableWidth = Math.max(260, width - sidePadding * 2);
+    const gapX = dims.gapX;
+    const gapY = dims.gapY;
+    const pillH = dims.pillHeight;
     const rowHeight = pillH + gapY;
 
     // Categories in defined portfolio order
@@ -107,6 +129,7 @@ export default function SkillsJar() {
 
     // Center all rows vertically inside the glass chamber
     const totalContentHeight = allRows.length * rowHeight - gapY;
+    const neededTotalHeight = totalContentHeight + (dims.isMobile ? 32 : 36);
     const startY = Math.max(pillH / 2 + 10, (height - totalContentHeight) / 2 + pillH / 2);
 
     allRows.forEach((row, rowIndex) => {
@@ -121,8 +144,8 @@ export default function SkillsJar() {
       });
     });
 
-    return targets;
-  }, []);
+    return { targets, totalHeight: neededTotalHeight };
+  }, [getPillDimensions]);
 
   // Helper to toggle organize collision mode: completely bypasses inter-body collisions
   const setOrganizeCollisionMode = useCallback((isOrganizedMode: boolean) => {
@@ -146,6 +169,7 @@ export default function SkillsJar() {
     const nextOrganized = !isOrganized;
     setIsOrganized(nextOrganized);
     isOrganizedRef.current = nextOrganized;
+    const wrap = canvasWrapRef.current;
 
     if (nextOrganized) {
       setIsZeroG(false);
@@ -154,9 +178,21 @@ export default function SkillsJar() {
       // Wipe stale collision pairs and disable inter-pill collision resolution
       setOrganizeCollisionMode(true);
 
-      const w = canvasWrapRef.current.clientWidth || 650;
-      const h = canvasWrapRef.current.clientHeight || 350;
-      targetPositionsRef.current = computeOrganizedPositions(w, h);
+      const w = wrap.clientWidth || 650;
+      const isMobile = w < 640;
+      const baseHeight = isMobile ? 360 : 350;
+      const { targets, totalHeight } = computeOrganizedPositions(w, baseHeight);
+
+      // Expand jar height if organized rows need more space (fully visible on mobile)
+      if (totalHeight > baseHeight) {
+        const expandedH = Math.ceil(totalHeight);
+        wrap.style.height = `${expandedH}px`;
+        setupBoundsRef.current?.(expandedH);
+        const recomputed = computeOrganizedPositions(w, expandedH);
+        targetPositionsRef.current = recomputed.targets;
+      } else {
+        targetPositionsRef.current = targets;
+      }
 
       // Reset velocities for smooth transition
       bodiesRef.current.forEach(({ body }) => {
@@ -165,6 +201,10 @@ export default function SkillsJar() {
         Matter.Body.setAngularVelocity(body, 0);
       });
     } else {
+      // Revert wrap height to CSS default
+      wrap.style.height = "";
+      setupBoundsRef.current?.();
+
       // Re-enable natural collision physics & gravity
       setOrganizeCollisionMode(false);
       engineRef.current.gravity.y = 0.95;
@@ -185,21 +225,24 @@ export default function SkillsJar() {
     if (!engineRef.current || !canvasWrapRef.current) return;
     setIsOrganized(false);
     isOrganizedRef.current = false;
+    canvasWrapRef.current.style.height = "";
+    setupBoundsRef.current?.();
     setIsZeroG(false);
     setOrganizeCollisionMode(false);
     engineRef.current.gravity.y = 0.95;
     engineRef.current.gravity.x = 0;
 
     const width = canvasWrapRef.current.clientWidth || 800;
-    const cols = Math.max(3, Math.min(6, Math.floor(width / 130)));
+    const isMobile = width < 640;
+    const cols = Math.max(4, Math.floor(width / (isMobile ? 80 : 130)));
 
     bodiesRef.current.forEach(({ body }, index) => {
       Matter.Sleeping.set(body, false);
       const col = index % cols;
       const row = Math.floor(index / cols);
       const colWidth = width / (cols + 1);
-      const startX = colWidth * (col + 1) + (Math.random() - 0.5) * 20;
-      const startY = 18 + row * 24 + (index % 3) * 8;
+      const startX = colWidth * (col + 1) + (Math.random() - 0.5) * 16;
+      const startY = 16 + row * (isMobile ? 18 : 24) + (index % 3) * 6;
 
       Matter.Body.setPosition(body, { x: startX, y: startY });
       Matter.Body.setVelocity(body, {
@@ -265,9 +308,11 @@ export default function SkillsJar() {
 
     const { Engine, Runner, Bodies, Composite, Mouse, MouseConstraint } = Matter;
 
-    // Create physics engine
+    // Create physics engine with high iteration counts to prevent body overlap/merging
     const engine = Engine.create({
       gravity: { x: 0, y: 0.95, scale: 0.001 },
+      positionIterations: 10,
+      velocityIterations: 8,
     });
     engineRef.current = engine;
 
@@ -280,10 +325,12 @@ export default function SkillsJar() {
     if (!ctx) return;
 
     // Setup boundaries for the contoured glass jar
-    const setupBounds = () => {
+    const setupBounds = (forcedHeight?: number) => {
       const rect = wrap.getBoundingClientRect();
       const width = rect.width;
-      const height = rect.height || 350;
+      const isMobile = width < 640;
+      const defaultH = isMobile ? 360 : 350;
+      const height = forcedHeight || (rect.height > 100 ? rect.height : defaultH);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       canvas.width = width * dpr;
@@ -305,43 +352,43 @@ export default function SkillsJar() {
       // Floor (bottom)
       const floor = Bodies.rectangle(width / 2, floorY + wallThickness / 2, width * 2, wallThickness, {
         isStatic: true,
-        restitution: 0.35,
-        friction: 0.25,
+        restitution: 0.25,
+        friction: 0.35,
       });
 
       // Ceiling (enclosed top right below the jar lid)
       const ceiling = Bodies.rectangle(width / 2, ceilingY - wallThickness / 2, width * 2, wallThickness, {
         isStatic: true,
-        restitution: 0.35,
-        friction: 0.25,
+        restitution: 0.25,
+        friction: 0.35,
       });
 
       // Left Wall
       const leftWall = Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height * 4, {
         isStatic: true,
-        restitution: 0.35,
+        restitution: 0.25,
         friction: 0.2,
       });
 
       // Right Wall
       const rightWall = Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height * 4, {
         isStatic: true,
-        restitution: 0.35,
+        restitution: 0.25,
         friction: 0.2,
       });
 
       // Smooth rounded bottom corner bumpers (matches jar's rounded bottom curves)
-      const cornerRadius = 38;
-      const btmLeftCorner = Bodies.rectangle(cornerRadius * 0.35, height - cornerRadius * 0.35, cornerRadius * 1.5, 22, {
+      const cornerRadius = isMobile ? 22 : 38;
+      const btmLeftCorner = Bodies.rectangle(cornerRadius * 0.35, height - cornerRadius * 0.35, cornerRadius * 1.5, 20, {
         isStatic: true,
         angle: Math.PI / 4,
-        restitution: 0.35,
+        restitution: 0.25,
         friction: 0.2,
       });
-      const btmRightCorner = Bodies.rectangle(width - cornerRadius * 0.35, height - cornerRadius * 0.35, cornerRadius * 1.5, 22, {
+      const btmRightCorner = Bodies.rectangle(width - cornerRadius * 0.35, height - cornerRadius * 0.35, cornerRadius * 1.5, 20, {
         isStatic: true,
         angle: -Math.PI / 4,
-        restitution: 0.35,
+        restitution: 0.25,
         friction: 0.2,
       });
 
@@ -351,6 +398,7 @@ export default function SkillsJar() {
       return { width, height };
     };
 
+    setupBoundsRef.current = setupBounds;
     const { width: initWidth } = setupBounds();
 
     // Setup Mouse and MouseConstraint
@@ -376,30 +424,31 @@ export default function SkillsJar() {
       if (canvas) canvas.style.cursor = "default";
     });
 
-    // Create all 35 Skill Bodies
-    const pillHeight = 30;
+    // Create all 35 Skill Bodies using responsive metrics
+    const dims = getPillDimensions(initWidth);
+    isMobileRef.current = dims.isMobile;
+    ctx.font = dims.fontStr;
+    const cols = Math.max(4, Math.floor(initWidth / (dims.isMobile ? 80 : 130)));
     const items: { body: Matter.Body; name: string; category: string; width: number; height: number }[] = [];
-
-    ctx.font = '500 12px var(--font-mono, "JetBrains Mono", monospace)';
-    const cols = Math.max(3, Math.min(6, Math.floor(initWidth / 130)));
 
     ALL_SKILLS.forEach((skill, index) => {
       const textMetrics = ctx.measureText(skill.name);
-      const pillWidth = Math.max(64, Math.ceil(textMetrics.width + 22));
+      const pillWidth = Math.max(dims.minWidth, Math.ceil(textMetrics.width + dims.paddingX));
+      const pillHeight = dims.pillHeight;
 
       const col = index % cols;
       const row = Math.floor(index / cols);
       const colWidth = initWidth / (cols + 1);
-      const startX = colWidth * (col + 1) + (Math.random() - 0.5) * 20;
-      const startY = 18 + row * 24 + (index % 3) * 8;
+      const startX = colWidth * (col + 1) + (Math.random() - 0.5) * 16;
+      const startY = 16 + row * (dims.isMobile ? 18 : 24) + (index % 3) * 6;
 
       const body = Bodies.rectangle(startX, startY, pillWidth, pillHeight, {
-        chamfer: { radius: 6 },
-        restitution: 0.45,
-        friction: 0.18,
+        chamfer: { radius: dims.chamferRadius },
+        restitution: 0.25,
+        friction: 0.35,
         frictionAir: 0.015,
-        density: 0.002,
-        angle: (Math.random() - 0.5) * 0.3,
+        density: 0.003,
+        angle: (Math.random() - 0.5) * 0.25,
       });
 
       items.push({ body, name: skill.name, category: skill.category, width: pillWidth, height: pillHeight });
@@ -466,8 +515,8 @@ export default function SkillsJar() {
           Matter.Body.setPosition(body, { x: body.position.x, y: 16 });
           if (body.velocity.y < 0) Matter.Body.setVelocity(body, { x: body.velocity.x, y: -body.velocity.y * 0.3 });
         }
-        // Floor bound
-        else if (body.position.y > h - 16) {
+        // Floor bound (active only during natural physics mode, never clamps organized targets)
+        else if (body.position.y > h - 16 && !isOrganizedRef.current) {
           Matter.Body.setPosition(body, { x: body.position.x, y: h - 16 });
           if (body.velocity.y > 0) Matter.Body.setVelocity(body, { x: body.velocity.x, y: -body.velocity.y * 0.3 });
         }
@@ -584,8 +633,124 @@ export default function SkillsJar() {
       }
     };
 
+    // Apply dynamic physical impulse to pills along a finger swipe path
+    const applySwipeForceAt = (x: number, y: number, vx: number, vy: number) => {
+      if (isOrganizedRef.current) return;
+      const speed = Math.hypot(vx, vy);
+      if (speed < 0.3) return;
+
+      const swipeRadius = 45;
+      const swipeRadiusSq = swipeRadius * swipeRadius;
+
+      bodiesRef.current.forEach(({ body }) => {
+        if (draggedBodyRef.current === body) return;
+
+        const dx = body.position.x - x;
+        const dy = body.position.y - y;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq < swipeRadiusSq) {
+          Matter.Sleeping.set(body, false);
+          const dist = Math.sqrt(distSq) || 1;
+          const forceMag = Math.min(speed * 0.001, 0.03);
+
+          const pushX = (vx * 0.65 + (dx / dist) * speed * 0.35) * forceMag;
+          const pushY = (vy * 0.65 + (dy / dist) * speed * 0.35) * forceMag;
+
+          Matter.Body.applyForce(body, body.position, { x: pushX, y: pushY });
+          Matter.Body.setAngularVelocity(
+            body,
+            body.angularVelocity + (Math.random() - 0.5) * speed * 0.02
+          );
+        }
+      });
+    };
+
+    // Mobile touch interaction states for fluid swiping and flinging
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let lastTouchTime = 0;
+    let touchVelocityX = 0;
+    let touchVelocityY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (mouseConstraint) {
+        mouseConstraint.collisionFilter.mask = 0xFFFFFFFF;
+      }
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        mouse.position.x = x;
+        mouse.position.y = y;
+        mouse.button = 0;
+        (mouse as any).buttons = 1;
+
+        lastTouchX = x;
+        lastTouchY = y;
+        lastTouchTime = performance.now();
+        touchVelocityX = 0;
+        touchVelocityY = 0;
+
+        applySwipeForceAt(x, y, 0.5, 0.5);
+      }
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        if (checkIsOutside(touch as unknown as MouseEvent)) {
+          releaseDragged();
+          return;
+        }
+
+        mouse.position.x = x;
+        mouse.position.y = y;
+
+        const now = performance.now();
+        const dt = Math.max(1, now - lastTouchTime);
+        const vx = (x - lastTouchX) / (dt / 16.67);
+        const vy = (y - lastTouchY) / (dt / 16.67);
+
+        touchVelocityX = vx * 0.6 + touchVelocityX * 0.4;
+        touchVelocityY = vy * 0.6 + touchVelocityY * 0.4;
+
+        lastTouchX = x;
+        lastTouchY = y;
+        lastTouchTime = now;
+
+        applySwipeForceAt(x, y, vx, vy);
+      }
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const handleTouchEnd = () => {
+      const releasedBody = draggedBodyRef.current;
+      if (releasedBody && !isOrganizedRef.current) {
+        const speed = Math.hypot(touchVelocityX, touchVelocityY);
+        if (speed > 1.2) {
+          Matter.Body.setVelocity(releasedBody, {
+            x: Math.max(-10, Math.min(10, touchVelocityX * 0.6)),
+            y: Math.max(-10, Math.min(10, touchVelocityY * 0.6)),
+          });
+        }
+      }
+      handleGlobalMouseUp();
+    };
+
     canvas.addEventListener("pointerdown", handleCanvasPointerDown);
     canvas.addEventListener("mousedown", handleCanvasPointerDown);
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+    canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseleave", handleMouseLeave);
     wrap.addEventListener("mouseleave", handleMouseLeave);
@@ -615,14 +780,40 @@ export default function SkillsJar() {
     );
     observer.observe(wrap);
 
-    // Responsive resize observer
+    // Responsive resize observer with dynamic body scaling between breakpoints
     let resizeTimer: NodeJS.Timeout;
     const resizeObserver = new ResizeObserver(() => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
+        if (!wrap) return;
+        const rect = wrap.getBoundingClientRect();
+        const newDims = getPillDimensions(rect.width);
+
+        // If breakpoint crossed between mobile and desktop, scale the Matter.js bodies
+        if (newDims.isMobile !== isMobileRef.current) {
+          isMobileRef.current = newDims.isMobile;
+          ctx.font = newDims.fontStr;
+
+          bodiesRef.current.forEach((item) => {
+            const textMetrics = ctx.measureText(item.name);
+            const newW = Math.max(newDims.minWidth, Math.ceil(textMetrics.width + newDims.paddingX));
+            const newH = newDims.pillHeight;
+            const scaleX = newW / item.width;
+            const scaleY = newH / item.height;
+            Matter.Body.scale(item.body, scaleX, scaleY);
+            item.width = newW;
+            item.height = newH;
+          });
+        }
+
         const bounds = setupBounds();
-        if (isOrganizedRef.current && wrap) {
-          targetPositionsRef.current = computeOrganizedPositions(bounds.width, bounds.height);
+        if (isOrganizedRef.current) {
+          const { targets, totalHeight } = computeOrganizedPositions(bounds.width, bounds.height);
+          if (totalHeight > bounds.height) {
+            wrap.style.height = `${Math.ceil(totalHeight)}px`;
+            setupBounds(Math.ceil(totalHeight));
+          }
+          targetPositionsRef.current = targets;
         }
       }, 100);
     });
@@ -664,9 +855,10 @@ export default function SkillsJar() {
         // Draw pill capsule path
         const hW = pW / 2;
         const hH = pH / 2;
+        const isMobile = width < 640;
 
         ctx.beginPath();
-        ctx.roundRect(-hW, -hH, pW, pH, 5);
+        ctx.roundRect(-hW, -hH, pW, pH, isMobile ? 4 : 5);
 
         // Pill Fill
         if (!isAll && isMatch) {
@@ -700,7 +892,9 @@ export default function SkillsJar() {
         ctx.stroke();
 
         // Centered Text in monospace font
-        ctx.font = '500 12px var(--font-mono, "JetBrains Mono", monospace)';
+        ctx.font = isMobile
+          ? '500 10.5px var(--font-mono, "JetBrains Mono", monospace)'
+          : '500 12px var(--font-mono, "JetBrains Mono", monospace)';
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
@@ -731,6 +925,10 @@ export default function SkillsJar() {
       observer.disconnect();
       canvas.removeEventListener("pointerdown", handleCanvasPointerDown);
       canvas.removeEventListener("mousedown", handleCanvasPointerDown);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       wrap.removeEventListener("mouseleave", handleMouseLeave);
