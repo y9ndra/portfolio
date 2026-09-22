@@ -81,7 +81,7 @@ export default async function ProjectDetailPage({
                   rel="noopener noreferrer"
                   className="proj-detail-gh-btn"
                 >
-                  <GH /> View on GitHub
+                  <GH /> GitHub
                 </a>
               )}
               {project.demo && project.demo !== "#" && (
@@ -96,21 +96,7 @@ export default async function ProjectDetailPage({
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
                   </svg>
-                  Live Demo
-                </a>
-              )}
-              {"docs" in project && (project as { docs?: string }).docs && (
-                <a
-                  href={(project as { docs: string }).docs}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="proj-detail-gh-btn"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ marginRight: "0.25rem" }}>
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                  </svg>
-                  Swagger Docs
+                  Live
                 </a>
               )}
             </div>
