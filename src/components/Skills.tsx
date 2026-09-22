@@ -1,32 +1,35 @@
 import { SKILLS } from "@/data/portfolio";
+import SkillsJar from "@/components/SkillsJar";
 
 export default function Skills() {
   return (
     <section id="skills" className="section" aria-label="Skills">
       <div className="wrap">
-
         <div className="section-head" data-reveal>
           <span className="section-title">Skills</span>
           <div className="section-rule" />
         </div>
 
-        <div className="skills-grid" data-reveal data-delay="1">
+        {/* Interactive Physics Chamber */}
+        <div data-reveal data-delay="1">
+          <SkillsJar />
+        </div>
+
+        {/* Accessible screen-reader & SEO semantic structure */}
+        <div className="sr-only">
+          <h3>Full Skills List</h3>
           {SKILLS.map((cat) => (
-            <div key={cat.category} className="skills-row">
-              <div className="skills-cat">{cat.category}</div>
-              <div className="skills-items">
+            <div key={cat.category}>
+              <h4>{cat.category}</h4>
+              <ul>
                 {cat.items.map((skill) => (
-                  <div key={skill} className="skills-pill">
-                    {skill}
-                  </div>
+                  <li key={skill}>{skill}</li>
                 ))}
-              </div>
+              </ul>
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );
 }
-

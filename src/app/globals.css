@@ -1227,6 +1227,314 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════
+   PHYSICS JAR: CONTOURED GLASS JAR SILHOUETTE (CONCEPT 1)
+═══════════════════════════════════════════ */
+.skills-jar-card {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-bottom: 3.5px solid var(--border-h);
+  border-radius: 12px 12px 36px 36px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.008) 60%, rgba(255, 255, 255, 0.025) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+  box-shadow:
+    0 16px 40px -15px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 10px rgba(255, 255, 255, 0.03);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+[data-theme='light'] .skills-jar-card {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.015) 0%, rgba(0, 0, 0, 0.005) 60%, rgba(0, 0, 0, 0.02) 100%);
+  box-shadow:
+    0 14px 32px -12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(0, 0, 0, 0.05),
+    inset 0 -2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.skills-jar-card:hover {
+  border-color: var(--border-h);
+  box-shadow:
+    0 20px 48px -15px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 12px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='light'] .skills-jar-card:hover {
+  box-shadow:
+    0 16px 36px -12px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(0, 0, 0, 0.08),
+    inset 0 -2px 12px rgba(0, 0, 0, 0.03);
+}
+
+/* Contoured Jar Lid Rim (Top cap housing controls cleanly) */
+.skills-jar-lid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 25;
+}
+
+[data-theme='light'] .skills-jar-lid {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Category / Type Selector Dropdown in Lid */
+.skills-jar-select-wrap {
+  position: relative;
+  display: inline-block;
+  z-index: 30;
+}
+
+.skills-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.725rem;
+  font-weight: 500;
+  color: var(--t2);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(255, 255, 255, 0.06), 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme='light'] .skills-dropdown-trigger {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06), 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+.skills-dropdown-trigger:hover,
+.skills-dropdown-trigger.active {
+  color: var(--t1);
+  border-color: var(--border-h);
+  background: var(--bg-3);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.1), 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='light'] .skills-dropdown-trigger:hover,
+[data-theme='light'] .skills-dropdown-trigger.active {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.08);
+}
+
+.skills-dropdown-trigger:active {
+  transform: translateY(1.5px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 2px 3px rgba(0, 0, 0, 0.25);
+}
+
+.skills-dropdown-chevron {
+  transition: transform 0.2s ease;
+  color: var(--t3);
+  margin-left: 0.15rem;
+}
+
+.skills-dropdown-chevron.rotated {
+  transform: rotate(180deg);
+  color: var(--t1);
+}
+
+.skills-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 140px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 40;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+[data-theme='light'] .skills-dropdown-menu {
+  box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skills-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.725rem;
+  font-weight: 500;
+  color: var(--t2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.skills-dropdown-item:hover {
+  color: var(--t1);
+  background: var(--bg-3);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.skills-dropdown-item.active {
+  color: var(--t1);
+  background: var(--bg-3);
+  border-color: var(--border-h);
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Action Controls in Jar Lid (Zero-G and Drop) */
+.skills-jar-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 30;
+}
+
+/* Premium tactile buttons matching site's .btn-line aesthetics */
+.skills-btn {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.725rem;
+  font-weight: 500;
+  color: var(--t2);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(255, 255, 255, 0.06), 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme='light'] .skills-btn {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06), 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+.skills-btn:hover {
+  color: var(--t1);
+  border-color: var(--border-h);
+  background: var(--bg-3);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.1), 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='light'] .skills-btn:hover {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.08);
+}
+
+.skills-btn:active {
+  transform: translateY(1.5px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 2px 3px rgba(0, 0, 0, 0.25);
+}
+
+.skills-btn.active {
+  color: var(--t1);
+  border-color: var(--border-h);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='light'] .skills-btn.active {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* Glass Viewport inside the Jar */
+.skills-jar-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  min-height: 320px;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.skills-jar-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+/* Specular reflection highlight along the curved glass silhouette */
+.skills-jar-glass-specular {
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  width: 2px;
+  height: 80%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.02) 80%,
+    transparent 100%
+  );
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+[data-theme='light'] .skills-jar-glass-specular {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.04) 45%,
+    transparent 80%
+  );
+  opacity: 0.4;
+}
+
+@media (max-width: 640px) {
+  .skills-jar-card {
+    border-radius: 10px 10px 24px 24px;
+  }
+  .skills-jar-lid {
+    padding: 0.5rem 0.75rem;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .skills-jar-canvas-wrap {
+    height: 310px;
+  }
+  .skills-jar-controls {
+    gap: 0.3rem;
+  }
+  .skills-btn {
+    font-size: 0.65rem;
+    padding: 0.22rem 0.55rem;
+  }
+}
+
+
+/* ═══════════════════════════════════════════
    3D PERSPECTIVE TILT & SPECULAR GLARE
 ═══════════════════════════════════════════ */
 .proj-card-link,
@@ -2901,6 +3209,18 @@ body::before {
   border-color: rgba(0, 0, 0, 0.25);
   background: rgba(0, 0, 0, 0.04);
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 /* GitHub calendar footer dashed line */
 [data-theme='light'] .gc-foot {
   border-top-color: rgba(0, 0, 0, 0.1);
