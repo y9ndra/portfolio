@@ -1,10 +1,54 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.me";
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
 export async function generateStaticParams() {
   return PROJECTS.map((p) => ({ id: p.id }));
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const project = PROJECTS.find((p) => p.id === id);
+
+  if (!project) return {};
+
+  const imageUrl = project.image || "/assets/images/profile+v6.png";
+  const title = `${project.title} — Yugendhra E`;
+  const description = project.description;
+
+  return {
+    metadataBase: new URL(BASE_URL),
+    title,
+    description,
+    openGraph: {
+      siteName: "Yugendhra E",
+      title,
+      description,
+      type: "website",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${project.title} Banner`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
 }
 
 const GH = () => (

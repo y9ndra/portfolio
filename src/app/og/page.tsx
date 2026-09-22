@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { BLOGS } from "@/data/portfolio";
+import { BLOGS, PROJECTS } from "@/data/portfolio";
 
 interface MetaTags {
   title?: string;
@@ -18,7 +18,8 @@ interface MetaTags {
 }
 
 export default function OGTestingPage() {
-  const [selectedId, setSelectedId] = useState(BLOGS[0]?.id || "");
+  const [category, setCategory] = useState<"projects" | "blog">("projects");
+  const [selectedId, setSelectedId] = useState(PROJECTS[0]?.id || "");
   const [loading, setLoading] = useState(false);
   const [metaTags, setMetaTags] = useState<MetaTags>({});
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +31,10 @@ export default function OGTestingPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/blog/${selectedId}`);
+        const path = category === "projects" ? `/projects/${selectedId}` : `/blog/${selectedId}`;
+        const res = await fetch(path);
         if (!res.ok) {
-          throw new Error(`Failed to fetch /blog/${selectedId} (Status: ${res.status})`);
+          throw new Error(`Failed to fetch ${path} (Status: ${res.status})`);
         }
         const html = await res.text();
         const parser = new DOMParser();
@@ -66,7 +68,7 @@ export default function OGTestingPage() {
     };
 
     fetchMeta();
-  }, [selectedId]);
+  }, [category, selectedId]);
 
   return (
     <main className="section" style={{ minHeight: "100vh", padding: "4rem 2rem", background: "var(--bg)" }}>
@@ -74,7 +76,7 @@ export default function OGTestingPage() {
         
         {/* Navigation back */}
         <div style={{ marginBottom: "2rem" }}>
-          <Link href="/#blog" style={{ color: "var(--t2)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}>
+          <Link href="/#projects" style={{ color: "var(--t2)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}>
             ← Back to Portfolio
           </Link>
         </div>
@@ -85,36 +87,72 @@ export default function OGTestingPage() {
             OpenGraph Preview Sandbox
           </h1>
           <p style={{ color: "var(--t2)", fontSize: "0.95rem" }}>
-            Select a blog post below to scrape and preview its OpenGraph tags and card design in real time on localhost.
+            Select a project or blog post below to scrape and preview its live OpenGraph tags and social card design in real time on localhost.
           </p>
         </div>
 
         {/* Dropdown Selector */}
-        <div style={{ marginBottom: "2.5rem", display: "flex", gap: "1rem", alignItems: "center" }}>
-          <label htmlFor="blog-select" style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--t1)" }}>
-            Select Blog Page:
-          </label>
-          <select
-            id="blog-select"
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-            style={{
-              padding: "0.5rem 1rem",
-              background: "var(--bg-2)",
-              color: "var(--t1)",
-              border: "1px solid var(--border)",
-              borderRadius: "6px",
-              fontFamily: "var(--font-sans-alt)",
-              fontSize: "0.9rem",
-              cursor: "pointer",
-            }}
-          >
-            {BLOGS.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.title} ({b.id})
-              </option>
-            ))}
-          </select>
+        <div style={{ marginBottom: "2.5rem", display: "flex", gap: "1.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <label htmlFor="category-select" style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--t1)" }}>
+              Type:
+            </label>
+            <select
+              id="category-select"
+              value={category}
+              onChange={(e) => {
+                const newCat = e.target.value as "projects" | "blog";
+                setCategory(newCat);
+                setSelectedId(newCat === "projects" ? (PROJECTS[0]?.id || "") : (BLOGS[0]?.id || ""));
+              }}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "var(--bg-2)",
+                color: "var(--t1)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                fontFamily: "var(--font-sans-alt)",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+              }}
+            >
+              <option value="projects">Projects</option>
+              <option value="blog">Blog Posts</option>
+            </select>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <label htmlFor="item-select" style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--t1)" }}>
+              Page:
+            </label>
+            <select
+              id="item-select"
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "var(--bg-2)",
+                color: "var(--t1)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                fontFamily: "var(--font-sans-alt)",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+              }}
+            >
+              {category === "projects"
+                ? PROJECTS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} ({p.id})
+                    </option>
+                  ))
+                : BLOGS.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.title} ({b.id})
+                    </option>
+                  ))}
+            </select>
+          </div>
         </div>
 
         {loading && (
