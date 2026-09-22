@@ -193,9 +193,10 @@ export default async function ProjectDetailPage({
             <div className="proj-detail-section a4">
               <h2 className="proj-detail-section-title">What I Learned</h2>
               {typeof (project as { learned?: unknown }).learned === "string" ? (
-                <p className="proj-detail-learned-paragraph">
-                  {(project as unknown as { learned: string }).learned}
-                </p>
+                <p
+                  className="proj-detail-learned-paragraph"
+                  dangerouslySetInnerHTML={{ __html: (project as unknown as { learned: string }).learned }}
+                />
               ) : Array.isArray((project as { learned?: unknown }).learned) ? (
                 <ul className="proj-detail-bullet-list">
                   {(project as { learned: string[] }).learned.map((item, i) => (
