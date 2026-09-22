@@ -1538,14 +1538,27 @@ body::before {
   height: 1px;
   background: linear-gradient(90deg, var(--border-h) 0%, var(--border) 45%, transparent 95%);
 }
+.proj-detail-section-header-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.proj-detail-section-eyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--t3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .proj-detail-section-title {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  font-weight: 400;
+  font-family: var(--font-sans-alt);
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--t1);
-  letter-spacing: -0.01em;
-  margin-bottom: 0.15rem;
-  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.1rem;
+  line-height: 1.25;
 }
 .proj-detail-tags {
   display: flex;
