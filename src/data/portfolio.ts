@@ -81,7 +81,7 @@ export const PROJECTS = [
       {
         title: "Problem",
         description:
-          "Most modern social applications look deceptively simple on the surface, but underneath, features like <strong>low-latency real-time messaging</strong>, <strong>CPU-heavy media pipelines</strong>, <strong>stateless authentication</strong>, <strong>instant notifications</strong>, and <strong>search indexing</strong> introduce fundamentally distinct backend paradigms. Rather than exploring these in isolated toy projects, I built <strong>Sotrix</strong> to confront and solve those real-world distributed challenges within a single cohesive product—engineering the complete backend architecture and data flow from the ground up."
+          "Most modern social applications look deceptively simple on the surface, but underneath, features like <strong>low-latency real-time messaging</strong>, <strong>CPU-heavy media pipelines</strong>, <strong>stateless authentication</strong>, <strong>instant notifications</strong>, and <strong>search indexing</strong> introduce fundamentally distinct backend paradigms. Rather than exploring these in isolated toy projects, I built <strong>Sotrix</strong> to confront and solve those real-world distributed challenges within a single cohesive product, engineering the complete backend architecture and data flow from the ground up."
       },
       {
         title: "Approach",
