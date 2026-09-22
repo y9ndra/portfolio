@@ -141,25 +141,59 @@ export default async function ProjectDetailPage({
             </div>
           )}
 
-          {/* Individual narrative topics (The Origin, The Problem, The Approach) */}
+          {/* Individual narrative topics (Problem, Approach) */}
           {"problem" in project && Array.isArray((project as { problem?: { title: string; description: string }[] }).problem) && (
-            (project as { problem: { title: string; description: string }[] }).problem.map((p, idx) => (
-              <div key={idx} className="proj-detail-section a2">
-                <h2 className="proj-detail-section-title">{p.title}</h2>
-                <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: p.description }} />
-              </div>
-            ))
+            (project as { problem: { title: string; description: string }[] }).problem.map((p, idx) => {
+              const hasBullets = p.description.includes("<br/>•") || p.description.includes("<br />•");
+              if (hasBullets) {
+                const parts = p.description.split(/<br\s*\/?>\s*•\s*/);
+                const intro = parts[0];
+                const pillars = parts.slice(1);
+                return (
+                  <div key={idx} className="proj-detail-section a2">
+                    <h2 className="proj-detail-section-title">{p.title}</h2>
+                    {intro && (
+                      <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: intro }} />
+                    )}
+                    <div className="proj-detail-pillar-grid">
+                      {pillars.map((pillar, pIdx) => (
+                        <div key={pIdx} className="proj-detail-pillar-card" dangerouslySetInnerHTML={{ __html: pillar }} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={idx} className="proj-detail-section a2">
+                  <h2 className="proj-detail-section-title">{p.title}</h2>
+                  <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: p.description }} />
+                </div>
+              );
+            })
           )}
 
           {/* Architecture / What I Built */}
           {("architecture" in project && Array.isArray((project as { architecture?: string[] }).architecture)) ? (
             <div className="proj-detail-section a3">
               <h2 className="proj-detail-section-title">Architecture</h2>
-              <ul className="proj-detail-bullet-list">
-                {(project as { architecture: string[] }).architecture.map((item, i) => (
-                  <li key={i} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: item }} />
-                ))}
-              </ul>
+              <div className="proj-detail-arch-matrix">
+                {(project as { architecture: string[] }).architecture.map((item, i) => {
+                  const match = item.match(/^<strong>(.*?)<\/strong>\s*[-–—]\s*(.*)$/);
+                  if (match) {
+                    return (
+                      <div key={i} className="proj-detail-arch-row">
+                        <div className="proj-detail-arch-layer-cell">
+                          <span className="proj-detail-arch-layer-badge">{match[1]}</span>
+                        </div>
+                        <div className="proj-detail-arch-details-cell" dangerouslySetInnerHTML={{ __html: match[2] }} />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={i} className="proj-detail-arch-row-fallback" dangerouslySetInnerHTML={{ __html: item }} />
+                  );
+                })}
+              </div>
             </div>
           ) : ("highlights" in project && Array.isArray((project as { highlights?: string[] }).highlights) && (
             <div className="proj-detail-section a3">

@@ -1593,7 +1593,7 @@ body::before {
   font-weight: 600;
 }
 
-/* Bullet list (Architecture, Stats, Highlights) */
+/* Bullet list (Stats, Highlights) */
 .proj-detail-bullet-list {
   list-style: none;
   padding: 0;
@@ -1629,6 +1629,111 @@ body::before {
   font-family: var(--font-mono, monospace);
   font-size: 0.82em;
   color: var(--t1);
+}
+
+/* Approach Pillar Cards */
+.proj-detail-pillar-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+.proj-detail-pillar-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  padding: 0.85rem 1.15rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--t2);
+  transition: border-color 0.15s, background 0.15s;
+}
+.proj-detail-pillar-card:hover {
+  border-color: var(--border-h);
+  border-left-color: var(--accent);
+  background: var(--bg-3);
+}
+.proj-detail-pillar-card strong {
+  color: var(--t1);
+  font-weight: 600;
+}
+[data-theme='light'] .proj-detail-pillar-card {
+  border-left-color: rgba(0, 0, 0, 0.35);
+}
+[data-theme='light'] .proj-detail-pillar-card:hover {
+  border-left-color: #000;
+}
+
+/* Architecture Blueprint Matrix */
+.proj-detail-arch-matrix {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.proj-detail-arch-row {
+  display: grid;
+  grid-template-columns: 135px 1fr;
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+  gap: 1.15rem;
+  transition: background 0.15s;
+}
+.proj-detail-arch-row:last-child {
+  border-bottom: none;
+}
+.proj-detail-arch-row:hover {
+  background: var(--bg-3);
+}
+.proj-detail-arch-layer-cell {
+  display: flex;
+  align-items: center;
+}
+.proj-detail-arch-layer-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--t1);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.proj-detail-arch-details-cell {
+  font-size: 0.88rem;
+  color: var(--t2);
+  line-height: 1.65;
+}
+.proj-detail-arch-details-cell code {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82em;
+  color: var(--t1);
+}
+.proj-detail-arch-row-fallback {
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+  color: var(--t2);
+}
+.proj-detail-arch-row-fallback:last-child {
+  border-bottom: none;
+}
+@media (max-width: 600px) {
+  .proj-detail-arch-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
 }
 
 /* Learned paragraph */
