@@ -801,6 +801,122 @@ body::before {
   display: inline-block;
 }
 
+/* ═══════════════════════════════════════════
+   HERO LIVE ODOMETER CLOCK
+═══════════════════════════════════════════ */
+.odometer-container {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.odometer-reel {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  height: 1.2em;
+  gap: 0.05em;
+}
+
+.odometer-slot {
+  display: inline-flex;
+  position: relative;
+  overflow: hidden;
+  height: 1.2em;
+  width: 1ch;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+  perspective: 70px;
+}
+
+.odometer-num {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+}
+
+.odometer-slide-out {
+  animation: odometerSlideOut 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.odometer-slide-in {
+  animation: odometerSlideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes odometerSlideOut {
+  0% {
+    transform: translateY(0%) rotateX(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-110%) rotateX(-35deg);
+    opacity: 0;
+  }
+}
+
+@keyframes odometerSlideIn {
+  0% {
+    transform: translateY(110%) rotateX(35deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0%) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.odometer-colon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.2em;
+  width: 1ch;
+  line-height: 1;
+  text-align: center;
+  color: var(--t2);
+  user-select: none;
+}
+
+.odometer-ampm {
+  display: inline-flex;
+  align-items: center;
+  height: 1.2em;
+  margin-left: 0.85ch;
+  line-height: 1;
+  color: var(--t2);
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.odometer-fallback {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .odometer-slide-out {
+    display: none;
+    animation: none;
+  }
+  .odometer-slide-in {
+    animation: none;
+  }
+}
+
 
 /* Bio */
 .hero-bio {

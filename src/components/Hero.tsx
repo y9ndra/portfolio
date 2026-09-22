@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { PERSONAL } from "@/data/portfolio";
 import GithubCalendar from "@/components/GithubCalendar";
+import OdometerClock from "@/components/OdometerClock";
 
 const GH = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -45,32 +46,6 @@ const CLOCK_ICON = () => (
 
 export default function Hero() {
   const [err, setErr] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [time, setTime] = useState("");
-
-  useEffect(() => {
-    const mountTimer = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    const updateClock = () => {
-      const now = new Date();
-      setTime(
-        now.toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-          timeZone: "Asia/Kolkata",
-        })
-      );
-    };
-    updateClock();
-    const timer = setInterval(updateClock, 1000);
-    return () => {
-      clearTimeout(mountTimer);
-      clearInterval(timer);
-    };
-  }, []);
 
   return (
     <section id="about" className="section" aria-label="About">
@@ -106,7 +81,7 @@ export default function Hero() {
                 <PIN_ICON /> India
               </span>
               <span className="hero-meta-item">
-                <CLOCK_ICON /> {mounted ? time : "--:--:-- --"}
+                <CLOCK_ICON /> <OdometerClock />
               </span>
             </div>
           </div>
