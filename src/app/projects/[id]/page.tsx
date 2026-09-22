@@ -64,7 +64,7 @@ export default async function ProjectDetailPage({
               alt={project.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1000px"
-              style={{ objectFit: "contain" }}
+              style={{ objectFit: "cover" }}
               priority
             />
             <div className="proj-detail-banner-overlay" />
