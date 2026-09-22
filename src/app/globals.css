@@ -18,6 +18,8 @@
   --section-gap: 2.25rem;
   --font-serif:  var(--font-playfair, Georgia, serif);
   --font-sans-alt: var(--font-hanken, 'Hanken Grotesk', sans-serif);
+  --card-glare-color: rgba(255, 255, 255, 0.13);
+  --card-tilt-shadow: rgba(0, 0, 0, 0.45);
 }
 
 [data-theme='light'] {
@@ -30,6 +32,8 @@
   --t2:          #5a6065;
   --t3:          #8b949e;
   --accent:      #121314;
+  --card-glare-color: rgba(255, 255, 255, 0.7);
+  --card-tilt-shadow: rgba(0, 0, 0, 0.12);
 }
 
 /* ═══════════════════════════════════════════
@@ -977,6 +981,43 @@ body::before {
   .skills-cat {
     width: auto;
     padding-top: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   3D PERSPECTIVE TILT & SPECULAR GLARE
+═══════════════════════════════════════════ */
+.proj-card-link,
+.blog-card-link,
+.blog-landing-card-wrap {
+  perspective: 1000px;
+}
+
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.card-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .proj-card-link:hover .proj-item.tilt-card,
+  .blog-card-link:hover .blog-item.tilt-card {
+    transform: none;
+    box-shadow: none;
+  }
+  .blog-landing-card.tilt-card:hover {
+    transform: none;
+    box-shadow: none;
   }
 }
 

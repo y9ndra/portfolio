@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { BLOGS } from "@/data/portfolio";
+import { useCardTilt } from "@/hooks/useCardTilt";
 
 type BlogCardProps = (typeof import("@/data/portfolio").BLOGS)[number] & { delay: string };
 
@@ -29,6 +30,7 @@ function BlogCard({ id, title, description, tags, image, date, readTime, delay }
   const [imgErr, setImgErr] = useState(false);
   const [views, setViews] = useState<number | null>(null);
   const showImg = !!image && !imgErr;
+  const { cardRef, glareRef } = useCardTilt<HTMLElement>();
 
   useEffect(() => {
     // Fetch views count for this blog
@@ -47,13 +49,15 @@ function BlogCard({ id, title, description, tags, image, date, readTime, delay }
       href={`/blog/${id}`}
       className="blog-card-link"
       aria-label={`Read ${title}`}
+      data-reveal
+      data-delay={delay}
     >
       <article
+        ref={cardRef}
         id={`blog-${id}`}
-        className="blog-item corner-box"
-        data-reveal
-        data-delay={delay}
+        className="blog-item corner-box tilt-card"
       >
+        <div ref={glareRef} className="card-glare" aria-hidden="true" />
         {/* Left: image */}
         <div className="blog-img-col">
           {showImg ? (

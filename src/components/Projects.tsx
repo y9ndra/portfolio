@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
+import { useCardTilt } from "@/hooks/useCardTilt";
 
 const GH = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -17,6 +18,7 @@ function ProjectCard({ id, title, description, tech, github, demo, image, delay 
   const router = useRouter();
   const [imgErr, setImgErr] = useState(false);
   const showImg = !!image && !imgErr;
+  const { cardRef, glareRef } = useCardTilt<HTMLElement>();
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent navigation if click was on a button or link
@@ -43,13 +45,15 @@ function ProjectCard({ id, title, description, tech, github, demo, image, delay 
       className="proj-card-link"
       aria-label={`View ${title} details`}
       style={{ cursor: "pointer" }}
+      data-reveal
+      data-delay={delay}
     >
       <article
+        ref={cardRef}
         id={`proj-${id}`}
-        className="proj-item corner-box"
-        data-reveal
-        data-delay={delay}
+        className="proj-item corner-box tilt-card"
       >
+        <div ref={glareRef} className="card-glare" aria-hidden="true" />
         {/* Left: image */}
         <div className="proj-img-col">
           {showImg ? (

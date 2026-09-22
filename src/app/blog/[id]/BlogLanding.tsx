@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCardTilt } from "@/hooks/useCardTilt";
 
 interface BlogPart {
   id: string;
@@ -93,6 +94,7 @@ function ShareButton({ title, description }: { title: string; description: strin
 
 function PartCard({ part, idx }: { part: BlogPart; idx: number }) {
   const [views, setViews] = useState<number | null>(null);
+  const { cardRef, glareRef } = useCardTilt<HTMLAnchorElement>();
 
   useEffect(() => {
     // Fetch views count for this specific blog part
@@ -108,9 +110,11 @@ function PartCard({ part, idx }: { part: BlogPart; idx: number }) {
 
   return (
     <Link 
+      ref={cardRef}
       href={`/blog/${part.id}`} 
-      className="blog-landing-card corner-box"
+      className="blog-landing-card corner-box tilt-card"
     >
+      <div ref={glareRef} className="card-glare" aria-hidden="true" />
       <span className="blog-landing-part-tag">0{idx + 1}</span>
       
       <div className="blog-landing-card-content">
