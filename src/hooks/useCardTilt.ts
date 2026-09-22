@@ -8,6 +8,7 @@ interface TiltOptions {
   scale?: number;        // Scale factor on hover, default 1.015
   perspective?: number;  // 3D perspective distance in px, default 1000
   glare?: boolean;       // Enable dynamic light reflection sheen, default true
+  glareRadius?: number;  // Cursor spotlight glow radius in px, default 380
 }
 
 export function useCardTilt<T extends HTMLElement = HTMLElement>(options: TiltOptions = {}) {
@@ -20,6 +21,7 @@ export function useCardTilt<T extends HTMLElement = HTMLElement>(options: TiltOp
     scale = 1.015,
     perspective = 1000,
     glare = true,
+    glareRadius = 380,
   } = options;
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export function useCardTilt<T extends HTMLElement = HTMLElement>(options: TiltOp
 
         // Specular light glare follows cursor position
         if (glare && glareRef.current) {
-          glareRef.current.style.background = `radial-gradient(circle 380px at ${(x * 100).toFixed(1)}% ${(y * 100).toFixed(1)}%, var(--card-glare-color, rgba(255,255,255,0.08)), transparent 75%)`;
+          glareRef.current.style.background = `radial-gradient(circle ${glareRadius}px at ${(x * 100).toFixed(1)}% ${(y * 100).toFixed(1)}%, var(--card-glare-color, rgba(255,255,255,0.08)), transparent 70%)`;
         }
       });
     };
@@ -100,7 +102,7 @@ export function useCardTilt<T extends HTMLElement = HTMLElement>(options: TiltOp
       card.removeEventListener("pointermove", onPointerMove);
       card.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, [maxTiltX, maxTiltY, scale, perspective, glare]);
+  }, [maxTiltX, maxTiltY, scale, perspective, glare, glareRadius]);
 
   return { cardRef, glareRef };
 }
