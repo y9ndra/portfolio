@@ -34,14 +34,14 @@ export default function Home() {
         {/* Work Experience */}
         <Experience />
 
-        {/* Skills */}
-        <Skills />
-
         {/* Projects */}
         <Projects />
 
         {/* Blog */}
         <Blog />
+
+        {/* Skills */}
+        <Skills />
 
         {/* Contact */}
         <Contact />

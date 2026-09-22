@@ -8,9 +8,9 @@ import { BLOGS } from "@/data/portfolio";
 const LINKS = [
   { label: "About",         id: "about",         key: "1", icon: User2 },
   { label: "Experience",    id: "experience",    key: "2", icon: Briefcase },
-  { label: "Skills",        id: "skills",        key: "3", icon: Cpu },
-  { label: "Projects",      id: "projects",      key: "4", icon: FolderGit2 },
-  { label: "Blog",          id: "blog",          key: "5", icon: BookOpen },
+  { label: "Projects",      id: "projects",      key: "3", icon: FolderGit2 },
+  { label: "Blog",          id: "blog",          key: "4", icon: BookOpen },
+  { label: "Skills",        id: "skills",        key: "5", icon: Cpu },
   { label: "Contact",       id: "contact",       key: "6", icon: Mail },
 ];
 
