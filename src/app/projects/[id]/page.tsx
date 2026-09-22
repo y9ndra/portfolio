@@ -33,18 +33,6 @@ const ArrowLeft = () => (
   </svg>
 );
 
-function getSectionEyebrow(title: string): string {
-  const t = title.toLowerCase();
-  if (t.includes("problem")) return "// 01. Context & Challenge";
-  if (t.includes("approach")) return "// 02. System Design & Strategy";
-  if (t.includes("technolog")) return "// Stack & Tools";
-  if (t.includes("architecture")) return "// Implementation Breakdown";
-  if (t.includes("stats") || t.includes("metrics")) return "// Performance & Metrics";
-  if (t.includes("learn") || t.includes("takeaway")) return "// Engineering Takeaways";
-  if (t.includes("highlight")) return "// Core Features";
-  return `// ${title.toUpperCase()}`;
-}
-
 export default async function ProjectDetailPage({
   params,
 }: {
@@ -144,10 +132,7 @@ export default async function ProjectDetailPage({
           {/* Tech stack: Only shown if no Architecture breakdown exists */}
           {!Boolean("architecture" in project && (project as { architecture?: unknown }).architecture) && (
             <div className="proj-detail-section a2">
-              <div className="proj-detail-section-header-block">
-                <span className="proj-detail-section-eyebrow">{getSectionEyebrow("Technologies Used")}</span>
-                <h2 className="proj-detail-section-title">Technologies Used</h2>
-              </div>
+              <h2 className="proj-detail-section-title">Technologies Used</h2>
               <div className="proj-detail-tags">
                 {project.tech.map((t) => (
                   <span key={t} className="proj-detail-tag">{t}</span>
@@ -160,10 +145,7 @@ export default async function ProjectDetailPage({
           {"problem" in project && Array.isArray((project as { problem?: { title: string; description: string }[] }).problem) && (
             (project as { problem: { title: string; description: string }[] }).problem.map((p, idx) => (
               <div key={idx} className="proj-detail-section a2">
-                <div className="proj-detail-section-header-block">
-                  <span className="proj-detail-section-eyebrow">{getSectionEyebrow(p.title)}</span>
-                  <h2 className="proj-detail-section-title">{p.title}</h2>
-                </div>
+                <h2 className="proj-detail-section-title">{p.title}</h2>
                 <p className="proj-detail-learned-paragraph" dangerouslySetInnerHTML={{ __html: p.description }} />
               </div>
             ))
@@ -172,10 +154,7 @@ export default async function ProjectDetailPage({
           {/* Architecture / What I Built */}
           {("architecture" in project && Array.isArray((project as { architecture?: string[] }).architecture)) ? (
             <div className="proj-detail-section a3">
-              <div className="proj-detail-section-header-block">
-                <span className="proj-detail-section-eyebrow">{getSectionEyebrow("Architecture")}</span>
-                <h2 className="proj-detail-section-title">Architecture</h2>
-              </div>
+              <h2 className="proj-detail-section-title">Architecture</h2>
               <ul className="proj-detail-bullet-list">
                 {(project as { architecture: string[] }).architecture.map((item, i) => (
                   <li key={i} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: item }} />
@@ -184,10 +163,7 @@ export default async function ProjectDetailPage({
             </div>
           ) : ("highlights" in project && Array.isArray((project as { highlights?: string[] }).highlights) && (
             <div className="proj-detail-section a3">
-              <div className="proj-detail-section-header-block">
-                <span className="proj-detail-section-eyebrow">{getSectionEyebrow("Architecture")}</span>
-                <h2 className="proj-detail-section-title">Architecture</h2>
-              </div>
+              <h2 className="proj-detail-section-title">Architecture</h2>
               <ul className="proj-detail-bullet-list">
                 {(project as { highlights: string[] }).highlights.map((h, i) => (
                   <li key={i} className="proj-detail-bullet-item" dangerouslySetInnerHTML={{ __html: h }} />
@@ -199,10 +175,7 @@ export default async function ProjectDetailPage({
           {/* Stats */}
           {"stats" in project && Array.isArray((project as { stats?: unknown[] }).stats) && (
             <div className="proj-detail-section a4">
-              <div className="proj-detail-section-header-block">
-                <span className="proj-detail-section-eyebrow">{getSectionEyebrow("Stats")}</span>
-                <h2 className="proj-detail-section-title">Stats</h2>
-              </div>
+              <h2 className="proj-detail-section-title">Stats</h2>
               <ul className="proj-detail-bullet-list">
                 {(project as { stats: (string | { label: string; value: string })[] }).stats.map((s, idx) => {
                   if (typeof s === "string") {
@@ -223,10 +196,7 @@ export default async function ProjectDetailPage({
           {/* What I Learned */}
           {"learned" in project && (
             <div className="proj-detail-section a4">
-              <div className="proj-detail-section-header-block">
-                <span className="proj-detail-section-eyebrow">{getSectionEyebrow("What I Learned")}</span>
-                <h2 className="proj-detail-section-title">What I Learned</h2>
-              </div>
+              <h2 className="proj-detail-section-title">What I Learned</h2>
               {typeof (project as { learned?: unknown }).learned === "string" ? (
                 <p
                   className="proj-detail-learned-paragraph"
