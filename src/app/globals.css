@@ -1523,12 +1523,20 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border);
+  padding-top: 2.25rem;
+  position: relative;
 }
 .proj-detail-section:first-of-type {
-  border-top: none;
   padding-top: 0;
+}
+.proj-detail-section:not(:first-of-type)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-h) 0%, var(--border) 45%, transparent 95%);
 }
 .proj-detail-section-title {
   font-family: var(--font-serif);
