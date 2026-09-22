@@ -135,7 +135,7 @@ export default function Hero() {
 
           <div className="hero-actions-right">
             <a id="hero-resume" href={PERSONAL.resume} target="_blank" rel="noopener noreferrer" className="btn btn-solid">
-              <DL /> Resume
+              <DL /> <span className="btn-label">Resume</span>
             </a>
             <a
               id="hero-contact"
@@ -143,7 +143,7 @@ export default function Hero() {
               onClick={(e) => { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}
               className="btn btn-line"
             >
-              Contact <AR />
+              <span className="btn-label">Contact</span> <AR />
             </a>
           </div>
         </div>

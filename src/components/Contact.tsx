@@ -49,17 +49,17 @@ export default function Contact() {
 
         <div className="contact-actions-row" data-reveal data-delay="3">
           <a href={`mailto:${PERSONAL.email}`} className="btn btn-solid" id="contact-cta">
-            Send me an email <Arr />
+            <span className="btn-label">Send me an email</span> <Arr />
           </a>
           
           <div className="contact-socials-inline">
-            <a href={PERSONAL.github} target="_blank" rel="noopener noreferrer" className="ic" aria-label="GitHub">
+            <a id="contact-gh" href={PERSONAL.github} target="_blank" rel="noopener noreferrer" className="ic" aria-label="GitHub">
               <GH />
             </a>
-            <a href={PERSONAL.linkedin} target="_blank" rel="noopener noreferrer" className="ic" aria-label="LinkedIn">
+            <a id="contact-li" href={PERSONAL.linkedin} target="_blank" rel="noopener noreferrer" className="ic" aria-label="LinkedIn">
               <LI />
             </a>
-            <a href={PERSONAL.leetcode} target="_blank" rel="noopener noreferrer" className="ic" aria-label="LeetCode">
+            <a id="contact-lc" href={PERSONAL.leetcode} target="_blank" rel="noopener noreferrer" className="ic" aria-label="LeetCode">
               <LC />
             </a>
           </div>
