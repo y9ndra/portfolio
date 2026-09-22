@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
+import { Magnetic } from "@/components/Magnetic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.me";
 
@@ -58,7 +59,7 @@ const GH = () => (
 );
 
 const LiveIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="globe-icon">
     <circle cx="12" cy="12" r="10" />
     <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
     <path d="M2 12h20" />
@@ -93,9 +94,11 @@ export default async function ProjectDetailPage({
       {/* Back button — aligned to main page width */}
       <div className="wrap">
         <div className="proj-detail-back-wrap a0">
-          <Link href="/#projects" className="proj-detail-back">
-            <ArrowLeft /> Back to Projects
-          </Link>
+          <Magnetic strength={0.32} maxDisplacement={8}>
+            <Link href="/#projects" className="proj-detail-back">
+              <ArrowLeft /> <span className="btn-label">Back to Projects</span>
+            </Link>
+          </Magnetic>
         </div>
       </div>
 
@@ -134,34 +137,40 @@ export default async function ProjectDetailPage({
             {/* Action buttons */}
             <div className="proj-detail-actions">
               {project.github && project.github !== "#" && (
-                <a
-                  href={project.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="proj-detail-gh-btn"
-                >
-                  <GH /> GitHub
-                </a>
+                <Magnetic strength={0.35} maxDisplacement={7}>
+                  <a
+                    href={project.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="proj-detail-gh-btn"
+                  >
+                    <GH /> <span className="btn-label">GitHub</span>
+                  </a>
+                </Magnetic>
               )}
               {project.demo && project.demo !== "#" && (
-                <a
-                  href={project.demo}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="proj-detail-gh-btn"
-                >
-                  <LiveIcon /> Live
-                </a>
+                <Magnetic strength={0.35} maxDisplacement={7}>
+                  <a
+                    href={project.demo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="proj-detail-live-btn"
+                  >
+                    <LiveIcon /> <span className="btn-label">Live</span>
+                  </a>
+                </Magnetic>
               )}
               {"docs" in project && (project as { docs?: string }).docs && (
-                <a
-                  href={(project as { docs: string }).docs}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="proj-detail-gh-btn"
-                >
-                  <SwaggerIcon /> Swagger
-                </a>
+                <Magnetic strength={0.35} maxDisplacement={7}>
+                  <a
+                    href={(project as { docs: string }).docs}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="proj-detail-gh-btn"
+                  >
+                    <SwaggerIcon /> <span className="btn-label">Swagger</span>
+                  </a>
+                </Magnetic>
               )}
             </div>
 
