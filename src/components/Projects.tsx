@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
 import { useCardTilt } from "@/hooks/useCardTilt";
-import { Magnetic } from "@/components/Magnetic";
 
 const GH = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -89,33 +88,29 @@ function ProjectCard({ id, title, description, tech, github, demo, image, delay 
             <h3 className="proj-name">{title}</h3>
             <div className="proj-actions">
               {demo && demo !== "#" && (
-                <Magnetic strength={0.35} maxDisplacement={6}>
-                  <a
-                    href={demo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="proj-live-btn"
-                    aria-label={`${title} Live Demo`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <LiveIcon /> <span className="btn-label">Live</span>
-                  </a>
-                </Magnetic>
+                <a
+                  href={demo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="proj-live-btn"
+                  aria-label={`${title} Live Demo`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <LiveIcon /> <span className="btn-label">Live</span>
+                </a>
               )}
               {github && github !== "#" && (
-                <Magnetic strength={0.35} maxDisplacement={6}>
-                  <a
-                    href={github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="proj-gh-btn"
-                    aria-label={`${title} GitHub`}
-                    id={`proj-${id}-gh`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <GH /> <span className="btn-label">GitHub</span>
-                  </a>
-                </Magnetic>
+                <a
+                  href={github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="proj-gh-btn"
+                  aria-label={`${title} GitHub`}
+                  id={`proj-${id}-gh`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GH /> <span className="btn-label">GitHub</span>
+                </a>
               )}
             </div>
           </div>

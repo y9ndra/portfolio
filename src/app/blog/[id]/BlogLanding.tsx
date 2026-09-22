@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCardTilt } from "@/hooks/useCardTilt";
-import { Magnetic } from "@/components/Magnetic";
 
 interface BlogPart {
   id: string;
@@ -187,11 +186,9 @@ export default function BlogLanding({ blog }: BlogLandingProps) {
       {/* Back button */}
       <div className="wrap">
         <div className="proj-detail-back-wrap a0">
-          <Magnetic strength={0.32} maxDisplacement={8}>
-            <Link href="/#blog" className="proj-detail-back">
-              <ArrowLeft /> Back to Blogs
-            </Link>
-          </Magnetic>
+          <Link href="/#blog" className="proj-detail-back">
+            <ArrowLeft /> Back to Blogs
+          </Link>
         </div>
       </div>
 
