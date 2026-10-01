@@ -2101,7 +2101,8 @@ body::before {
 ═══════════════════════════════════════════ */
 .proj-detail-main {
   min-height: 100vh;
-  background: var(--bg);
+  position: relative;
+  z-index: 1;
   padding-bottom: 5rem;
 }
 .proj-detail-back-wrap {
