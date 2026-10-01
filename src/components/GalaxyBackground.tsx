@@ -52,15 +52,15 @@ export default function GalaxyBackground() {
         mouseRepulsion={true}
         mouseInteraction={true}
         density={isLight ? 1.5 : 3}
-        glowIntensity={isLight ? 0.06 : 0.075}
+        glowIntensity={isLight ? 0.06 : 0.07}
         saturation={0}
         hueShift={0}
-        twinkleIntensity={isLight ? 0.12 : 0.2}
+        twinkleIntensity={isLight ? 0.02 : 0.02}
         rotationSpeed={0}
         repulsionStrength={0}
         autoCenterRepulsion={0}
-        starSpeed={0.1}
-        speed={0.2}
+        starSpeed={0}
+        speed={0.1}
         transparent={true}
         lightMode={isLight}
       />
