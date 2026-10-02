@@ -24,9 +24,9 @@ export default function SkillsJar() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Simulation state
+  // Simulation state: starts in Organized mode for 2s, then auto-falls
   const [isZeroG, setIsZeroG] = useState(false);
-  const [isOrganized, setIsOrganized] = useState(false);
+  const [isOrganized, setIsOrganized] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const selectedCategoryRef = useRef("All");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -39,10 +39,11 @@ export default function SkillsJar() {
   const draggedBodyRef = useRef<Matter.Body | null>(null);
   const hoveredBodyRef = useRef<Matter.Body | null>(null);
   const animFrameRef = useRef<number | null>(null);
-  const hasTriggeredDropRef = useRef(false);
+  const hasTriggeredAutoFallRef = useRef(false);
+  const autoFallTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Organize mode refs
-  const isOrganizedRef = useRef(false);
+  const isOrganizedRef = useRef(true);
   const targetPositionsRef = useRef<Map<Matter.Body, { x: number; y: number }>>(new Map());
   const setupBoundsRef = useRef<((forcedHeight?: number) => { width: number; height: number }) | null>(null);
   const isMobileRef = useRef(false);
@@ -163,8 +164,49 @@ export default function SkillsJar() {
     });
   }, []);
 
+  // Cancel auto-fall timer if user manually interacts early
+  const cancelAutoFall = useCallback(() => {
+    if (autoFallTimerRef.current) {
+      clearTimeout(autoFallTimerRef.current);
+      autoFallTimerRef.current = null;
+    }
+    hasTriggeredAutoFallRef.current = true;
+  }, []);
+
+  // Auto-fall: smoothly transition skills from organized rows to natural physics collapse
+  const triggerAutoFall = useCallback(() => {
+    if (!engineRef.current || !canvasWrapRef.current) return;
+    if (!isOrganizedRef.current) return;
+
+    setIsOrganized(false);
+    isOrganizedRef.current = false;
+
+    const wrap = canvasWrapRef.current;
+    const w = wrap.clientWidth;
+    const isMobile = w < 640;
+    const defaultH = isMobile ? 360 : 350;
+
+    wrap.style.height = "";
+    setupBoundsRef.current?.(defaultH);
+
+    // Re-enable natural collision physics & gravity
+    setOrganizeCollisionMode(false);
+    engineRef.current.gravity.y = 0.95;
+    engineRef.current.gravity.x = 0;
+
+    bodiesRef.current.forEach(({ body }) => {
+      Matter.Sleeping.set(body, false);
+      Matter.Body.setVelocity(body, {
+        x: (Math.random() - 0.5) * 2,
+        y: Math.random() * 2 + 1,
+      });
+      Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05);
+    });
+  }, [setOrganizeCollisionMode]);
+
   // Toggle Organize Mode: magnetically align skills into categorized horizontal rows
   const handleToggleOrganize = useCallback(() => {
+    cancelAutoFall();
     if (!engineRef.current || !canvasWrapRef.current) return;
     const nextOrganized = !isOrganized;
     setIsOrganized(nextOrganized);
@@ -202,8 +244,11 @@ export default function SkillsJar() {
       });
     } else {
       // Revert wrap height to CSS default
+      const w = wrap.clientWidth;
+      const isMobile = w < 640;
+      const defaultH = isMobile ? 360 : 350;
       wrap.style.height = "";
-      setupBoundsRef.current?.();
+      setupBoundsRef.current?.(defaultH);
 
       // Re-enable natural collision physics & gravity
       setOrganizeCollisionMode(false);
@@ -218,44 +263,11 @@ export default function SkillsJar() {
         Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05);
       });
     }
-  }, [isOrganized, computeOrganizedPositions, setOrganizeCollisionMode]);
-
-  // Drop/cascade all skills from the top inside the closed jar
-  const dropSkills = useCallback(() => {
-    if (!engineRef.current || !canvasWrapRef.current) return;
-    setIsOrganized(false);
-    isOrganizedRef.current = false;
-    canvasWrapRef.current.style.height = "";
-    setupBoundsRef.current?.();
-    setIsZeroG(false);
-    setOrganizeCollisionMode(false);
-    engineRef.current.gravity.y = 0.95;
-    engineRef.current.gravity.x = 0;
-
-    const width = canvasWrapRef.current.clientWidth || 800;
-    const isMobile = width < 640;
-    const cols = Math.max(4, Math.floor(width / (isMobile ? 80 : 130)));
-
-    bodiesRef.current.forEach(({ body }, index) => {
-      Matter.Sleeping.set(body, false);
-      const col = index % cols;
-      const row = Math.floor(index / cols);
-      const colWidth = width / (cols + 1);
-      const startX = colWidth * (col + 1) + (Math.random() - 0.5) * 16;
-      const startY = 16 + row * (isMobile ? 18 : 24) + (index % 3) * 6;
-
-      Matter.Body.setPosition(body, { x: startX, y: startY });
-      Matter.Body.setVelocity(body, {
-        x: (Math.random() - 0.5) * 2,
-        y: Math.random() * 3 + 2,
-      });
-      Matter.Body.setAngle(body, (Math.random() - 0.5) * 0.25);
-      Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05);
-    });
-  }, [setOrganizeCollisionMode]);
+  }, [isOrganized, computeOrganizedPositions, setOrganizeCollisionMode, cancelAutoFall]);
 
   // Zero Gravity Toggle
   const handleToggleZeroG = useCallback(() => {
+    cancelAutoFall();
     if (!engineRef.current) return;
     if (isOrganized) {
       setIsOrganized(false);
@@ -279,10 +291,11 @@ export default function SkillsJar() {
       engineRef.current.gravity.y = 0.95;
       engineRef.current.gravity.x = 0;
     }
-  }, [isZeroG, isOrganized, setOrganizeCollisionMode]);
+  }, [isZeroG, isOrganized, setOrganizeCollisionMode, cancelAutoFall]);
 
   // Category select handler (highlights matching pills in-place without re-dropping or restarting physics)
   const handleSelectCategory = (catId: string) => {
+    cancelAutoFall();
     setSelectedCategory(catId);
     selectedCategoryRef.current = catId;
     setIsDropdownOpen(false);
@@ -292,6 +305,7 @@ export default function SkillsJar() {
   useEffect(() => {
     const wrap = canvasWrapRef.current;
     const canvas = canvasRef.current;
+    const container = containerRef.current;
     if (!wrap || !canvas) return;
 
     // Check theme
@@ -309,8 +323,9 @@ export default function SkillsJar() {
     const { Engine, Runner, Bodies, Composite, Mouse, MouseConstraint } = Matter;
 
     // Create physics engine with high iteration counts to prevent body overlap/merging
+    // Starts with 0 gravity because initial state is organized
     const engine = Engine.create({
-      gravity: { x: 0, y: 0.95, scale: 0.001 },
+      gravity: { x: 0, y: 0, scale: 0.001 },
       positionIterations: 10,
       velocityIterations: 8,
     });
@@ -415,6 +430,7 @@ export default function SkillsJar() {
     Composite.add(engine.world, mouseConstraint);
 
     Matter.Events.on(mouseConstraint, "startdrag", (evt: any) => {
+      cancelAutoFall();
       draggedBodyRef.current = evt.body || mouseConstraint.body;
       if (canvas) canvas.style.cursor = "grabbing";
     });
@@ -428,33 +444,58 @@ export default function SkillsJar() {
     const dims = getPillDimensions(initWidth);
     isMobileRef.current = dims.isMobile;
     ctx.font = dims.fontStr;
-    const cols = Math.max(4, Math.floor(initWidth / (dims.isMobile ? 80 : 130)));
     const items: { body: Matter.Body; name: string; category: string; width: number; height: number }[] = [];
 
-    ALL_SKILLS.forEach((skill, index) => {
+    ALL_SKILLS.forEach((skill) => {
       const textMetrics = ctx.measureText(skill.name);
       const pillWidth = Math.max(dims.minWidth, Math.ceil(textMetrics.width + dims.paddingX));
       const pillHeight = dims.pillHeight;
 
-      const col = index % cols;
-      const row = Math.floor(index / cols);
-      const colWidth = initWidth / (cols + 1);
-      const startX = colWidth * (col + 1) + (Math.random() - 0.5) * 16;
-      const startY = 16 + row * (dims.isMobile ? 18 : 24) + (index % 3) * 6;
-
-      const body = Bodies.rectangle(startX, startY, pillWidth, pillHeight, {
+      const body = Bodies.rectangle(0, 0, pillWidth, pillHeight, {
         chamfer: { radius: dims.chamferRadius },
         restitution: 0.25,
         friction: 0.35,
         frictionAir: 0.015,
         density: 0.003,
-        angle: (Math.random() - 0.5) * 0.25,
+        isSensor: true,
+        collisionFilter: {
+          group: -1,
+          mask: 0,
+          category: 0x0001,
+        },
       });
 
       items.push({ body, name: skill.name, category: skill.category, width: pillWidth, height: pillHeight });
     });
 
     bodiesRef.current = items;
+
+    // Calculate initial organized layout and position bodies directly
+    const isMobile = initWidth < 640;
+    const baseHeight = isMobile ? 360 : 350;
+    const { targets, totalHeight } = computeOrganizedPositions(initWidth, baseHeight);
+
+    if (totalHeight > baseHeight) {
+      const expandedH = Math.ceil(totalHeight);
+      wrap.style.height = `${expandedH}px`;
+      setupBounds(expandedH);
+      const recomputed = computeOrganizedPositions(initWidth, expandedH);
+      targetPositionsRef.current = recomputed.targets;
+    } else {
+      targetPositionsRef.current = targets;
+    }
+
+    // Set each body directly to its organized position from frame 1
+    items.forEach(({ body }) => {
+      const target = targetPositionsRef.current.get(body);
+      if (target) {
+        Matter.Body.setPosition(body, { x: target.x, y: target.y });
+      }
+      Matter.Body.setAngle(body, 0);
+      Matter.Body.setVelocity(body, { x: 0, y: 0 });
+      Matter.Body.setAngularVelocity(body, 0);
+    });
+
     Composite.add(
       engine.world,
       items.map((i) => i.body)
@@ -583,6 +624,7 @@ export default function SkillsJar() {
 
     // When clicking inside the canvas, re-enable mouseConstraint grabbing
     const handleCanvasPointerDown = () => {
+      cancelAutoFall();
       if (mouseConstraint) {
         mouseConstraint.collisionFilter.mask = 0xFFFFFFFF;
       }
@@ -754,8 +796,8 @@ export default function SkillsJar() {
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseleave", handleMouseLeave);
     wrap.addEventListener("mouseleave", handleMouseLeave);
-    if (containerRef.current) {
-      containerRef.current.addEventListener("mouseleave", handleMouseLeave);
+    if (container) {
+      container.addEventListener("mouseleave", handleMouseLeave);
     }
     document.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("mousemove", handleGlobalPointerMove, { passive: true });
@@ -766,13 +808,15 @@ export default function SkillsJar() {
     window.addEventListener("touchcancel", handleGlobalMouseUp);
     window.addEventListener("blur", releaseDragged);
 
-    // IntersectionObserver to trigger drop cascade when scrolled into view
+    // IntersectionObserver to trigger auto-fall after 2 seconds when scrolled into view
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasTriggeredDropRef.current) {
-            hasTriggeredDropRef.current = true;
-            dropSkills();
+          if (entry.isIntersecting && !hasTriggeredAutoFallRef.current) {
+            hasTriggeredAutoFallRef.current = true;
+            autoFallTimerRef.current = setTimeout(() => {
+              triggerAutoFall();
+            }, 2000);
           }
         });
       },
@@ -919,6 +963,7 @@ export default function SkillsJar() {
 
     // Cleanup on unmount
     return () => {
+      if (autoFallTimerRef.current) clearTimeout(autoFallTimerRef.current);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       themeObserver.disconnect();
       resizeObserver.disconnect();
@@ -932,8 +977,8 @@ export default function SkillsJar() {
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       wrap.removeEventListener("mouseleave", handleMouseLeave);
-      if (containerRef.current) {
-        containerRef.current.removeEventListener("mouseleave", handleMouseLeave);
+      if (container) {
+        container.removeEventListener("mouseleave", handleMouseLeave);
       }
       document.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("mousemove", handleGlobalPointerMove);
@@ -946,7 +991,7 @@ export default function SkillsJar() {
       Runner.stop(runner);
       Engine.clear(engine);
     };
-  }, [dropSkills]);
+  }, [triggerAutoFall, computeOrganizedPositions, getPillDimensions, cancelAutoFall]);
 
   return (
     <div className="skills-jar-card" ref={containerRef}>
