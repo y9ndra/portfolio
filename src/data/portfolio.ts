@@ -32,7 +32,7 @@ export const SKILLS = [
   },
   {
     category: "Tools",
-    items: ["Git", "GitHub", "Docker", "Postman", "Swagger", "Jest", "Render", "Vercel", "VS Code", "Antigravity", "Windsurf"],
+    items: ["Git", "GitHub", "Docker", "Postman", "Swagger", "Jest", "Render", "Vercel", "Antigravity"],
   },
 ];
 
