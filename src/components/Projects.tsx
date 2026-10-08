@@ -194,7 +194,7 @@ export default function Projects() {
       const cardRect = glareRef.current.getBoundingClientRect();
       const px = Math.round(((e.clientX - cardRect.left) / cardRect.width) * 100);
       const py = Math.round(((e.clientY - cardRect.top) / cardRect.height) * 100);
-      glareRef.current.style.background = `radial-gradient(circle 380px at ${px}% ${py}%, var(--card-glare-color, rgba(255,255,255,0.12)), transparent 68%)`;
+      glareRef.current.style.background = `radial-gradient(circle 380px at ${px}% ${py}%, var(--card-glare-color, rgba(255,255,255,0.18)), transparent 68%)`;
       glareRef.current.style.opacity = "1";
     }
   };

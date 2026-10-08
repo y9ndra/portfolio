@@ -18,7 +18,7 @@
   --section-gap: 2.25rem;
   --font-serif:  var(--font-playfair, Georgia, serif);
   --font-sans-alt: var(--font-hanken, 'Hanken Grotesk', sans-serif);
-  --card-glare-color: rgba(255, 255, 255, 0.13);
+  --card-glare-color: rgba(255, 255, 255, 0.18);
   --card-tilt-shadow: rgba(0, 0, 0, 0.45);
 }
 
@@ -2108,7 +2108,7 @@ body::before {
   pointer-events: none !important;
   border-radius: inherit;
   opacity: 0;
-  z-index: 10;
+  z-index: 100 !important;
   transition: opacity 0.3s ease;
 }
 
