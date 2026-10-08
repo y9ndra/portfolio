@@ -109,6 +109,57 @@ export const PROJECTS = [
       "Building Sotrix completely changed how I look at software development. Before this, backend felt like just writing API routes and querying a database. Sotrix showed me <strong>how vast backend engineering actually is</strong>, from orchestrating background workers and real-time messaging to keeping data fast, indexed, and secure.<br/><br/>More than anything, it taught me <strong>how a true end-to-end, production-grade system operates</strong>. It shifted my mindset from simply writing code that works to thinking like an engineer: anticipating bottlenecks, designing for resilience, and building software that holds up under real-world conditions."
   },
   {
+    id: "cappd",
+    title: "Cappd",
+    year: "2026",
+    description:
+      "A generic resource budgeting and reservation engine for backend systems. Built for TypeScript & Node.js.",
+    tech: [
+      "TypeScript",
+      "Node.js",
+      "Redis",
+      "Lua",
+      "Express",
+      "Vitest",
+      "Docker",
+      "tsup",
+      "npm"
+    ],
+    github: "https://github.com/y9ndra/cappd",
+    demo: "https://www.npmjs.com/package/cappd",
+    installCommand: "npm install cappd",
+    image: "/assets/images/cappd-banner.jpg",
+    problem: [
+      {
+        title: "Problem",
+        description:
+          "Traditional rate limiters control how many requests a system can receive, but they don't account for how much of a shared resource each request consumes.<br/><br/>A request using 150 tokens and one using 85,000 tokens both count as a single request. Cappd addresses variable-cost workloads by reserving expected resource usage before execution and reconciling it against actual usage afterward.<br/><br/>The system also needs to remain safe when multiple requests attempt to consume the same budget concurrently. Simple check-then-act logic can allow parallel requests to over-allocate shared capacity."
+      },
+      {
+        title: "Approach",
+        description:
+          "I engineered Cappd around a <strong>reserve → execute → reconcile</strong> lifecycle while maintaining the invariant: <code>committed + reserved ≤ limit</code><br/>• <strong>Atomic Reservation:</strong> Reserves estimated resource usage before execution and rejects requests when sufficient capacity isn't available.<br/>• <strong>Redis + Lua Atomicity:</strong> Implements reservation, commit, and release as atomic Redis Lua operations, preventing concurrent requests from over-allocating shared capacity.<br/>• <strong>Usage Reconciliation:</strong> Measures actual consumption after execution, commits the amount used, and releases unused reserved capacity.<br/>• <strong>Storage Abstraction:</strong> Separates the budgeting engine from persistence through a <code>ResourceStore</code> interface, with both in-memory and Redis implementations.<br/>• <strong>Express Integration:</strong> Provides a <code>protectRoute</code> adapter with automatic 429 budget rejections and fail-closed 503 handling for infrastructure failures."
+      }
+    ],
+    architecture: [
+      "<strong>Core Engine</strong> - TypeScript · budget accounting · reservation lifecycle · typed errors",
+      "<strong>Distributed Store</strong> - Redis · Redis Hashes · atomic Lua scripts for reserve, commit, and release",
+      "<strong>Local Store</strong> - In-memory <code>MemoryStore</code> for local development and testing",
+      "<strong>Web Framework</strong> - Express <code>protectRoute</code> adapter · pre-response usage reconciliation · HTTP 429 / 503 handling",
+      "<strong>Usage & Metering</strong> - Generic resource units such as <code>tokens</code>, <code>compute-ms</code>, <code>credits</code>, and <code>bytes</code> · custom usage resolvers",
+      "<strong>Tooling & Quality</strong> - Vitest · concurrency tests · Redis integration tests · tsup ESM/CJS builds · Docker Compose · GitHub Actions"
+    ],
+    stats: [
+      "<strong>98 passing tests</strong> across unit, concurrency, reliability, and Redis integration suites",
+      "<strong>Atomic reservation lifecycle</strong> implemented with Redis Lua",
+      "<strong>Strict budget invariant</strong> enforced under concurrent requests",
+      "<strong>Dual ESM & CJS</strong> distribution with TypeScript declarations",
+      "<strong>npm package</strong> published as <code>cappd</code>"
+    ],
+    learned:
+      "Cappd was different from the projects I usually work on. Instead of building an application that uses packages, I was building the package itself.<br/><br/>That changed how I approached the project. I had to think more about how the API would look for someone else using it, how to keep the core independent from a specific framework, and how to make the pieces reusable instead of building everything around one application.<br/><br/>I also got to understand more of the npm side of things, from how a package is structured and built to exports, versioning, testing, and publishing. It was a good shift from just using libraries to actually thinking about what goes into building one."
+  },
+  {
     id: "spendwise",
     title: "SpendWise",
     year: "2025",
