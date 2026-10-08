@@ -1078,7 +1078,7 @@ body::before {
 .proj-gh-btn svg,
 .proj-detail-gh-btn svg,
 #hero-gh svg,
-#contact-gh svg,
+#footer-gh svg,
 .ic[aria-label="GitHub"] svg {
   display: inline-block;
   transform-origin: center center;
@@ -1089,7 +1089,7 @@ body::before {
 .proj-gh-btn:hover svg,
 .proj-detail-gh-btn:hover svg,
 #hero-gh:hover svg,
-#contact-gh:hover svg,
+#footer-gh:hover svg,
 .ic[aria-label="GitHub"]:hover svg {
   animation: ghWiggle 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -2929,23 +2929,68 @@ body::before {
 /* ═══════════════════════════════════════════
    FOOTER
 ═══════════════════════════════════════════ */
-.footer {
+.footer-wrap {
+  width: 100%;
+}
+
+.footer-row {
   border-top: 1px solid var(--border);
-  padding: 1.5rem var(--px) 6.5rem var(--px);
-  max-width: var(--w);
-  margin: 0 auto;
+  padding-top: 1.75rem;
+  padding-bottom: 6.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 1.5rem;
+  width: 100%;
 }
-.ft { font-family: var(--font-mono, monospace); font-size: 0.675rem; color: var(--t3); }
+
+.ft {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.675rem;
+  color: var(--t3);
+  line-height: 1;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+}
+
 .footer-views {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   color: var(--t3);
+}
+
+.footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: auto;
+}
+
+.footer-socials .ic {
+  width: 36px;
+  height: 36px;
+}
+
+.footer-socials .ic svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 480px) {
+  .footer-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+  .footer-socials {
+    margin-left: 0;
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -5683,5 +5728,60 @@ body::before {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════
+   QUOTE SECTION (Standalone Typography)
+═══════════════════════════════════════════ */
+.quote-section {
+  padding-top: 1.75rem;
+  padding-bottom: 2.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-standalone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  border-left: 2px solid var(--border-h);
+  padding-left: 1.5rem;
+  transition: border-color 0.25s ease;
+}
+
+.quote-standalone:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme='light'] .quote-standalone:hover {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.quote-text {
+  font-family: var(--font-serif);
+  font-size: clamp(1.28rem, 3.2vw, 1.65rem);
+  line-height: 1.5;
+  color: var(--t1);
+  letter-spacing: -0.015em;
+  font-style: italic;
+  font-weight: 400;
+  margin: 0;
+}
+
+.quote-author {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--t2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  align-self: flex-end;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .quote-standalone {
+    padding-left: 1.15rem;
+  }
+}
+
 
 

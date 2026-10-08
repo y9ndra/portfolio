@@ -7,6 +7,7 @@ import Experience     from "@/components/Experience";
 import Projects       from "@/components/Projects";
 import Blog           from "@/components/Blog";
 import Contact        from "@/components/Contact";
+import QuoteSection    from "@/components/QuoteSection";
 import Footer         from "@/components/Footer";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
@@ -45,6 +46,9 @@ export default function Home() {
 
         {/* Contact */}
         <Contact />
+
+        {/* Quote */}
+        <QuoteSection />
       </main>
       <Footer />
     </>
