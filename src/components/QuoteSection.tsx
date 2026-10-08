@@ -16,7 +16,7 @@ export default function QuoteSection() {
   return (
     <section className="quote-section" aria-label="Quote of the moment">
       <div className="wrap">
-        <div className="quote-standalone">
+        <div className="quote-standalone" data-reveal>
           <blockquote className="quote-text">
             &ldquo;{quote.quote}&rdquo;
           </blockquote>
