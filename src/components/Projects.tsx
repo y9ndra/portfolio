@@ -1,152 +1,550 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
-import { useCardTilt } from "@/hooks/useCardTilt";
+import { GH, LiveIcon, NPMIcon } from "@/components/ProjectCard";
 
-const GH = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+export { GH, LiveIcon, NPMIcon };
+
+const ArrowLeftNav = () => (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M10 3L5 8l5 5" />
   </svg>
 );
 
-const LiveIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="globe-icon">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-    <path d="M2 12h20" />
+const ArrowRightNav = () => (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M6 3l5 5-5 5" />
   </svg>
 );
 
-type ProjectCardProps = (typeof import("@/data/portfolio").PROJECTS)[number] & { delay: string };
+const ArrowRight = () => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M3 8h10M9 4l4 4-4 4" />
+  </svg>
+);
 
-function ProjectCard({ id, title, description, tech, github, demo, image, delay }: ProjectCardProps) {
+export default function Projects() {
   const router = useRouter();
-  const [imgErr, setImgErr] = useState(false);
-  const showImg = !!image && !imgErr;
-  const { cardRef, glareRef } = useCardTilt<HTMLElement>();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  const [cursorTilt, setCursorTilt] = useState({ x: 0, y: 0 });
+  const [fanExtra, setFanExtra] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent navigation if click was on a button or link
+  const stageRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
+  const dragStartX = useRef<number | null>(null);
+  const hasSwiped = useRef(false);
+
+  const projects = PROJECTS.slice(0, 3);
+  const total = projects.length;
+  const [prevActiveIndex, setPrevActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPrevActiveIndex(activeIndex);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [activeIndex]);
+
+  const handlePrev = useCallback(() => {
+    setPrevActiveIndex(activeIndex);
+    setActiveIndex((prev) => (prev - 1 + total) % total);
+  }, [activeIndex, total]);
+
+  const handleNext = useCallback(() => {
+    setPrevActiveIndex(activeIndex);
+    setActiveIndex((prev) => (prev + 1) % total);
+  }, [activeIndex, total]);
+
+  const handleCardClick = (e: React.MouseEvent, index: number, id: string) => {
+    const target = e.target as HTMLElement;
+    if (target.closest(".proj-actions") || target.closest("a") || target.closest("button")) {
+      return;
+    }
+    if (hasSwiped.current) {
+      e.preventDefault();
+      return;
+    }
+    if (index === activeIndex) {
+      router.push(`/projects/${id}`);
+    } else {
+      e.preventDefault();
+      setPrevActiveIndex(activeIndex);
+      setActiveIndex(index);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number, id: string) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (index === activeIndex) {
+        router.push(`/projects/${id}`);
+      } else {
+        setPrevActiveIndex(activeIndex);
+        setActiveIndex(index);
+      }
+    }
+  };
+
+  // Keyboard left/right arrow navigation when projects section is in view
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.getAttribute("contenteditable") === "true")
+      ) {
+        return;
+      }
+
+      const stage = stageRef.current;
+      if (!stage) return;
+      const rect = stage.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!inView) return;
+
+      if (e.key === "ArrowLeft") {
+        handlePrev();
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [handleNext, handlePrev]);
+
+  // Pointer drag & 3D tilt tracking
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
     const target = e.target as HTMLElement;
     if (target.closest("a") || target.closest("button")) {
       return;
     }
-    router.push(`/projects/${id}`);
+    dragStartX.current = e.clientX;
+    hasSwiped.current = false;
+    setIsDragging(true);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      router.push(`/projects/${id}`);
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (dragStartX.current !== null) {
+      const deltaX = e.clientX - dragStartX.current;
+      if (Math.abs(deltaX) > 15) {
+        hasSwiped.current = true;
+      }
+      setDragOffset(deltaX);
+    }
+
+    const stage = stageRef.current;
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const normX = (e.clientX - rect.left) / rect.width - 0.5;
+    const normY = (e.clientY - rect.top) / rect.height - 0.5;
+
+    const target = e.target as HTMLElement;
+    if (target.closest(".proj-actions") || target.closest("a") || target.closest("button")) {
+      setCursorTilt({ x: 0, y: 0 });
+    } else {
+      setCursorTilt({
+        x: Math.round(-normY * 4.5),
+        y: Math.round(normX * 5),
+      });
+    }
+    setFanExtra(Math.abs(normX) * 1.5);
+
+    if (glareRef.current) {
+      const cardRect = glareRef.current.getBoundingClientRect();
+      const px = Math.round(((e.clientX - cardRect.left) / cardRect.width) * 100);
+      const py = Math.round(((e.clientY - cardRect.top) / cardRect.height) * 100);
+      glareRef.current.style.background = `radial-gradient(circle 380px at ${px}% ${py}%, var(--card-glare-color, rgba(255,255,255,0.12)), transparent 68%)`;
+      glareRef.current.style.opacity = "1";
     }
   };
 
-  return (
-    <div
-      role="link"
-      tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={handleKeyDown}
-      className="proj-card-link"
-      aria-label={`View ${title} details`}
-      style={{ cursor: "pointer" }}
-      data-reveal
-      data-delay={delay}
-    >
-      <article
-        ref={cardRef}
-        id={`proj-${id}`}
-        className="proj-item corner-box tilt-card"
-      >
-        <div ref={glareRef} className="card-glare" aria-hidden="true" />
-        {/* Left: image */}
-        <div className="proj-img-col">
-          {showImg ? (
-            <div className="proj-img-wrap">
-              <Image
-                src={image}
-                alt={title}
-                fill
-                sizes="(max-width: 768px) 100vw, 240px"
-                style={{ objectFit: "contain" }}
-                onError={() => setImgErr(true)}
-              />
-            </div>
-          ) : (
-            <div className="proj-img-wrap proj-img-empty">
-              <span className="proj-img-placeholder">No Preview</span>
-            </div>
-          )}
-        </div>
+  const handlePointerUp = () => {
+    if (dragStartX.current !== null) {
+      if (dragOffset < -40) {
+        handleNext();
+      } else if (dragOffset > 40) {
+        handlePrev();
+      }
+    }
+    dragStartX.current = null;
+    setDragOffset(0);
+    setIsDragging(false);
+    setTimeout(() => {
+      hasSwiped.current = false;
+    }, 60);
+  };
 
-        {/* Right: content */}
-        <div className="proj-body">
-          <div className="proj-row">
-            <h3 className="proj-name">{title}</h3>
-            <div className="proj-actions">
-              {demo && demo !== "#" && (
-                <a
-                  href={demo}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="proj-live-btn"
-                  aria-label={`${title} Live Demo`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <LiveIcon /> <span className="btn-label">Live</span>
-                </a>
-              )}
-              {github && github !== "#" && (
-                <a
-                  href={github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="proj-gh-btn"
-                  aria-label={`${title} GitHub`}
-                  id={`proj-${id}-gh`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <GH /> <span className="btn-label">GitHub</span>
-                </a>
-              )}
-            </div>
-          </div>
-          <p className="proj-desc">{description}</p>
-          <div className="proj-tech-section">
-            <span className="proj-tech-label">Technologies Used:</span>
-            <div className="proj-tags">
-              {tech.slice(0, 6).map((t) => <span key={t} className="proj-tag">{t}</span>)}
-              {tech.length > 6 && (
-                <span className="proj-tag proj-tag-more" title={tech.slice(6).join(", ")}>
-                  +{tech.length - 6} more
-                </span>
-              )}
-            </div>
-          </div>
-          <span className="proj-view-more">View details →</span>
-        </div>
-      </article>
-    </div>
-  );
-}
+  const handlePointerLeave = () => {
+    handlePointerUp();
+    setCursorTilt({ x: 0, y: 0 });
+    setFanExtra(0);
+    if (glareRef.current) {
+      glareRef.current.style.opacity = "0";
+    }
+  };
 
-export default function Projects() {
+  // Touch swipe support for mobile devices
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("a") || target.closest("button")) {
+      return;
+    }
+    dragStartX.current = e.touches[0].clientX;
+    hasSwiped.current = false;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (dragStartX.current === null) return;
+    const deltaX = e.touches[0].clientX - dragStartX.current;
+    if (Math.abs(deltaX) > 15) {
+      hasSwiped.current = true;
+    }
+    setDragOffset(deltaX);
+  };
+
+  const handleTouchEnd = () => {
+    handlePointerUp();
+  };
+
   return (
     <section id="projects" className="section" aria-label="Projects">
       <div className="wrap">
 
-        <div className="section-head" data-reveal>
+        <div className="section-head section-head-split" data-reveal>
           <span className="section-title">Projects</span>
-          <div className="section-rule" />
+          <div className="proj-deck-controls">
+            <button
+              type="button"
+              className="proj-deck-nav-btn"
+              onClick={handlePrev}
+              aria-label="Previous project"
+              title="Previous project"
+            >
+              <ArrowLeftNav />
+            </button>
+            <button
+              type="button"
+              className="proj-deck-nav-btn"
+              onClick={handleNext}
+              aria-label="Next project"
+              title="Next project"
+            >
+              <ArrowRightNav />
+            </button>
+          </div>
         </div>
 
-        <div className="proj-list">
-          {PROJECTS.map((p, i) => (
-            <ProjectCard key={p.id} {...p} delay={String((i % 3) + 1)} />
-          ))}
+        <div className="proj-deck-wrap" data-reveal data-delay="1">
+
+          {/* 3D Arc Fan Stage with Swipe & Drag Interaction */}
+          <div
+            ref={stageRef}
+            className={`proj-deck-stage ${isDragging ? "dragging" : ""}`}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Natural Height Spacer for responsive container sizing */}
+            <div className="proj-deck-spacer" aria-hidden="true">
+              <div className="proj-item proj-deck-item corner-box" style={{ visibility: "hidden", pointerEvents: "none" }}>
+                <div className="proj-deck-banner-wrap">
+                  <div className="proj-deck-banner" />
+                </div>
+                <div className="proj-body proj-deck-body">
+                  <div className="proj-row">
+                    <h3 className="proj-name">Spacer Project</h3>
+                  </div>
+                  <p className="proj-desc">{PROJECTS[1].description}</p>
+                  <div className="proj-tech-section">
+                    <span className="proj-tech-label">Technologies Used:</span>
+                    <div className="proj-tags">
+                      <span className="proj-tag">TypeScript</span>
+                      <span className="proj-tag">Redis</span>
+                      <span className="proj-tag">Node.js</span>
+                      <span className="proj-tag">+6 more</span>
+                    </div>
+                  </div>
+                  <span className="proj-view-more">View details →</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3D Stacked Cards: Stable DOM order to prevent DOM-reordering transition glitches */}
+            {projects.map((p, i) => {
+              const diff = (i - activeIndex + total) % total;
+              const isFront = diff === 0;
+              const isRight = diff === 1;
+              const isLeft = diff === 2;
+              const isExiting = i === prevActiveIndex && !isFront;
+
+              // Normalized drag progress (-1 to 1) along the triangle
+              const dragProgress = Math.max(-1, Math.min(1, dragOffset / 180));
+
+              let x = 0;
+              let y = 0;
+              let z = 35;
+              let rotZ = 0;
+              let scale = 0.91;
+              let opacity = 1;
+              let zIndex = isFront ? 60 : isExiting ? 25 : 10;
+              let boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
+
+              if (isDragging && dragOffset !== 0) {
+                // Interactive Triangle Carousel: all 3 cards move synchronously during drag!
+                if (dragProgress > 0) {
+                  // User dragging RIGHT:
+                  // Mid -> Right, Right -> Left (across back), Left -> Mid
+                  const pNorm = dragProgress;
+                  if (isFront) {
+                    x = Math.round(dragOffset * 0.72);
+                    y = Math.round(pNorm * 6);
+                    z = Math.round(35 - pNorm * 80);
+                    rotZ = Number((pNorm * 5).toFixed(2));
+                    scale = Number((0.91 + pNorm * 0.02).toFixed(3));
+                    opacity = Number((1 - pNorm * 0.45).toFixed(2));
+                  } else if (isRight) {
+                    x = Math.round(56 - pNorm * 112);
+                    y = 6;
+                    z = -45;
+                    rotZ = Number((5 - pNorm * 10).toFixed(2));
+                    scale = 0.93;
+                    opacity = 0.55;
+                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
+                  } else if (isLeft) {
+                    x = Math.round(-56 + pNorm * 56);
+                    y = Math.round(6 - pNorm * 6);
+                    z = Math.round(-45 + pNorm * 80);
+                    rotZ = Number((-5 + pNorm * 5).toFixed(2));
+                    scale = Number((0.93 - pNorm * 0.02).toFixed(3));
+                    opacity = Number((0.55 + pNorm * 0.45).toFixed(2));
+                    zIndex = 40; // Rising Left card comes forward
+                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
+                  }
+                } else {
+                  // User dragging LEFT:
+                  // Mid -> Left, Left -> Right (across back), Right -> Mid
+                  const mag = -dragProgress;
+                  if (isFront) {
+                    x = Math.round(dragOffset * 0.72);
+                    y = Math.round(mag * 6);
+                    z = Math.round(35 - mag * 80);
+                    rotZ = Number((-mag * 5).toFixed(2));
+                    scale = Number((0.91 + mag * 0.02).toFixed(3));
+                    opacity = Number((1 - mag * 0.45).toFixed(2));
+                  } else if (isLeft) {
+                    x = Math.round(-56 + mag * 112);
+                    y = 6;
+                    z = -45;
+                    rotZ = Number((-5 + mag * 10).toFixed(2));
+                    scale = 0.93;
+                    opacity = 0.55;
+                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
+                  } else if (isRight) {
+                    x = Math.round(56 - mag * 56);
+                    y = Math.round(6 - mag * 6);
+                    z = Math.round(-45 + mag * 80);
+                    rotZ = Number((5 - mag * 5).toFixed(2));
+                    scale = Number((0.93 - mag * 0.02).toFixed(3));
+                    opacity = Number((0.55 + mag * 0.45).toFixed(2));
+                    zIndex = 40; // Rising Right card comes forward
+                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
+                  }
+                }
+              } else {
+                // Resting positions with subtle hover fan expansion:
+                if (isFront) {
+                  x = 0;
+                  y = 0;
+                  z = 35;
+                  rotZ = 0;
+                  scale = 0.91;
+                  opacity = 1;
+                  boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
+                } else if (isRight) {
+                  x = Math.round(56 + fanExtra * 14);
+                  y = 6;
+                  z = -45;
+                  rotZ = Number((5 + fanExtra * 1.5).toFixed(2));
+                  scale = 0.93;
+                  opacity = 0.55;
+                  boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
+                } else if (isLeft) {
+                  x = Math.round(-56 - fanExtra * 14);
+                  y = 6;
+                  z = -45;
+                  rotZ = Number((-5 - fanExtra * 1.5).toFixed(2));
+                  scale = 0.93;
+                  opacity = 0.55;
+                  boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
+                }
+              }
+
+              // Apply subtle cursor 3D tilt
+              const tiltX = isFront ? cursorTilt.x : Math.round(cursorTilt.x * 0.25);
+              const tiltY = isFront ? cursorTilt.y : Math.round(cursorTilt.y * 0.25);
+              const transform = `translate3d(${x}px, ${y}px, ${z}px) rotateZ(${rotZ}deg) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale})`;
+
+              const imgErr = !!imgErrors[p.id];
+              const showImg = !!p.image && !imgErr;
+
+              return (
+                <div
+                  key={p.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => handleCardClick(e, i, p.id)}
+                  onKeyDown={(e) => handleKeyDown(e, i, p.id)}
+                  className={`proj-deck-card-wrap ${isFront ? "front" : "wing"}${isExiting ? " exiting" : ""}`}
+                  style={{
+                    transform,
+                    zIndex,
+                    opacity,
+                    boxShadow,
+                    transition: isDragging
+                      ? "none"
+                      : "transform 0.55s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.5s ease, box-shadow 0.45s ease",
+                  }}
+                  aria-label={`${p.title} project card${isFront ? " (active)" : ""}`}
+                >
+                  <article id={`proj-deck-${p.id}`} className="proj-item proj-deck-item corner-box tilt-card">
+                    {/* Active card glare sheen */}
+                    {isFront && <div ref={glareRef} className="card-glare" aria-hidden="true" />}
+
+                    {/* Top: Full-width Banner Image */}
+                    <div className="proj-deck-banner-wrap">
+                      {showImg ? (
+                        <div className="proj-deck-banner">
+                          <Image
+                            src={p.image}
+                            alt={p.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 650px"
+                            style={{ objectFit: "cover" }}
+                            onError={() => setImgErrors((prev) => ({ ...prev, [p.id]: true }))}
+                            priority={i === 0}
+                          />
+                        </div>
+                      ) : (
+                        <div className="proj-deck-banner proj-deck-banner-empty">
+                          <span className="proj-img-placeholder">No Preview</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom: Content Body */}
+                    <div className="proj-body proj-deck-body">
+                      <div className="proj-row">
+                        <h3 className="proj-name">{p.title}</h3>
+                        <div className="proj-actions">
+                          {p.demo && p.demo !== "#" && (
+                            <a
+                              href={p.demo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="proj-live-btn"
+                              aria-label={`${p.title} ${p.demo.includes("npmjs.com") ? "npm Package" : "Live Demo"}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {p.demo.includes("npmjs.com") ? <NPMIcon /> : <LiveIcon />}
+                              <span className="btn-label">{p.demo.includes("npmjs.com") ? "npm" : "Live"}</span>
+                            </a>
+                          )}
+                          {p.github && p.github !== "#" && (
+                            <a
+                              href={p.github}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="proj-gh-btn"
+                              aria-label={`${p.title} GitHub`}
+                              id={`proj-deck-${p.id}-gh`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <GH /> <span className="btn-label">GitHub</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="proj-desc">{p.description}</p>
+
+                      <div className="proj-tech-section">
+                        <span className="proj-tech-label">Technologies Used:</span>
+                        <div className="proj-tags">
+                          {p.tech.slice(0, 6).map((t) => (
+                            <span key={t} className="proj-tag">
+                              {t}
+                            </span>
+                          ))}
+                          {p.tech.length > 6 && (
+                            <span className="proj-tag proj-tag-more" title={p.tech.slice(6).join(", ")}>
+                              +{p.tech.length - 6} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <span className="proj-view-more">View details →</span>
+                    </div>
+                  </article>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* Compact Right-Aligned All Projects Link */}
+        <div className="proj-view-all-wrap" data-reveal>
+          <Link href="/projects" className="btn btn-line proj-view-all-btn">
+            <span className="btn-label">All Projects</span>
+            <ArrowRight />
+          </Link>
         </div>
 
       </div>

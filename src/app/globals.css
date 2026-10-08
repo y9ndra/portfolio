@@ -539,10 +539,16 @@ body::before {
 #about {
   padding-top: 80px;
 }
+#projects {
+  padding-top: 2.25rem;
+}
 .section-head {
   display: flex;
   align-items: center;
   margin-bottom: 1.25rem;
+}
+.section-head-split {
+  justify-content: space-between;
 }
 .section-title {
   position: relative;
@@ -1112,6 +1118,18 @@ body::before {
 .proj-live-btn:hover .globe-icon,
 .proj-detail-live-btn:hover .globe-icon {
   transform: rotate(180deg) scale(1.12);
+}
+
+.npm-icon {
+  display: inline-block;
+  transform-origin: center center;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.proj-live-btn:hover .npm-icon,
+.proj-detail-live-btn:hover .npm-icon {
+  transform: scale(1.15);
 }
 
 .proj-live-btn:hover .btn-label,
@@ -1718,7 +1736,10 @@ body::before {
   gap: 0;
   overflow: hidden;
   border-radius: 10px;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--bg-2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   cursor: pointer;
   align-items: center;
 }
@@ -1732,7 +1753,7 @@ body::before {
 .proj-img-col {
   flex: 0 0 45%;
   max-width: 45%;
-  background: transparent;
+  background: var(--bg-3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1745,7 +1766,7 @@ body::before {
   aspect-ratio: 16 / 9;
   position: relative;
   overflow: hidden;
-  background: transparent;
+  background: var(--bg-3);
 }
 .proj-card-link:hover .proj-img-wrap { border-color: var(--border-h); }
 .proj-img-wrap img {
@@ -1912,6 +1933,282 @@ body::before {
   .proj-body {
     padding: 1rem;
   }
+}
+
+/* ═══════════════════════════════════════════
+   3D CARD DECK / ARC FAN (HOMEPAGE)
+═══════════════════════════════════════════ */
+.proj-deck-wrap {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+
+
+.proj-deck-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.proj-deck-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--t2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.06);
+}
+
+.proj-deck-nav-btn:hover {
+  color: var(--t1);
+  border-color: var(--border-h);
+  background: var(--bg-3);
+  transform: translateY(-1px);
+}
+
+.proj-deck-nav-btn:active {
+  transform: translateY(1px);
+}
+
+/* 3D Arc Stage */
+.proj-deck-stage {
+  position: relative;
+  width: 100%;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+  touch-action: pan-y;
+  padding: 8px 0;
+}
+
+.proj-deck-spacer {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  width: calc(100% - 64px);
+  margin: 0 auto;
+}
+
+.proj-deck-card-wrap {
+  position: absolute;
+  top: 8px;
+  left: 32px;
+  width: calc(100% - 64px);
+  height: calc(100% - 16px);
+  transform-origin: 50% 100%;
+  will-change: transform, opacity, filter;
+  transition: transform 0.55s cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 0.5s ease,
+              box-shadow 0.45s ease,
+              border-color 0.3s ease;
+  border-radius: 10px;
+  background: var(--bg-2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Ensure the card and all its sections are 100% opaque, overriding .corner-box:hover translucency */
+.proj-item.corner-box,
+.proj-item.corner-box:hover,
+.proj-deck-card-wrap .proj-item,
+.proj-deck-card-wrap .proj-item:hover,
+.proj-deck-card-wrap .corner-box,
+.proj-deck-card-wrap .corner-box:hover {
+  background: var(--bg-2) !important;
+}
+
+.proj-deck-card-wrap .proj-item {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-2) !important;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Vertical Card Structure (Full-width banner on top, content below) */
+.proj-deck-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-2) !important;
+}
+
+.proj-deck-banner-wrap {
+  width: 100%;
+  position: relative;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.proj-deck-banner {
+  width: 100%;
+  aspect-ratio: 16 / 8.5;
+  position: relative;
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proj-deck-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.proj-deck-card-wrap:hover .proj-deck-banner img {
+  transform: scale(1.025);
+}
+
+.proj-deck-banner-empty {
+  aspect-ratio: 16 / 8.5;
+}
+
+.proj-deck-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.2rem 1.35rem 1.15rem;
+  background: var(--bg-2) !important;
+  flex: 1;
+}
+
+.proj-deck-stage.dragging {
+  cursor: grabbing;
+}
+.proj-deck-card-wrap.front {
+  z-index: 60;
+  cursor: grab;
+}
+
+.proj-deck-card-wrap.front:active {
+  cursor: grabbing;
+}
+
+/* Specular light sheen on deck card */
+.proj-deck-card-wrap .card-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none !important;
+  border-radius: inherit;
+  opacity: 0;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+/* Ensure action buttons on the active front card are on top and clickable */
+.proj-deck-card-wrap.front .proj-actions {
+  position: relative;
+  z-index: 70;
+  pointer-events: auto;
+}
+
+.proj-deck-card-wrap.front .proj-gh-btn,
+.proj-deck-card-wrap.front .proj-live-btn {
+  position: relative;
+  z-index: 71;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.proj-deck-card-wrap.wing {
+  z-index: 10;
+  cursor: pointer;
+}
+
+.proj-deck-card-wrap.wing.exiting {
+  z-index: 25;
+}
+
+.proj-deck-card-wrap.wing:hover {
+  opacity: 0.82 !important;
+}
+
+/* Wing cards: disable pointer events on inner body so they never block front card buttons */
+.proj-deck-card-wrap.wing .proj-deck-body {
+  pointer-events: none;
+}
+
+.proj-deck-card-wrap.wing a,
+.proj-deck-card-wrap.wing button {
+  pointer-events: none;
+}
+
+/* Light theme overrides for deck buttons and card wrap */
+
+[data-theme='light'] .proj-deck-card-wrap {
+  background: var(--bg-2);
+}
+
+[data-theme='light'] .proj-item.corner-box,
+[data-theme='light'] .proj-item.corner-box:hover,
+[data-theme='light'] .proj-deck-card-wrap .proj-item,
+[data-theme='light'] .proj-deck-card-wrap .proj-item:hover,
+[data-theme='light'] .proj-deck-card-wrap .proj-body {
+  background: var(--bg-2) !important;
+}
+
+[data-theme='light'] .proj-deck-nav-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--t2);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='light'] .proj-deck-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.25);
+  color: var(--t1);
+}
+
+@media (max-width: 640px) {
+  .proj-deck-spacer {
+    width: calc(100% - 24px);
+  }
+  .proj-deck-card-wrap {
+    left: 12px;
+    width: calc(100% - 24px);
+  }
+  .proj-deck-banner {
+    aspect-ratio: 16 / 9;
+  }
+  .proj-deck-body {
+    padding: 1rem 1rem 0.95rem;
+    gap: 0.5rem;
+  }
+}
+
+/* All Projects button on Homepage */
+.proj-view-all-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.proj-view-all-btn {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.725rem;
+  letter-spacing: 0.02em;
+  padding: 0 0.85rem;
+  height: 32px;
+  gap: 0.35rem;
+  border-radius: 6px;
 }
 
 /* ═══════════════════════════════════════════
@@ -2094,6 +2391,52 @@ body::before {
   .blog-body {
     padding: 1rem;
   }
+}
+
+/* ═══════════════════════════════════════════
+   ALL PROJECTS PAGE (/projects)
+═══════════════════════════════════════════ */
+.proj-page-main {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 5rem;
+}
+.proj-page-header {
+  padding-top: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.proj-page-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.proj-page-title {
+  font-family: var(--font-sans-alt);
+  font-size: 2.15rem;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.proj-page-count {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: var(--t3);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 9px;
+}
+.proj-page-desc {
+  font-size: 0.925rem;
+  color: var(--t2);
+  line-height: 1.7;
+  max-width: 640px;
 }
 
 /* ═══════════════════════════════════════════
