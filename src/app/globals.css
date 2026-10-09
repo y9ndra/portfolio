@@ -41,7 +41,13 @@
 ═══════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100%;
+  width: 100%;
+}
 
 body {
   background: var(--bg);
@@ -52,7 +58,19 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100%;
+  width: 100%;
+  position: relative;
   min-height: 100vh;
+}
+
+main,
+.proj-detail-main,
+.blog-detail-main {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 /* Subtle grain texture */
@@ -129,6 +147,7 @@ body::before {
   margin: 0 auto;
   padding-left: var(--px);
   padding-right: var(--px);
+  box-sizing: border-box;
 }
 @media (min-width: 720px) {
   .wrap {
@@ -646,6 +665,7 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .hero-name-wrap {
@@ -674,7 +694,7 @@ body::before {
     font-size: 1.65rem;
   }
   .hero-actions {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 0.5rem;
   }
   .hero-actions-left {
@@ -734,6 +754,10 @@ body::before {
   }
 }
 @media (max-width: 360px) {
+  .hero-name {
+    font-size: 1.35rem;
+    white-space: normal;
+  }
   .hero-actions {
     gap: 0.25rem;
   }
@@ -2178,19 +2202,36 @@ body::before {
 }
 
 @media (max-width: 640px) {
+  .proj-deck-stage {
+    perspective: 1000px;
+  }
   .proj-deck-spacer {
-    width: calc(100% - 24px);
+    width: calc(100% - 76px);
   }
   .proj-deck-card-wrap {
-    left: 12px;
-    width: calc(100% - 24px);
+    left: 38px;
+    width: calc(100% - 76px);
   }
   .proj-deck-banner {
     aspect-ratio: 16 / 9;
   }
   .proj-deck-body {
-    padding: 1rem 1rem 0.95rem;
-    gap: 0.5rem;
+    padding: 0.95rem 1rem 0.9rem;
+    gap: 0.45rem;
+  }
+  .proj-deck-item .proj-name {
+    font-size: 1.05rem;
+  }
+  .proj-deck-item .proj-desc {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+  .proj-deck-item .proj-tech-section {
+    margin-top: 0.2rem;
+  }
+  .proj-deck-item .proj-tag {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
   }
 }
 

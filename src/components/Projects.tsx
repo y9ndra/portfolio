@@ -65,6 +65,16 @@ export default function Projects() {
   const [fanExtra, setFanExtra] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
@@ -335,6 +345,14 @@ export default function Projects() {
               let zIndex = isFront ? 60 : isExiting ? 25 : 10;
               let boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
 
+              const isMobile = viewportWidth < 640;
+              const wingOffset = viewportWidth >= 640
+                ? 56
+                : viewportWidth <= 360
+                ? 28
+                : Math.min(40, Math.round(viewportWidth * 0.10));
+              const wingRot = 5;
+
               if (isDragging && dragOffset !== 0) {
                 // Interactive Triangle Carousel: all 3 cards move synchronously during drag!
                 if (dragProgress > 0) {
@@ -342,25 +360,25 @@ export default function Projects() {
                   // Mid -> Right, Right -> Left (across back), Left -> Mid
                   const pNorm = dragProgress;
                   if (isFront) {
-                    x = Math.round(dragOffset * 0.72);
+                    x = Math.round(dragOffset * (isMobile ? 0.5 : 0.72));
                     y = Math.round(pNorm * 6);
                     z = Math.round(35 - pNorm * 80);
-                    rotZ = Number((pNorm * 5).toFixed(2));
+                    rotZ = Number((pNorm * wingRot).toFixed(2));
                     scale = Number((0.91 + pNorm * 0.02).toFixed(3));
                     opacity = Number((1 - pNorm * 0.45).toFixed(2));
                   } else if (isRight) {
-                    x = Math.round(56 - pNorm * 112);
+                    x = Math.round(wingOffset - pNorm * (wingOffset * 2));
                     y = 6;
                     z = -45;
-                    rotZ = Number((5 - pNorm * 10).toFixed(2));
+                    rotZ = Number((wingRot - pNorm * (wingRot * 2)).toFixed(2));
                     scale = 0.93;
                     opacity = 0.55;
                     boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
                   } else if (isLeft) {
-                    x = Math.round(-56 + pNorm * 56);
+                    x = Math.round(-wingOffset + pNorm * wingOffset);
                     y = Math.round(6 - pNorm * 6);
                     z = Math.round(-45 + pNorm * 80);
-                    rotZ = Number((-5 + pNorm * 5).toFixed(2));
+                    rotZ = Number((-wingRot + pNorm * wingRot).toFixed(2));
                     scale = Number((0.93 - pNorm * 0.02).toFixed(3));
                     opacity = Number((0.55 + pNorm * 0.45).toFixed(2));
                     zIndex = 40; // Rising Left card comes forward
@@ -371,25 +389,25 @@ export default function Projects() {
                   // Mid -> Left, Left -> Right (across back), Right -> Mid
                   const mag = -dragProgress;
                   if (isFront) {
-                    x = Math.round(dragOffset * 0.72);
+                    x = Math.round(dragOffset * (isMobile ? 0.5 : 0.72));
                     y = Math.round(mag * 6);
                     z = Math.round(35 - mag * 80);
-                    rotZ = Number((-mag * 5).toFixed(2));
+                    rotZ = Number((-mag * wingRot).toFixed(2));
                     scale = Number((0.91 + mag * 0.02).toFixed(3));
                     opacity = Number((1 - mag * 0.45).toFixed(2));
                   } else if (isLeft) {
-                    x = Math.round(-56 + mag * 112);
+                    x = Math.round(-wingOffset + mag * (wingOffset * 2));
                     y = 6;
                     z = -45;
-                    rotZ = Number((-5 + mag * 10).toFixed(2));
+                    rotZ = Number((-wingRot + mag * (wingRot * 2)).toFixed(2));
                     scale = 0.93;
                     opacity = 0.55;
                     boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
                   } else if (isRight) {
-                    x = Math.round(56 - mag * 56);
+                    x = Math.round(wingOffset - mag * wingOffset);
                     y = Math.round(6 - mag * 6);
                     z = Math.round(-45 + mag * 80);
-                    rotZ = Number((5 - mag * 5).toFixed(2));
+                    rotZ = Number((wingRot - mag * wingRot).toFixed(2));
                     scale = Number((0.93 - mag * 0.02).toFixed(3));
                     opacity = Number((0.55 + mag * 0.45).toFixed(2));
                     zIndex = 40; // Rising Right card comes forward
@@ -407,18 +425,18 @@ export default function Projects() {
                   opacity = 1;
                   boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
                 } else if (isRight) {
-                  x = Math.round(56 + fanExtra * 14);
+                  x = Math.round(wingOffset + (isMobile ? 0 : fanExtra * 14));
                   y = 6;
                   z = -45;
-                  rotZ = Number((5 + fanExtra * 1.5).toFixed(2));
+                  rotZ = Number((wingRot + (isMobile ? 0 : fanExtra * 1.5)).toFixed(2));
                   scale = 0.93;
                   opacity = 0.55;
                   boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
                 } else if (isLeft) {
-                  x = Math.round(-56 - fanExtra * 14);
+                  x = Math.round(-wingOffset - (isMobile ? 0 : fanExtra * 14));
                   y = 6;
                   z = -45;
-                  rotZ = Number((-5 - fanExtra * 1.5).toFixed(2));
+                  rotZ = Number((-wingRot - (isMobile ? 0 : fanExtra * 1.5)).toFixed(2));
                   scale = 0.93;
                   opacity = 0.55;
                   boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";

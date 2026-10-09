@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <>
-      <main style={{ position: "relative", zIndex: 1 }}>
+      <main style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "100%", overflowX: "clip" }}>
         
         {/* Hero / About combined */}
         <Hero />

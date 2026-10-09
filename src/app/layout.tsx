@@ -1,9 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Playfair_Display, Hanken_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import ClickSound from "@/components/ClickSound";
 import GalaxyBackground from "@/components/GalaxyBackground";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 const inter = Inter({
   subsets: ["latin"],
