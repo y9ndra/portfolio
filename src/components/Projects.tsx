@@ -172,6 +172,9 @@ export default function Projects() {
     dragStartX.current = e.clientX;
     hasSwiped.current = false;
     setIsDragging(true);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -209,7 +212,12 @@ export default function Projects() {
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: React.PointerEvent) => {
+    if (e && e.currentTarget) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {}
+    }
     if (dragStartX.current !== null) {
       if (dragOffset < -40) {
         handleNext();
@@ -225,8 +233,8 @@ export default function Projects() {
     }, 60);
   };
 
-  const handlePointerLeave = () => {
-    handlePointerUp();
+  const handlePointerLeave = (e: React.PointerEvent) => {
+    handlePointerUp(e);
     setCursorTilt({ x: 0, y: 0 });
     setFanExtra(0);
     if (glareRef.current) {
@@ -299,6 +307,7 @@ export default function Projects() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onDragStart={(e) => e.preventDefault()}
           >
             {/* Natural Height Spacer for responsive container sizing */}
             <div className="proj-deck-spacer" aria-hidden="true">
@@ -492,6 +501,7 @@ export default function Projects() {
                             style={{ objectFit: "cover" }}
                             onError={() => setImgErrors((prev) => ({ ...prev, [p.id]: true }))}
                             priority={i === 0}
+                            draggable={false}
                           />
                         </div>
                       ) : (

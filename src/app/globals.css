@@ -2013,6 +2013,11 @@ body::before {
   transform-style: preserve-3d;
   touch-action: pan-y;
   padding: 8px 0;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .proj-deck-spacer {
@@ -2039,6 +2044,11 @@ body::before {
   background: var(--bg-2);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Ensure the card and all its sections are 100% opaque, overriding .corner-box:hover translucency */
@@ -2068,6 +2078,10 @@ body::before {
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-2) !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .proj-deck-banner-wrap {
@@ -2087,6 +2101,9 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .proj-deck-banner img {
@@ -2095,6 +2112,14 @@ body::before {
   object-fit: cover;
   display: block;
   transition: transform 0.4s ease;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 .proj-deck-card-wrap:hover .proj-deck-banner img {
@@ -2112,6 +2137,10 @@ body::before {
   padding: 1.2rem 1.35rem 1.15rem;
   background: var(--bg-2) !important;
   flex: 1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .proj-deck-stage.dragging {
