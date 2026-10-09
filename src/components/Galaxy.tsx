@@ -308,8 +308,17 @@ export default function Galaxy({
     const mesh = new Mesh(gl, { geometry, program });
     let animateId: number;
 
+    let lastTime = 0;
+    const minFrameInterval = 1000 / 60; // Max 60 FPS cap (saves immense GPU on 120Hz/144Hz displays)
+
     function update(t: number) {
       animateId = requestAnimationFrame(update);
+      if (document.hidden) return; // Pause completely in background tab
+
+      const delta = t - lastTime;
+      if (delta < minFrameInterval) return;
+      lastTime = t - (delta % minFrameInterval);
+
       if (!disableAnimation) {
         program.uniforms.uTime.value = t * 0.001;
         program.uniforms.uStarSpeed.value = (t * 0.001 * starSpeed) / 10.0;
@@ -330,10 +339,18 @@ export default function Galaxy({
     animateId = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
 
+    let ctnRect: DOMRect | null = null;
+    function updateCtnRect() {
+      if (ctn) ctnRect = ctn.getBoundingClientRect();
+    }
+    updateCtnRect();
+    window.addEventListener('resize', updateCtnRect, { passive: true });
+
     function handleMouseMove(e: MouseEvent) {
-      const rect = ctn.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1.0 - (e.clientY - rect.top) / rect.height;
+      if (!ctnRect) updateCtnRect();
+      if (!ctnRect) return;
+      const x = (e.clientX - ctnRect.left) / (ctnRect.width || 1);
+      const y = 1.0 - (e.clientY - ctnRect.top) / (ctnRect.height || 1);
       targetMousePos.current = { x, y };
       targetMouseActive.current = 1.0;
     }
@@ -350,6 +367,7 @@ export default function Galaxy({
     return () => {
       cancelAnimationFrame(animateId);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', updateCtnRect);
       if (mouseInteraction) {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseleave', handleMouseLeave);

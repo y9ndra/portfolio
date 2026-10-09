@@ -162,6 +162,9 @@ export default function Projects() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [handleNext, handlePrev]);
 
+  const pointerRaf = useRef<number | null>(null);
+  const pendingPointer = useRef<{ clientX: number; clientY: number; target: HTMLElement } | null>(null);
+
   // Pointer drag & 3D tilt tracking
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -186,29 +189,36 @@ export default function Projects() {
       setDragOffset(deltaX);
     }
 
-    const stage = stageRef.current;
-    if (!stage) return;
-    const rect = stage.getBoundingClientRect();
-    const normX = (e.clientX - rect.left) / rect.width - 0.5;
-    const normY = (e.clientY - rect.top) / rect.height - 0.5;
+    pendingPointer.current = { clientX: e.clientX, clientY: e.clientY, target: e.target as HTMLElement };
+    if (!pointerRaf.current) {
+      pointerRaf.current = requestAnimationFrame(() => {
+        pointerRaf.current = null;
+        const ev = pendingPointer.current;
+        if (!ev) return;
+        const stage = stageRef.current;
+        if (!stage) return;
+        const rect = stage.getBoundingClientRect();
+        const normX = (ev.clientX - rect.left) / rect.width - 0.5;
+        const normY = (ev.clientY - rect.top) / rect.height - 0.5;
 
-    const target = e.target as HTMLElement;
-    if (target.closest(".proj-actions") || target.closest("a") || target.closest("button")) {
-      setCursorTilt({ x: 0, y: 0 });
-    } else {
-      setCursorTilt({
-        x: Math.round(-normY * 4.5),
-        y: Math.round(normX * 5),
+        if (ev.target.closest(".proj-actions") || ev.target.closest("a") || ev.target.closest("button")) {
+          setCursorTilt({ x: 0, y: 0 });
+        } else {
+          setCursorTilt({
+            x: Math.round(-normY * 4.5),
+            y: Math.round(normX * 5),
+          });
+        }
+        setFanExtra(Math.abs(normX) * 1.5);
+
+        if (glareRef.current) {
+          const cardRect = glareRef.current.getBoundingClientRect();
+          const px = Math.round(((ev.clientX - cardRect.left) / cardRect.width) * 100);
+          const py = Math.round(((ev.clientY - cardRect.top) / cardRect.height) * 100);
+          glareRef.current.style.background = `radial-gradient(circle 380px at ${px}% ${py}%, var(--card-glare-color, rgba(255,255,255,0.18)), transparent 68%)`;
+          glareRef.current.style.opacity = "1";
+        }
       });
-    }
-    setFanExtra(Math.abs(normX) * 1.5);
-
-    if (glareRef.current) {
-      const cardRect = glareRef.current.getBoundingClientRect();
-      const px = Math.round(((e.clientX - cardRect.left) / cardRect.width) * 100);
-      const py = Math.round(((e.clientY - cardRect.top) / cardRect.height) * 100);
-      glareRef.current.style.background = `radial-gradient(circle 380px at ${px}% ${py}%, var(--card-glare-color, rgba(255,255,255,0.18)), transparent 68%)`;
-      glareRef.current.style.opacity = "1";
     }
   };
 
@@ -217,6 +227,10 @@ export default function Projects() {
       try {
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {}
+    }
+    if (pointerRaf.current) {
+      cancelAnimationFrame(pointerRaf.current);
+      pointerRaf.current = null;
     }
     if (dragStartX.current !== null) {
       if (dragOffset < -40) {

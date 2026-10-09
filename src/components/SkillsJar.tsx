@@ -808,19 +808,60 @@ export default function SkillsJar() {
     window.addEventListener("touchcancel", handleGlobalMouseUp);
     window.addEventListener("blur", releaseDragged);
 
-    // IntersectionObserver to trigger auto-fall after 2 seconds when scrolled into view
+    // Visibility and sleep mode management
+    let isJarVisible = false;
+    let isRunnerActive = true;
+
+    const resumeJarLoop = () => {
+      if (!isRunnerActive) {
+        isRunnerActive = true;
+        Runner.run(runner, engine);
+      }
+      if (!animFrameRef.current) {
+        animFrameRef.current = requestAnimationFrame(render);
+      }
+    };
+
+    const pauseJarLoop = () => {
+      if (isRunnerActive) {
+        isRunnerActive = false;
+        Runner.stop(runner);
+      }
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = 0;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        pauseJarLoop();
+      } else if (isJarVisible) {
+        resumeJarLoop();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // IntersectionObserver: pauses physics and rendering when off-screen to save 100% CPU/GPU!
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasTriggeredAutoFallRef.current) {
-            hasTriggeredAutoFallRef.current = true;
-            autoFallTimerRef.current = setTimeout(() => {
-              triggerAutoFall();
-            }, 2000);
+          if (entry.isIntersecting) {
+            isJarVisible = true;
+            resumeJarLoop();
+            if (!hasTriggeredAutoFallRef.current) {
+              hasTriggeredAutoFallRef.current = true;
+              autoFallTimerRef.current = setTimeout(() => {
+                triggerAutoFall();
+              }, 2000);
+            }
+          } else {
+            isJarVisible = false;
+            pauseJarLoop();
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.05 }
     );
     observer.observe(wrap);
 
@@ -965,6 +1006,7 @@ export default function SkillsJar() {
     return () => {
       if (autoFallTimerRef.current) clearTimeout(autoFallTimerRef.current);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       themeObserver.disconnect();
       resizeObserver.disconnect();
       observer.disconnect();

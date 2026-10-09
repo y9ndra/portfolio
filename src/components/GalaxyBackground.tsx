@@ -45,6 +45,7 @@ export default function GalaxyBackground() {
         overflow: "hidden",
         opacity: isLight ? 0.35 : 1,
         transition: "opacity 0.4s ease",
+        transform: "translateZ(0)",
       }}
       aria-hidden="true"
     >
