@@ -308,16 +308,22 @@ export default function Projects() {
                 </div>
                 <div className="proj-body proj-deck-body">
                   <div className="proj-row">
-                    <h3 className="proj-name">Spacer Project</h3>
+                    <h3 className="proj-name">{PROJECTS[2].title}</h3>
+                    <div className="proj-actions">
+                      <span className="proj-live-btn"><LiveIcon /> <span className="btn-label">Live</span></span>
+                      <span className="proj-gh-btn"><GH /> <span className="btn-label">GitHub</span></span>
+                    </div>
                   </div>
-                  <p className="proj-desc">{PROJECTS[1].description}</p>
+                  <p className="proj-desc">{PROJECTS[0].description}</p>
                   <div className="proj-tech-section">
                     <span className="proj-tech-label">Technologies Used:</span>
                     <div className="proj-tags">
                       <span className="proj-tag">TypeScript</span>
-                      <span className="proj-tag">Redis</span>
+                      <span className="proj-tag">React 19</span>
                       <span className="proj-tag">Node.js</span>
-                      <span className="proj-tag">+6 more</span>
+                      <span className="proj-tag">Socket.IO</span>
+                      <span className="proj-tag">Redis</span>
+                      <span className="proj-tag">+20 more</span>
                     </div>
                   </div>
                   <span className="proj-view-more">View details →</span>
@@ -349,8 +355,8 @@ export default function Projects() {
               const wingOffset = viewportWidth >= 640
                 ? 56
                 : viewportWidth <= 360
-                ? 28
-                : Math.min(40, Math.round(viewportWidth * 0.10));
+                ? 44
+                : 52;
               const wingRot = 5;
 
               if (isDragging && dragOffset !== 0) {
@@ -360,7 +366,7 @@ export default function Projects() {
                   // Mid -> Right, Right -> Left (across back), Left -> Mid
                   const pNorm = dragProgress;
                   if (isFront) {
-                    x = Math.round(dragOffset * (isMobile ? 0.5 : 0.72));
+                    x = Math.round(dragOffset * 0.72);
                     y = Math.round(pNorm * 6);
                     z = Math.round(35 - pNorm * 80);
                     rotZ = Number((pNorm * wingRot).toFixed(2));
@@ -389,7 +395,7 @@ export default function Projects() {
                   // Mid -> Left, Left -> Right (across back), Right -> Mid
                   const mag = -dragProgress;
                   if (isFront) {
-                    x = Math.round(dragOffset * (isMobile ? 0.5 : 0.72));
+                    x = Math.round(dragOffset * 0.72);
                     y = Math.round(mag * 6);
                     z = Math.round(35 - mag * 80);
                     rotZ = Number((-mag * wingRot).toFixed(2));

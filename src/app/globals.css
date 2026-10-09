@@ -2076,6 +2076,7 @@ body::before {
   background: var(--bg-3);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .proj-deck-banner {
@@ -2206,25 +2207,38 @@ body::before {
     perspective: 1000px;
   }
   .proj-deck-spacer {
-    width: calc(100% - 76px);
+    width: calc(100% - 20px);
   }
   .proj-deck-card-wrap {
-    left: 38px;
-    width: calc(100% - 76px);
+    left: 10px;
+    width: calc(100% - 20px);
   }
   .proj-deck-banner {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 8.5;
   }
   .proj-deck-body {
-    padding: 0.95rem 1rem 0.9rem;
-    gap: 0.45rem;
+    padding: 1.15rem 1.2rem 1.05rem;
+    gap: 0.6rem;
+  }
+  .proj-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .proj-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
   }
   .proj-deck-item .proj-name {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
   .proj-deck-item .proj-desc {
-    font-size: 0.8rem;
-    line-height: 1.45;
+    font-size: 0.825rem;
+    line-height: 1.5;
   }
   .proj-deck-item .proj-tech-section {
     margin-top: 0.2rem;
