@@ -2148,11 +2148,16 @@ body::before {
 }
 .proj-deck-card-wrap.front {
   z-index: 60;
-  cursor: grab;
+  cursor: pointer;
 }
 
+.proj-deck-stage.dragging .proj-deck-card-wrap.front,
 .proj-deck-card-wrap.front:active {
   cursor: grabbing;
+}
+
+.proj-deck-card-wrap.front:hover .proj-view-more {
+  opacity: 1;
 }
 
 /* Specular light sheen on deck card */

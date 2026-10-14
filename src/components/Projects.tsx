@@ -57,9 +57,24 @@ const ArrowRight = () => (
   </svg>
 );
 
+let savedActiveIndex = 0;
+if (typeof window !== "undefined") {
+  try {
+    const s = sessionStorage.getItem("home_active_project_index");
+    if (s !== null) {
+      const p = parseInt(s, 10);
+      if (!isNaN(p) && p >= 0 && p < 3) {
+        savedActiveIndex = p;
+      }
+    }
+  } catch {
+    // sessionStorage unavailable
+  }
+}
+
 export default function Projects() {
   const router = useRouter();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(savedActiveIndex);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [cursorTilt, setCursorTilt] = useState({ x: 0, y: 0 });
   const [fanExtra, setFanExtra] = useState(0);
@@ -79,11 +94,30 @@ export default function Projects() {
   const stageRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
   const dragStartX = useRef<number | null>(null);
+  const dragStartY = useRef<number | null>(null);
+  const capturedPointerId = useRef<number | null>(null);
   const hasSwiped = useRef(false);
 
   const projects = PROJECTS.slice(0, 3);
   const total = projects.length;
-  const [prevActiveIndex, setPrevActiveIndex] = useState(0);
+  const [prevActiveIndex, setPrevActiveIndex] = useState(savedActiveIndex);
+
+  // Sync state if sessionStorage was updated
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("home_active_project_index");
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed < total && parsed !== activeIndex) {
+          savedActiveIndex = parsed;
+          setActiveIndex(parsed);
+          setPrevActiveIndex(parsed);
+        }
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+  }, [total, activeIndex]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,12 +128,26 @@ export default function Projects() {
 
   const handlePrev = useCallback(() => {
     setPrevActiveIndex(activeIndex);
-    setActiveIndex((prev) => (prev - 1 + total) % total);
+    setActiveIndex((prev) => {
+      const next = (prev - 1 + total) % total;
+      savedActiveIndex = next;
+      try {
+        sessionStorage.setItem("home_active_project_index", String(next));
+      } catch {}
+      return next;
+    });
   }, [activeIndex, total]);
 
   const handleNext = useCallback(() => {
     setPrevActiveIndex(activeIndex);
-    setActiveIndex((prev) => (prev + 1) % total);
+    setActiveIndex((prev) => {
+      const next = (prev + 1) % total;
+      savedActiveIndex = next;
+      try {
+        sessionStorage.setItem("home_active_project_index", String(next));
+      } catch {}
+      return next;
+    });
   }, [activeIndex, total]);
 
   const handleCardClick = (e: React.MouseEvent, index: number, id: string) => {
@@ -112,11 +160,26 @@ export default function Projects() {
       return;
     }
     if (index === activeIndex) {
+      savedActiveIndex = index;
+      try {
+        sessionStorage.setItem("projects_back_url", "/#projects");
+        sessionStorage.setItem("home_active_project_index", String(index));
+      } catch {
+        // sessionStorage not available
+      }
+      if (e.metaKey || e.ctrlKey) {
+        window.open(`/projects/${id}`, "_blank");
+        return;
+      }
       router.push(`/projects/${id}`);
     } else {
       e.preventDefault();
       setPrevActiveIndex(activeIndex);
       setActiveIndex(index);
+      savedActiveIndex = index;
+      try {
+        sessionStorage.setItem("home_active_project_index", String(index));
+      } catch {}
     }
   };
 
@@ -124,10 +187,21 @@ export default function Projects() {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       if (index === activeIndex) {
+        savedActiveIndex = index;
+        try {
+          sessionStorage.setItem("projects_back_url", "/#projects");
+          sessionStorage.setItem("home_active_project_index", String(index));
+        } catch {
+          // sessionStorage not available
+        }
         router.push(`/projects/${id}`);
       } else {
         setPrevActiveIndex(activeIndex);
         setActiveIndex(index);
+        savedActiveIndex = index;
+        try {
+          sessionStorage.setItem("home_active_project_index", String(index));
+        } catch {}
       }
     }
   };
@@ -173,20 +247,28 @@ export default function Projects() {
       return;
     }
     dragStartX.current = e.clientX;
+    dragStartY.current = e.clientY;
     hasSwiped.current = false;
-    setIsDragging(true);
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {}
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (dragStartX.current !== null) {
       const deltaX = e.clientX - dragStartX.current;
-      if (Math.abs(deltaX) > 15) {
+      const deltaY = e.clientY - (dragStartY.current ?? e.clientY);
+
+      // Only enter drag mode if horizontal displacement exceeds threshold
+      if (!hasSwiped.current && Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
         hasSwiped.current = true;
+        setIsDragging(true);
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+          capturedPointerId.current = e.pointerId;
+        } catch {}
       }
-      setDragOffset(deltaX);
+
+      if (hasSwiped.current) {
+        setDragOffset(deltaX);
+      }
     }
 
     pendingPointer.current = { clientX: e.clientX, clientY: e.clientY, target: e.target as HTMLElement };
@@ -223,6 +305,12 @@ export default function Projects() {
   };
 
   const handlePointerUp = (e?: React.PointerEvent) => {
+    if (capturedPointerId.current !== null && stageRef.current) {
+      try {
+        stageRef.current.releasePointerCapture(capturedPointerId.current);
+      } catch {}
+      capturedPointerId.current = null;
+    }
     if (e && e.currentTarget) {
       try {
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
@@ -240,11 +328,14 @@ export default function Projects() {
       }
     }
     dragStartX.current = null;
+    dragStartY.current = null;
     setDragOffset(0);
     setIsDragging(false);
-    setTimeout(() => {
-      hasSwiped.current = false;
-    }, 60);
+    if (hasSwiped.current) {
+      setTimeout(() => {
+        hasSwiped.current = false;
+      }, 100);
+    }
   };
 
   const handlePointerLeave = (e: React.PointerEvent) => {
@@ -263,17 +354,21 @@ export default function Projects() {
       return;
     }
     dragStartX.current = e.touches[0].clientX;
+    dragStartY.current = e.touches[0].clientY;
     hasSwiped.current = false;
-    setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (dragStartX.current === null) return;
     const deltaX = e.touches[0].clientX - dragStartX.current;
-    if (Math.abs(deltaX) > 15) {
+    const deltaY = e.touches[0].clientY - (dragStartY.current ?? e.touches[0].clientY);
+    if (!hasSwiped.current && Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
       hasSwiped.current = true;
+      setIsDragging(true);
     }
-    setDragOffset(deltaX);
+    if (hasSwiped.current) {
+      setDragOffset(deltaX);
+    }
   };
 
   const handleTouchEnd = () => {
