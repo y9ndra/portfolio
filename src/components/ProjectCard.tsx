@@ -40,12 +40,22 @@ export function ProjectCard({ id, title, description, tech, github, demo, image,
     if (target.closest("a") || target.closest("button")) {
       return;
     }
+    try {
+      sessionStorage.setItem("projects_back_url", "/projects");
+    } catch {
+      // sessionStorage not available
+    }
     router.push(`/projects/${id}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
+      try {
+        sessionStorage.setItem("projects_back_url", "/projects");
+      } catch {
+        // sessionStorage not available
+      }
       router.push(`/projects/${id}`);
     }
   };

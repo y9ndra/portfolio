@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { PROJECTS } from "@/data/portfolio";
 import { ProjectCard } from "@/components/ProjectCard";
@@ -24,6 +25,14 @@ const ArrowLeft = () => (
 
 export default function AllProjectsClient() {
   useScrollReveal();
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("projects_back_url", "/projects");
+    } catch {
+      // sessionStorage not available
+    }
+  }, []);
 
   return (
     <>

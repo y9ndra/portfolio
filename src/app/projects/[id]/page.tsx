@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
+import { ProjectBackButton } from "@/components/ProjectBackButton";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.me";
 
@@ -77,12 +77,6 @@ const NPMIcon = () => (
   </svg>
 );
 
-const ArrowLeft = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M10 3L5 8l5 5" />
-  </svg>
-);
-
 export default async function ProjectDetailPage({
   params,
 }: {
@@ -99,9 +93,7 @@ export default async function ProjectDetailPage({
       {/* Back button — aligned to main page width */}
       <div className="wrap">
         <div className="proj-detail-back-wrap a0">
-          <Link href="/#projects" className="proj-detail-back">
-            <ArrowLeft /> <span className="btn-label">Back to Projects</span>
-          </Link>
+          <ProjectBackButton />
         </div>
       </div>
 
