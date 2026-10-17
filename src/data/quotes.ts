@@ -30,7 +30,7 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
   },
   {
     quote: "When do you think a person dies? A person dies only when they are forgotten.",
-    author: "Dr. Hiluluk",
+    author: "Dr. Hiriluk",
   },
   {
     quote: "By experiencing both victory and defeat, running away and shedding tears, that is how you truly grow.",
@@ -58,7 +58,7 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
   },
   {
     quote: "Everyone has things they can do and things they cannot. Focus on what only you can do.",
-    author: "Sanji",
+    author: "Vinsmoke Sanji",
   },
   {
     quote: "No matter what you build, it isn't good or bad. A person must take pride in what they create with their own hands.",
@@ -66,7 +66,7 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
   },
   {
     quote: "There is no crime in simply existing. Being alive is never a wrong thing.",
-    author: "Franky",
+    author: "Cyborg Franky",
   },
   {
     quote: "It doesn't matter who you were born to. We are all children of the open sea.",
@@ -74,7 +74,7 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
   },
   {
     quote: "There comes a time when you must stand your ground, especially when someone laughs at your dreams.",
-    author: "Usopp",
+    author: "God Usopp",
   },
   {
     quote: "Counting the things you've defeated is pointless. What truly matters is the number of lives and dreams you protect.",
@@ -125,10 +125,6 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
     author: "Monkey D. Luffy",
   },
   {
-    quote: "Whether it exists or not does not matter. What matters is having the courage to chase it.",
-    author: "Mont Blanc Cricket",
-  },
-  {
     quote: "Inherited will, the tide of the ages, and the dreams of people. These are things that will never be stopped.",
     author: "Gol D. Roger",
   },
@@ -139,6 +135,110 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
   {
     quote: "Friendship has nothing to do with how long you have known each other.",
     author: "Bon Clay",
+  },
+  {
+    quote: "I don't want to conquer anything! The greatest person in this entire world is the one who has the absolute most FREEDOM!",
+    author: "Monkey D. Luffy",
+  },
+  {
+    quote: "When you hit a wall, you don't turn back. You smash right through it and discover what you're truly made of.",
+    author: "Roronoa Zoro",
+  },
+  {
+    quote: "If you want to achieve something nobody else has, you have to be willing to endure what nobody else can.",
+    author: "Roronoa Zoro",
+  },
+  {
+    quote: "You can knock me down a hundred times. As long as I have breath in my lungs, I'm getting back up every single time.",
+    author: "Monkey D. Luffy",
+  },
+  {
+    quote: "Don't live a quiet life of hesitation. Step into the fire and make so much noise that the world can never ignore you.",
+    author: "Kozuki Oden",
+  },
+  {
+    quote: "If you don't take control of your own destiny, someone else will decide your future for you.",
+    author: "Trafalgar D. Law",
+  },
+  {
+    quote: "Let people laugh at your ambitions. The ones laughing from below will always stay looking up at you.",
+    author: "Marshall D. Teach",
+  },
+  {
+    quote: "If you don't have the courage to aim for what seems impossible, you'll spend your entire life settling for the ordinary.",
+    author: "Eustass Kid",
+  },
+  {
+    quote: "Why should you ever tremble before fear or pressure? If your eyes are set on greatness, never bow your head to anyone.",
+    author: "Jinbe",
+  },
+  {
+    quote: "Doubt is what breeds hesitation, and hesitation is what causes failure. When you make a move, commit with everything you have.",
+    author: "Silvers Rayleigh",
+  },
+  {
+    quote: "Let small insults slide off your back. Save your real fire for the people and dreams that actually matter.",
+    author: "Red-Haired Shanks",
+  },
+  {
+    quote: "Raw talent is worthless without discipline. Master yourself before you attempt to conquer the world.",
+    author: "Dracule Mihawk",
+  },
+  {
+    quote: "Even if your voice shakes and everyone tells you to stay quiet, never be afraid to stand up and speak the truth.",
+    author: "Koby",
+  },
+  {
+    quote: "Stand tall, look the world straight in the eye, and never apologize for who you are.",
+    author: "Cyborg Franky",
+  },
+  {
+    quote: "I may not be a genius, but I never stop pushing myself to grow stronger.",
+    author: "Monkey D. Luffy",
+  },
+  {
+    quote: "True strength isn't measured by how many battles you win, but by how many times you rise after falling.",
+    author: "Roronoa Zoro",
+  },
+  {
+    quote: "The people who laugh at your dreams are the same people who are afraid to chase their own.",
+    author: "Marshall D. Teach",
+  },
+  {
+    quote: "Don't ever let anyone else define your limits. Your future is yours to create.",
+    author: "Trafalgar D. Law",
+  },
+  {
+    quote: "If you want to stand out in this world, you have to be willing to break the rules everyone else follows.",
+    author: "Donquixote Doflamingo",
+  },
+  {
+    quote: "Never be satisfied with 'good enough.' If you want to be the best, you have to push beyond what seems possible.",
+    author: "Silvers Rayleigh",
+  },
+  {
+    quote: "Don't let fear silence your voice. The truth deserves to be heard, no matter who it offends.",
+    author: "Nico Robin",
+  },
+  {
+    quote: "It's not about where you came from; it's about the path you carve out with your own two hands.",
+    author: "Edward Newgate",
+  },
+  {
+    quote: "The greatest strength comes from protecting those you care about, not from conquering others.",
+    author: "Trafalgar D. Law",
+  },
+  {
+    quote: "To achieve something extraordinary, you must risk losing everything you hold dear.",
+    author: "Portgas D. Ace",
+  },
+  {
+    quote: "If you truly believe in something, stand up for it with all your might, even if you're standing alone.",
+    author: "Dracule Mihawk",
+  },
+  {
+    quote: "Let the world call you crazy for following your dreams. Their doubt is just fuel for your success.",
+    author: "God Usopp",
   },
 ];
 
