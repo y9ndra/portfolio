@@ -5906,11 +5906,11 @@ body::before {
 }
 .moon-banner-hint {
   position: absolute;
-  left: 0.9rem;
-  bottom: 0.7rem;
+  right: 0.75rem;
+  top: 0.65rem;
   font-family: var(--font-mono, monospace);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--t2);
   text-shadow: 0 0 4px var(--bg), 0 0 10px var(--bg), 0 0 18px var(--bg);
@@ -5919,6 +5919,10 @@ body::before {
   transition: opacity 0.5s ease, transform 0.5s ease;
   pointer-events: none;
   white-space: nowrap;
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
 }
 .moon-banner-hint.visible {
   opacity: 1;
@@ -5954,6 +5958,7 @@ body::before {
   .hero-tagline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 @media (max-width: 480px) {
+  .moon-banner-hint { font-size: 0.52rem; letter-spacing: 0.06em; }
   .hero-profile { margin-top: -1.1rem; padding-left: 0.8rem; }
   .hero-tagline-extra { display: none; }
 }

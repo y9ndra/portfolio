@@ -13,10 +13,12 @@ import { useEffect, useRef } from "react";
  *
  *  - desktop: hover shows a fine-grid focus circle, left click zooms in 2x on
  *    the clicked spot (max 4x), right click zooms out
- *  - touch: tap zooms in, double-tap zooms out, one finger pans while zoomed
- *  - a one-time hint fades in on first view; the scene also performs a single
- *    demonstration zoom when the flag is planted, unless the visitor already
- *    interacted
+ *  - touch: tap zooms in, double-tap zooms out, one finger pans while zoomed;
+ *    at 4x the whole banner switches to the fine grid automatically
+ *  - a hint is shown from load until the first interaction (hover, click or
+ *    touch) and then disappears for the rest of the page's life; the scene
+ *    also performs a single demonstration zoom when the flag is planted,
+ *    unless the visitor already zoomed
  *  - dark theme: dots carry light; light theme: dots carry ink
  */
 
@@ -723,6 +725,8 @@ export default function MoonBanner() {
       };
 
       const focusOn = lens.a > 0.01;
+      // touch devices have no hover focus: give them the fine grid everywhere at max zoom
+      const fineAll = !canHover && view.zoom > MAX_ZOOM * 0.8;
       const fr2 = FOCUS_R * FOCUS_R;
       const q = CELL / 4;             // sub-dot offset inside a focused cell
       const subMax = maxR * 0.5;
@@ -733,8 +737,8 @@ export default function MoonBanner() {
         const stagger = r % 2 ? CELL / 2 : 0;
         for (let c = 0; c < cols; c++) {
           const x = c * CELL + stagger;
-          let focused = false;
-          if (focusOn) {
+          let focused = fineAll;
+          if (!focused && focusOn) {
             const dx = x - lens.x, dy = y - lens.y;
             // the circle grows in as the pointer arrives
             focused = dx * dx + dy * dy < fr2 * lens.a * lens.a;
@@ -788,26 +792,21 @@ export default function MoonBanner() {
     let demoDone = false;
     let demoActive = false;
     let hintTimer: ReturnType<typeof setTimeout> | null = null;
-    let hintHideTimer: ReturnType<typeof setTimeout> | null = null;
-    const HINT_KEY = "moon-banner-hint-seen";
+    let hintDismissed = false;
     const hideHint = () => {
+      hintDismissed = true;
       if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
-      if (hintHideTimer) { clearTimeout(hintHideTimer); hintHideTimer = null; }
       hint?.classList.remove("visible");
     };
-    const scheduleHint = () => {
-      if (!hint || hintTimer || hintHideTimer) return;
-      let seen = false;
-      try { seen = localStorage.getItem(HINT_KEY) === "1"; } catch { /* storage unavailable */ }
-      if (seen) return;
+    const showHint = () => {
+      if (!hint || hintDismissed || hintTimer) return;
       hint.textContent = canHover
-        ? "click to zoom in · right-click to zoom out"
-        : "tap to zoom in · double-tap to zoom out";
+        ? "left click to zoom in · right click to zoom out"
+        : "tap to zoom in · double tap to zoom out";
       hintTimer = setTimeout(() => {
-        hint.classList.add("visible");
-        try { localStorage.setItem(HINT_KEY, "1"); } catch { /* ignore */ }
-        hintHideTimer = setTimeout(() => hint.classList.remove("visible"), 4200);
-      }, 1500);
+        hintTimer = null;
+        if (!hintDismissed) hint.classList.add("visible");
+      }, 600);
     };
     const markInteracted = () => {
       if (!userInteracted) { userInteracted = true; hideHint(); }
@@ -862,7 +861,7 @@ export default function MoonBanner() {
     const start = () => { if (running) return; running = true; last = 0; raf = requestAnimationFrame(frame); };
     const stop = () => { running = false; if (raf !== null) cancelAnimationFrame(raf); raf = null; };
     const io = new IntersectionObserver((e) => {
-      if (e[0]?.isIntersecting) { start(); scheduleHint(); } else stop();
+      if (e[0]?.isIntersecting) { start(); showHint(); } else stop();
     });
     io.observe(wrap);
 
@@ -891,8 +890,13 @@ export default function MoonBanner() {
       return { x: e.clientX - r.left, y: e.clientY - r.top };
     };
     // mouse: hover focus, click in, right-click out
+    let firstMove: { x: number; y: number } | null = null;
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
+      // a cursor merely resting over the banner on load should not dismiss the hint;
+      // require a little real movement first
+      if (!firstMove) firstMove = { x: e.clientX, y: e.clientY };
+      else if (Math.hypot(e.clientX - firstMove.x, e.clientY - firstMove.y) > 6) hideHint();
       const p = local(e);
       target.x = p.x; target.y = p.y; target.a = 1;
       if (lens.x < -1000) { lens.x = target.x; lens.y = target.y; }
@@ -914,6 +918,7 @@ export default function MoonBanner() {
     const onDown = (e: PointerEvent) => {
       lastPointerType = e.pointerType;
       if (e.pointerType !== "touch" || touch.id !== -1) return;
+      hideHint();
       touch.id = e.pointerId;
       touch.x0 = touch.lx = e.clientX; touch.y0 = touch.ly = e.clientY;
       touch.t0 = performance.now(); touch.moved = false;
@@ -951,6 +956,7 @@ export default function MoonBanner() {
     };
     const onCancel = (e: PointerEvent) => { if (e.pointerId === touch.id) touch.id = -1; };
     const onKey = (e: KeyboardEvent) => {
+      hideHint();
       if (e.key === "Enter" || e.key === "+") { e.preventDefault(); zoomInAt(W / 2, H / 2); }
       if (e.key === "Escape" || e.key === "-") { e.preventDefault(); zoomOut(); }
     };
