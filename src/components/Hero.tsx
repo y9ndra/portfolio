@@ -5,6 +5,7 @@ import Image from "next/image";
 import { PERSONAL } from "@/data/portfolio";
 import GithubCalendar from "@/components/GithubCalendar";
 import OdometerClock from "@/components/OdometerClock";
+import MoonBanner from "@/components/MoonBanner";
 
 const GH = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -51,8 +52,13 @@ export default function Hero() {
     <section id="about" className="section" aria-label="About">
       <div className="hero-inner">
 
+        {/* Interactive banner */}
+        <div className="hero-banner-wrap a0">
+          <MoonBanner />
+        </div>
+
         {/* Profile row */}
-        <div className="hero-profile a0">
+        <div className="hero-profile a1">
           <div className="hero-avatar">
             {!err ? (
               <Image
@@ -73,7 +79,7 @@ export default function Hero() {
             <h1 className="hero-name">Yugendhra E</h1>
 
             <div className="hero-tagline">
-              {PERSONAL.title} · Building scalable systems
+              {PERSONAL.title}<span className="hero-tagline-extra"> · Building scalable systems</span>
             </div>
 
             <div className="hero-meta">
@@ -88,14 +94,14 @@ export default function Hero() {
         </div>
 
         {/* About text, directly rendered with dangerous HTML for highlights */}
-        <div className="hero-bio a1">
+        <div className="hero-bio a2">
           {PERSONAL.about.map((paragraph, index) => (
             <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
           ))}
         </div>
 
         {/* Actions - Grouped to Left (social links) and Right (Resume & Contact) */}
-        <div className="hero-actions a2">
+        <div className="hero-actions a3">
           <div className="hero-actions-left">
             <a id="hero-gh" href={PERSONAL.github} target="_blank" rel="noopener noreferrer" className="ic" aria-label="GitHub">
               <GH />
@@ -124,7 +130,7 @@ export default function Hero() {
         </div>
 
         {/* GitHub Contributions */}
-        <div className="a3">
+        <div className="a4">
           <GithubCalendar />
         </div>
 
