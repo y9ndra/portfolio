@@ -5875,6 +5875,10 @@ body::before {
 /* ═══════════════════════════════════════════
    MOON BANNER (halftone moon landing, canvas)
 ═══════════════════════════════════════════ */
+/* The banner is the first thing on the page; it needs breathing room, not a nav gap */
+#about {
+  padding-top: 2.75rem;
+}
 .hero-banner-wrap {
   position: relative;
   z-index: 0;
@@ -5951,6 +5955,7 @@ body::before {
 }
 
 @media (max-width: 640px) {
+  #about { padding-top: 1.5rem; }
   .moon-banner { height: 170px; }
   /* narrow screens: smaller overlap and tighter text so the block ends with the avatar */
   .hero-profile { margin-top: -1.25rem; padding-left: 1rem; }
@@ -5958,6 +5963,7 @@ body::before {
   .hero-tagline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 @media (max-width: 480px) {
+  #about { padding-top: 1.1rem; }
   .moon-banner-hint { font-size: 0.52rem; letter-spacing: 0.06em; }
   .hero-profile { margin-top: -1.1rem; padding-left: 0.8rem; }
   .hero-tagline-extra { display: none; }

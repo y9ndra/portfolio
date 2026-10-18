@@ -511,6 +511,13 @@ export default function MoonBanner() {
       g.scale(view.zoom, view.zoom);
       g.translate(-view.cx, -view.cy);
 
+      // Point on the curved surface, `d` along the arc from the landing site, `up` above it
+      const onSurface = (d: number, up: number) => {
+        const phi = THETA + d / R;
+        const nx = Math.cos(phi), ny = Math.sin(phi);
+        return { x: moon.cx + nx * (R + up), y: moon.cy + ny * (R + up), rot: Math.atan2(nx, -ny) };
+      };
+
       const bez = (a: number, b1: number, c: number, d: number, u: number) =>
         (1 - u) ** 3 * a + 3 * (1 - u) ** 2 * u * b1 + 3 * (1 - u) * u * u * c + u ** 3 * d;
 
@@ -580,9 +587,10 @@ export default function MoonBanner() {
         for (let i = 0; i < count; i++) {
           const d = R * (0.1 + 0.15 * (i / 9));
           const side = i % 2 ? 1 : -1;
-          const px = site.x + tg.x * d - tg.y * side * hA * 0.06;
-          const py = site.y + tg.y * d + tg.x * side * hA * 0.06;
-          g.beginPath(); g.ellipse(px, py, hA * 0.07, hA * 0.035, rotUp, 0, Math.PI * 2); g.fill();
+          const f = onSurface(d, 0);
+          const px = f.x - Math.sin(f.rot) * 0 + Math.cos(f.rot) * side * hA * 0.06;
+          const py = f.y + Math.sin(f.rot) * side * hA * 0.06;
+          g.beginPath(); g.ellipse(px, py, hA * 0.07, hA * 0.035, f.rot, 0, Math.PI * 2); g.fill();
         }
       }
 
@@ -608,11 +616,11 @@ export default function MoonBanner() {
       if (tl >= T_PLANT && traceAlpha > 0) {
         const rise = easeOutCubic(clamp01((tl - T_PLANT) / 1.4));
         const unfurl = easeOutCubic(clamp01((tl - T_PLANT - 1.0) / 1.2));
-        const d = R * 0.30;
+        const f = onSurface(R * 0.30, 0);
         g.save();
         g.globalAlpha = traceAlpha;
-        g.translate(site.x + tg.x * d, site.y + tg.y * d);
-        g.rotate(rotUp);
+        g.translate(f.x, f.y);
+        g.rotate(f.rot);
         drawFlag(g, L * 0.52, rise, unfurl, t);
         g.restore();
       }
@@ -654,9 +662,10 @@ export default function MoonBanner() {
           up = L * 0.4 * u;
           walk = u * 14;
         }
+        const a = onSurface(along, up);
         g.save();
-        g.translate(site.x + tg.x * along + n.x * up, site.y + tg.y * along + n.y * up);
-        g.rotate(rotUp);
+        g.translate(a.x, a.y);
+        g.rotate(a.rot);
         drawAstronaut(g, hA, walk, wave, facing);
         g.restore();
       }
@@ -817,10 +826,10 @@ export default function MoonBanner() {
       const startT = T_PLANT + 2.2, endT = T_WAVE + 2.6;
       if (!demoActive && tl >= startT && tl < endT) {
         demoActive = true;
-        const d = moon.R * 0.30;
+        const phi = THETA + 0.30;
         viewT.zoom = 2;
-        viewT.cx = site.x + tg.x * d - moon.R * 0.12;
-        viewT.cy = site.y + tg.y * d + moon.R * 0.10;
+        viewT.cx = moon.cx + Math.cos(phi) * moon.R - moon.R * 0.12;
+        viewT.cy = moon.cy + Math.sin(phi) * moon.R + moon.R * 0.10;
         clampView(viewT);
       } else if (demoActive && tl >= endT) {
         demoActive = false;
