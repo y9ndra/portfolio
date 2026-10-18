@@ -34,7 +34,7 @@ export const ONE_PIECE_QUOTES: AnimeQuote[] = [
   },
   {
     quote: "By experiencing both victory and defeat, running away and shedding tears, that is how you truly grow.",
-    author: "Shanks",
+    author: "Red-Haired Shanks",
   },
   {
     quote: "Live a life with no regrets.",
