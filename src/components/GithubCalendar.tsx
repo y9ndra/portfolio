@@ -37,8 +37,21 @@ interface ApiResponse {
   contributions: ApiResponseDay[];
 }
 
-export default function GithubCalendar() {
+const CHEVRON = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
+interface GithubCalendarProps {
+  /** Start collapsed to a one-line summary with a 12-week strip; click to expand. */
+  collapsible?: boolean;
+  id?: string;
+}
+
+export default function GithubCalendar({ collapsible = false, id }: GithubCalendarProps) {
   // State
+  const [open, setOpen] = useState(!collapsible);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [calendarGrid, setCalendarGrid] = useState<DayData[][]>([]);
@@ -354,19 +367,55 @@ export default function GithubCalendar() {
     );
   }
 
-  return (
-    <div className="gc-wrap corner-box a1" data-reveal data-delay="1">
-      
-      {/* Header */}
-      <div className="gc-head">
-        <div className="gc-title">
-          <span className="gc-count">{totalCount.toLocaleString()}</span> Contributions
-        </div>
-        <div className="gc-period">
-          <CAL_ICON /> Last Year
-        </div>
-      </div>
+  // Last 12 weeks, one square per week at that week's busiest level
+  const spark = calendarGrid.slice(-12).map((week) => Math.max(0, ...week.map((d) => d.level)));
 
+  const header = (
+    <>
+      <div className="gc-title">
+        <span className="gc-count">{totalCount.toLocaleString()}</span> Contributions
+        {collapsible && !open && (
+          <span className="gc-spark" aria-hidden="true">
+            {spark.map((lvl, i) => <span key={i} className={`gc-key lvl-${lvl}`} />)}
+          </span>
+        )}
+      </div>
+      <div className="gc-period">
+        <CAL_ICON /> Last Year
+        {collapsible && <span className={`gc-chevron ${open ? "open" : ""}`}><CHEVRON /></span>}
+      </div>
+    </>
+  );
+
+  return (
+    <div
+      id={id}
+      className={`gc-wrap corner-box ${collapsible ? "gc-collapsible" : "a1"} ${open ? "is-open" : ""}`}
+      {...(collapsible ? {} : { "data-reveal": true, "data-delay": "1" })}
+      onClick={collapsible ? (e) => {
+        // the whole box toggles, except interactions inside the expanded grid/footer
+        if ((e.target as HTMLElement).closest(".gc-body")) return;
+        setOpen((o) => !o);
+      } : undefined}
+    >
+
+      {/* Header (a toggle when collapsible) */}
+      {collapsible ? (
+        <button
+          type="button"
+          className="gc-head gc-toggle"
+          onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+          aria-expanded={open}
+          aria-label={open ? "Collapse contribution calendar" : "Expand contribution calendar"}
+        >
+          {header}
+        </button>
+      ) : (
+        <div className="gc-head">{header}</div>
+      )}
+
+      <div className={`gc-body ${open ? "open" : ""}`} aria-hidden={!open}>
+      <div className="gc-body-inner">
       {/* Grid container with scrolling for mobile */}
       <div className="gc-scroll">
         <div style={{ minWidth: "580px" }}>
@@ -432,6 +481,8 @@ export default function GithubCalendar() {
           <span className="gc-key lvl-4" />
           <span>More</span>
         </div>
+      </div>
+      </div>
       </div>
 
     </div>

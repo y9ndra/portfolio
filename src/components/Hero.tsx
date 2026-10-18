@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { PERSONAL } from "@/data/portfolio";
-import GithubCalendar from "@/components/GithubCalendar";
 import OdometerClock from "@/components/OdometerClock";
 import MoonBanner from "@/components/MoonBanner";
+import GithubCalendar from "@/components/GithubCalendar";
 
 const GH = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -129,9 +129,9 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* GitHub Contributions */}
+        {/* GitHub contributions, collapsed to a one-line summary; click to expand */}
         <div className="a4">
-          <GithubCalendar />
+          <GithubCalendar collapsible id="activity" />
         </div>
 
       </div>

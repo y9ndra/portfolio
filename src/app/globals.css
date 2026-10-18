@@ -5972,3 +5972,74 @@ body::before {
   .moon-banner { cursor: auto; }
   .moon-banner-hint { transition: none; }
 }
+
+/* ═══════════════════════════════════════════
+   ACTIVITY (collapsible contribution calendar)
+═══════════════════════════════════════════ */
+.gc-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gc-collapsible {
+  cursor: pointer;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease, background-color 0.25s ease;
+}
+.gc-collapsible.is-open {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+.gc-collapsible .gc-head {
+  margin-bottom: 0;
+}
+/* Expand/collapse with the same grid-rows motion as the experience dropdown */
+.gc-collapsible .gc-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+  overflow: hidden;
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.gc-collapsible .gc-body.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 0.85rem;
+}
+.gc-collapsible .gc-body-inner {
+  min-height: 0;
+  overflow: hidden;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-collapsible, .gc-collapsible .gc-body { transition: none; }
+}
+.gc-collapsible .gc-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.gc-spark {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 0.35rem;
+}
+.gc-chevron {
+  display: inline-flex;
+  margin-left: 0.3rem;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.gc-chevron.open {
+  transform: rotate(180deg);
+}
+@media (max-width: 480px) {
+  .gc-spark { display: none; }
+}
