@@ -76,8 +76,6 @@ export default function Projects() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(savedActiveIndex);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-  const [cursorTilt, setCursorTilt] = useState({ x: 0, y: 0 });
-  const [fanExtra, setFanExtra] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(1024);
@@ -283,15 +281,16 @@ export default function Projects() {
         const normX = (ev.clientX - rect.left) / rect.width - 0.5;
         const normY = (ev.clientY - rect.top) / rect.height - 0.5;
 
+        // Cursor tilt and fan spread are written as CSS variables on the stage,
+        // so hovering never re-renders the deck.
         if (ev.target.closest(".proj-actions") || ev.target.closest("a") || ev.target.closest("button")) {
-          setCursorTilt({ x: 0, y: 0 });
+          stage.style.setProperty("--tx", "0");
+          stage.style.setProperty("--ty", "0");
         } else {
-          setCursorTilt({
-            x: Math.round(-normY * 4.5),
-            y: Math.round(normX * 5),
-          });
+          stage.style.setProperty("--tx", String(Math.round(-normY * 4.5)));
+          stage.style.setProperty("--ty", String(Math.round(normX * 5)));
         }
-        setFanExtra(Math.abs(normX) * 1.5);
+        stage.style.setProperty("--fan", (Math.abs(normX) * 1.5).toFixed(3));
 
         if (glareRef.current) {
           const cardRect = glareRef.current.getBoundingClientRect();
@@ -340,8 +339,11 @@ export default function Projects() {
 
   const handlePointerLeave = (e: React.PointerEvent) => {
     handlePointerUp(e);
-    setCursorTilt({ x: 0, y: 0 });
-    setFanExtra(0);
+    if (stageRef.current) {
+      stageRef.current.style.setProperty("--tx", "0");
+      stageRef.current.style.setProperty("--ty", "0");
+      stageRef.current.style.setProperty("--fan", "0");
+    }
     if (glareRef.current) {
       glareRef.current.style.opacity = "0";
     }
@@ -460,6 +462,7 @@ export default function Projects() {
               // Normalized drag progress (-1 to 1) along the triangle
               const dragProgress = Math.max(-1, Math.min(1, dragOffset / 180));
 
+              let fanDir = 0;
               let x = 0;
               let y = 0;
               let z = 35;
@@ -549,28 +552,33 @@ export default function Projects() {
                   opacity = 1;
                   boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
                 } else if (isRight) {
-                  x = Math.round(wingOffset + (isMobile ? 0 : fanExtra * 14));
+                  x = Math.round(wingOffset);
                   y = 6;
                   z = -45;
-                  rotZ = Number((wingRot + (isMobile ? 0 : fanExtra * 1.5)).toFixed(2));
+                  rotZ = Number(wingRot.toFixed(2));
+                  fanDir = 1;
                   scale = 0.93;
                   opacity = 0.55;
                   boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
                 } else if (isLeft) {
-                  x = Math.round(-wingOffset - (isMobile ? 0 : fanExtra * 14));
+                  x = Math.round(-wingOffset);
                   y = 6;
                   z = -45;
-                  rotZ = Number((-wingRot - (isMobile ? 0 : fanExtra * 1.5)).toFixed(2));
+                  rotZ = Number((-wingRot).toFixed(2));
+                  fanDir = -1;
                   scale = 0.93;
                   opacity = 0.55;
                   boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
                 }
               }
 
-              // Apply subtle cursor 3D tilt
-              const tiltX = isFront ? cursorTilt.x : Math.round(cursorTilt.x * 0.25);
-              const tiltY = isFront ? cursorTilt.y : Math.round(cursorTilt.y * 0.25);
-              const transform = `translate3d(${x}px, ${y}px, ${z}px) rotateZ(${rotZ}deg) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale})`;
+              // Subtle cursor 3D tilt and hover fan, read from the stage's CSS variables
+              const tiltK = isMobile ? 0 : isFront ? 1 : 0.25;
+              const fanK = isMobile ? 0 : fanDir;
+              const transform =
+                `translate3d(calc(${x}px + var(--fan, 0) * ${fanK * 14}px), ${y}px, ${z}px) ` +
+                `rotateZ(calc(${rotZ}deg + var(--fan, 0) * ${fanK * 1.5}deg)) ` +
+                `rotateX(calc(var(--tx, 0) * ${tiltK}deg)) rotateY(calc(var(--ty, 0) * ${tiltK}deg)) scale(${scale})`;
 
               const imgErr = !!imgErrors[p.id];
               const showImg = !!p.image && !imgErr;

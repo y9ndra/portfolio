@@ -51,7 +51,6 @@ html {
 
 body {
   background: var(--bg);
-  background-attachment: fixed;
   color: var(--t1);
   font-family: var(--font-inter, 'Inter', system-ui, sans-serif);
   font-size: 15px;

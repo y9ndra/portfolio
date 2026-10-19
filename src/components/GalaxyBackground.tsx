@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Galaxy from "./Galaxy";
+import dynamic from "next/dynamic";
+
+// ogl + the shader are only needed on the client, after first paint
+const Galaxy = dynamic(() => import("./Galaxy"), { ssr: false });
 
 export default function GalaxyBackground() {
   const [mounted, setMounted] = useState(false);

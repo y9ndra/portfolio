@@ -104,11 +104,16 @@ vec3 StarLayer(vec2 uv) {
       float grn = min(red, blu) * seed;
       vec3 base = vec3(red, grn, blu);
       
-      float hue = atan(base.g - base.r, base.b - base.r) / (2.0 * 3.14159) + 0.5;
-      hue = fract(hue + uHueShift / 360.0);
-      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * uSaturation;
       float val = max(max(base.r, base.g), base.b);
-      base = hsv2rgb(vec3(hue, sat, val));
+      if (uSaturation > 0.0) {
+        float hue = atan(base.g - base.r, base.b - base.r) / (2.0 * 3.14159) + 0.5;
+        hue = fract(hue + uHueShift / 360.0);
+        float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * uSaturation;
+        base = hsv2rgb(vec3(hue, sat, val));
+      } else {
+        // monochrome: skip the hue/saturation math entirely
+        base = vec3(val);
+      }
 
       vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed / 10.0), tris(seed * 38.0 + uTime * uSpeed / 30.0)) - 0.5;
 
@@ -244,6 +249,7 @@ export default function Galaxy({
       return;
     }
     const gl = renderer.gl;
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
 
     if (lightMode) {
       gl.clearColor(1, 1, 1, 1);
@@ -259,10 +265,15 @@ export default function Galaxy({
 
     function resize() {
       if (!ctn) return;
-      const scale = 1;
       const width = ctn.offsetWidth || window.innerWidth || 1;
       const height = ctn.offsetHeight || window.innerHeight || 1;
-      renderer.setSize(width * scale, height * scale);
+      // The star field is faint and soft, so it can be rendered at a fraction of
+      // the window resolution and upscaled: this cuts GPU fill cost ~4x, which is
+      // the dominant cost on integrated graphics and phones.
+      const scale = width >= 1400 || coarsePointer ? 0.5 : 0.6;
+      renderer.setSize(Math.round(width * scale), Math.round(height * scale));
+      gl.canvas.style.width = "100%";
+      gl.canvas.style.height = "100%";
       if (program) {
         program.uniforms.uResolution.value = new Color(
           gl.canvas.width,
@@ -309,7 +320,8 @@ export default function Galaxy({
     let animateId: number;
 
     let lastTime = 0;
-    const minFrameInterval = 1000 / 60; // Max 60 FPS cap (saves immense GPU on 120Hz/144Hz displays)
+    // 60 FPS cap on desktop (saves GPU on 120Hz/144Hz displays); 30 FPS on touch devices
+    const minFrameInterval = coarsePointer ? 1000 / 30 : 1000 / 60;
 
     function update(t: number) {
       animateId = requestAnimationFrame(update);

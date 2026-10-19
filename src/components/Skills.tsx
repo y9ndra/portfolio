@@ -1,5 +1,10 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import { SKILLS } from "@/data/portfolio";
-import SkillsJar from "@/components/SkillsJar";
+
+// matter-js physics is below the fold: load it on the client, after the page is interactive
+const SkillsJar = dynamic(() => import("@/components/SkillsJar"), { ssr: false });
 
 export default function Skills() {
   return (

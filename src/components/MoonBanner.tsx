@@ -463,6 +463,57 @@ export default function MoonBanner() {
       return v * edge;
     };
 
+    /* ---------- moon texture ----------
+       The moon never changes, so its shading is sampled once into a brightness
+       texture (world-space, `ts` texels per world px) instead of being recomputed
+       per dot per frame. 1x is built synchronously; finer levels build in idle
+       chunks and swap in when ready. -1 marks sky. */
+    type MoonTex = { data: Float32Array; ts: number; w: number; h: number };
+    let moonTex: MoonTex | null = null;
+    let building: { ts: number; cancel: boolean } | null = null;
+    const buildMoonTex = (ts: number, sync: boolean) => {
+      if (building) building.cancel = true;
+      const job = { ts, cancel: false };
+      building = job;
+      const w = Math.ceil(W * ts), h = Math.ceil(H * ts);
+      const data = new Float32Array(w * h);
+      const R = moon.R;
+      const y0 = Math.max(0, Math.floor((moon.cy - R) * ts) - 1);
+      const y1 = Math.min(h - 1, Math.ceil((moon.cy + R) * ts) + 1);
+      const x0 = Math.max(0, Math.floor((moon.cx - R) * ts) - 1);
+      const x1 = Math.min(w - 1, Math.ceil((moon.cx + R) * ts) + 1);
+      data.fill(-1);
+      const fillRows = (ya: number, yb: number) => {
+        for (let y = ya; y <= yb; y++) {
+          const wy = (y + 0.5) / ts;
+          const row = y * w;
+          for (let x = x0; x <= x1; x++) {
+            data[row + x] = moonAt((x + 0.5) / ts, wy, ts * 1.5);
+          }
+        }
+      };
+      const finish = () => { if (!job.cancel) { moonTex = { data, ts, w, h }; building = null; } };
+      if (sync) { fillRows(y0, y1); finish(); return; }
+      let y = y0;
+      const rowsPerChunk = Math.max(4, Math.floor(16 / ts * 2));
+      const step = () => {
+        if (job.cancel) return;
+        const yb = Math.min(y1, y + rowsPerChunk - 1);
+        fillRows(y, yb);
+        y = yb + 1;
+        if (y > y1) finish();
+        else setTimeout(step, 0);
+      };
+      setTimeout(step, 0);
+    };
+    const moonTexAt = (wx: number, wy: number) => {
+      const tex = moonTex;
+      if (!tex) return moonAt(wx, wy, view.zoom);
+      const ix = (wx * tex.ts) | 0, iy = (wy * tex.ts) | 0;
+      if (ix < 0 || iy < 0 || ix >= tex.w || iy >= tex.h) return -1;
+      return tex.data[iy * tex.w + ix];
+    };
+
     const starAt = (wx: number, wy: number, zoom: number, t: number) => {
       const G = 26;
       const gx = Math.floor(wx / G), gy = Math.floor(wy / G);
@@ -496,6 +547,9 @@ export default function MoonBanner() {
     /* ---------- sprite layer (drawn in world space through the view) ---------- */
     let spData: Uint8ClampedArray | null = null;
     let lastAlpha = 1;
+    // screen-space box that the sprites were read back from (getImageData is the
+    // expensive part, so only the area that can contain sprites is copied)
+    const spBox = { x: 0, y: 0, w: 0, h: 0 };
 
     const drawSprites = (t: number) => {
       const g = sg;
@@ -671,14 +725,33 @@ export default function MoonBanner() {
       }
 
       g.setTransform(1, 0, 0, 1, 0, 0);
-      spData = g.getImageData(0, 0, W, H).data;
+
+      // Read back only where sprites can be: around the rocket, and around the
+      // landing site while anything is happening there.
+      let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+      const addWorldBox = (cx: number, cy: number, r: number) => {
+        const sx = (cx - view.cx) * view.zoom + W / 2, sy = (cy - view.cy) * view.zoom + H / 2;
+        const sr = r * view.zoom;
+        bx0 = Math.min(bx0, sx - sr); by0 = Math.min(by0, sy - sr);
+        bx1 = Math.max(bx1, sx + sr); by1 = Math.max(by1, sy + sr);
+      };
+      if (rocketVisible) addWorldBox(rx, ry, L * 1.6);
+      if (tl >= T_DESCENT - 1 && tl < T_GONE + 1.2) addWorldBox(site.x + tg.x * R * 0.15, site.y + tg.y * R * 0.15, R * 0.6);
+      const x0 = Math.max(0, Math.floor(bx0)), y0 = Math.max(0, Math.floor(by0));
+      const x1 = Math.min(W, Math.ceil(bx1)), y1 = Math.min(H, Math.ceil(by1));
+      if (x1 - x0 > 0 && y1 - y0 > 0) {
+        spBox.x = x0; spBox.y = y0; spBox.w = x1 - x0; spBox.h = y1 - y0;
+        spData = g.getImageData(x0, y0, spBox.w, spBox.h).data;
+      } else {
+        spData = null;
+      }
     };
 
     const spriteAt = (sx: number, sy: number) => {
       if (!spData) return -1;
-      const x = Math.round(sx), y = Math.round(sy);
-      if (x < 0 || y < 0 || x >= W || y >= H) return -1;
-      const i = (y * W + x) * 4;
+      const x = Math.round(sx) - spBox.x, y = Math.round(sy) - spBox.y;
+      if (x < 0 || y < 0 || x >= spBox.w || y >= spBox.h) return -1;
+      const i = (y * spBox.w + x) * 4;
       const a = spData[i + 3];
       if (a < 12) return -1;
       lastAlpha = a / 255;
@@ -703,6 +776,9 @@ export default function MoonBanner() {
       const oldW = prevW || W, oldH = prevH || H;
       prevW = W; prevH = H;
       setWorld();
+      moonTex = null;
+      buildMoonTex(1, true);
+      buildMoonTex(2, false);
       if (resizes === 1 || viewT.zoom === 1) {
         view.cx = viewT.cx = W / 2; view.cy = viewT.cy = H / 2;
       } else {
@@ -726,7 +802,7 @@ export default function MoonBanner() {
       // Brightness of the scene at a screen position (lens-free, exact sampling)
       const sampleScreen = (sx: number, sy: number, time: number) => {
         const w = screenToWorld(sx, sy);
-        let bg = moonAt(w.x, w.y, view.zoom);
+        let bg = moonTexAt(w.x, w.y);
         if (bg < 0) bg = starAt(w.x, w.y, view.zoom, time);
         const sp = spriteAt(sx, sy);
         const b = sp >= 0 ? bg * (1 - lastAlpha) + sp * lastAlpha : bg;
@@ -855,6 +931,7 @@ export default function MoonBanner() {
       view.cx += (viewT.cx - view.cx) * k;
       view.cy += (viewT.cy - view.cy) * k;
       clampView(view);
+      if (view.zoom > 2.5 && moonTex && moonTex.ts < 4 && !(building && building.ts === 4)) buildMoonTex(4, false);
       draw(t);
     };
     const frame = (ts: number) => {
@@ -988,6 +1065,7 @@ export default function MoonBanner() {
 
     return () => {
       stop(); ro.disconnect(); io.disconnect(); mo.disconnect();
+      if (building) building.cancel = true;
       hideHint();
       if (tapTimer) clearTimeout(tapTimer);
       wrap.removeEventListener("pointermove", onMove);
