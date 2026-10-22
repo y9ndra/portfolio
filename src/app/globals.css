@@ -5959,7 +5959,8 @@ body::before {
   /* narrow screens: smaller overlap and tighter text so the block ends with the avatar */
   .hero-profile { margin-top: -1.25rem; padding-left: 1rem; }
   .hero-info { padding-bottom: 0; gap: 0.25rem; }
-  .hero-tagline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hero-tagline { line-height: 1.35; }
+  .hero-tagline-extra { display: none; }
 }
 @media (max-width: 480px) {
   #about { padding-top: 1.1rem; }
