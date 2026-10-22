@@ -38,25 +38,26 @@ const hanken = Hanken_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://yugendhra.me"),
-  title: "Yugendhra E — Software Developer",
+  title: "Yugendhra E — Backend-focused Full-Stack Engineer",
   description:
-    "Final-year B.Tech IT student building scalable backend systems and full-stack applications. Explore my projects and skills.",
+    "IT graduate and backend-focused full-stack engineer working in TypeScript and Go. Explore my projects and skills.",
   keywords: [
     "Yugendhra",
-    "software developer",
-    "full-stack developer",
+    "full-stack engineer",
     "backend engineer",
-    "React",
+    "TypeScript",
+    "Go",
     "Node.js",
+    "React",
     "Next.js",
     "portfolio",
   ],
   authors: [{ name: "Yugendhra E" }],
   openGraph: {
     siteName: "Yugendhra E",
-    title: "Yugendhra E — Software Developer",
+    title: "Yugendhra E — Backend-focused Full-Stack Engineer",
     description:
-      "Building scalable backend systems and full-stack applications.",
+      "Building reliable backends, and the apps on top of them.",
     type: "website",
     images: [
       {
@@ -69,9 +70,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Yugendhra E — Software Developer",
+    title: "Yugendhra E — Backend-focused Full-Stack Engineer",
     description:
-      "Building scalable backend systems and full-stack applications.",
+      "Building reliable backends, and the apps on top of them.",
     images: ["/assets/images/profile+v6.png"],
   },
 };

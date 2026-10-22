@@ -1,9 +1,9 @@
 export const PERSONAL = {
   name: "Yugendhra E",
-  title: "Software Developer",
-  tagline: "Building scalable backend systems and full-stack applications.",
+  title: "Backend-focused Full-Stack Engineer",
+  tagline: "Building reliable backends, and the apps on top of them.",
   about: [
-    "I'm an Information Technology graduate with a thing for <strong>building software</strong> and figuring out <strong>how it works under the hood</strong>. You'll usually find me <strong>building backend systems, solving DSA problems</strong>, or turning <strong>random ideas into projects</strong> that teach me something new."
+    "I'm a <strong>backend-focused full-stack engineer</strong> from Chennai. I mostly live in <strong>TypeScript and Go</strong>, building <strong>APIs, background jobs and real-time stuff</strong>. I have a habit of opening things up to see <strong>how they work under the hood</strong>, and lately that habit has turned into <strong>open-source contributions</strong> across backend, web and desktop. When I'm not doing that, I'm turning <strong>random ideas into projects</strong> and occasionally reminding myself that DSA exists."
   ],
   email: "yugendhra18@gmail.com",
   github: "https://github.com/y9ndra",
