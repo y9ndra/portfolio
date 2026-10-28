@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon, User2, Briefcase, Cpu, FolderGit2, BookOpen, Mail, X, ChevronDown } from "lucide-react";
+import { Sun, Moon, User2, Briefcase, Cpu, FolderGit2, GitPullRequest, BookOpen, Mail, X, ChevronDown } from "lucide-react";
 import { BLOGS } from "@/data/portfolio";
 
 const LINKS = [
   { label: "About",         id: "about",         key: "1", icon: User2 },
   { label: "Experience",    id: "experience",    key: "2", icon: Briefcase },
   { label: "Projects",      id: "projects",      key: "3", icon: FolderGit2 },
-  { label: "Blog",          id: "blog",          key: "4", icon: BookOpen },
-  { label: "Skills",        id: "skills",        key: "5", icon: Cpu },
-  { label: "Contact",       id: "contact",       key: "6", icon: Mail },
+  { label: "Open Source",   id: "open-source",   key: "4", icon: GitPullRequest },
+  { label: "Blog",          id: "blog",          key: "5", icon: BookOpen },
+  { label: "Skills",        id: "skills",        key: "6", icon: Cpu },
+  { label: "Contact",       id: "contact",       key: "7", icon: Mail },
 ];
 
 export default function Navbar() {
@@ -94,6 +95,8 @@ export default function Navbar() {
       setActive("blog");
     } else if (pathname.startsWith("/projects")) {
       setActive("projects");
+    } else if (pathname.startsWith("/open-source")) {
+      setActive("open-source");
     }
   }, [pathname]);
 
@@ -113,7 +116,7 @@ export default function Navbar() {
 
   // Scroll Progress Listener (Universal across pages)
   useEffect(() => {
-    const isSubRoute = pathname.startsWith("/blog") || pathname.startsWith("/projects");
+    const isSubRoute = pathname.startsWith("/blog") || pathname.startsWith("/projects") || pathname.startsWith("/open-source");
     
     const handleProgress = () => {
       if (isSubRoute) {
@@ -135,7 +138,7 @@ export default function Navbar() {
       if (saved) {
         setScrollProgress(parseFloat(saved));
       } else {
-        const sectionId = pathname.startsWith("/blog") ? "blog" : "projects";
+        const sectionId = pathname.startsWith("/blog") ? "blog" : pathname.startsWith("/open-source") ? "open-source" : "projects";
         const idx = LINKS.findIndex(l => l.id === sectionId);
         const ratio = idx !== -1 ? (idx / (LINKS.length - 1)) * 100 : 80;
         setScrollProgress(ratio);
