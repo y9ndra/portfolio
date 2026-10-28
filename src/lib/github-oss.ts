@@ -41,6 +41,19 @@ export interface OrgStats {
   repoInfo: Record<string, { stars: number; forks: number }>;
 }
 
+/**
+ * Daily counts from the first contribution to today (oldest first), capped at
+ * a year; `days` are YYYY-MM-DD keys. Drives the trend lines on /open-source.
+ */
+export interface OssActivity {
+  days: string[];
+  merged: number[];
+  open: number[];
+  issues: number[];
+  /** distinct configured organisations active on or before each day */
+  projects: number[];
+}
+
 export interface OssPR {
   title: string;
   number: number;
@@ -185,11 +198,45 @@ export async function fetchOssStats() {
 
   const orgs = OPEN_SOURCE.map((o) => stats.get(o.org) ?? get(o.org));
 
+  // Daily activity from the first contribution to today, for the trend lines on
+  // /open-source. Starting at the first event (not a fixed window) keeps the
+  // line meaningful while all the work is recent.
+  const DAY = 86_400_000;
+  const dayKey = (iso: string) => iso.slice(0, 10);
+  const events: { kind: "merged" | "open" | "issues"; day: string; org: string }[] = [];
+  for (const it of prs) {
+    const org = orgOf(it);
+    if (!org) continue;
+    if (it.pull_request?.merged_at) events.push({ kind: "merged", day: dayKey(it.pull_request.merged_at), org });
+    else if (it.state === "open") events.push({ kind: "open", day: dayKey(it.created_at), org });
+  }
+  for (const it of issues) {
+    const org = orgOf(it);
+    if (org) events.push({ kind: "issues", day: dayKey(it.created_at), org });
+  }
+  const today = new Date();
+  const endMs = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const firstMs = events.length ? Math.min(...events.map((e) => Date.parse(e.day))) : endMs;
+  const startMs = Math.max(firstMs, endMs - 365 * DAY, Math.min(firstMs, endMs - 13 * DAY));
+  const days: string[] = [];
+  for (let t = startMs; t <= endMs; t += DAY) days.push(new Date(t).toISOString().slice(0, 10));
+  const idx = new Map(days.map((d, i) => [d, i]));
+  const series = () => days.map(() => 0);
+  const activity: OssActivity = { days, merged: series(), open: series(), issues: series(), projects: series() };
+  const firstSeen = new Map<string, string>();
+  for (const e of events) {
+    const i = idx.get(e.day);
+    if (i !== undefined) activity[e.kind][i]++;
+    const cur = firstSeen.get(e.org);
+    if (!cur || e.day < cur) firstSeen.set(e.org, e.day);
+  }
+  activity.projects = days.map((d) => [...firstSeen.values()].filter((f) => f <= d).length);
+
   const totals = orgs.reduce(
     (t, s) => ({ merged: t.merged + s.merged, open: t.open + s.open, reviews: t.reviews + s.reviews, issues: t.issues + s.issues }),
     { merged: 0, open: 0, reviews: 0, issues: 0 }
   );
-  return { user: OSS_USER, orgs, totals, fetchedAt: new Date().toISOString() };
+  return { user: OSS_USER, orgs, totals, activity, fetchedAt: new Date().toISOString() };
 }
 
 /** Merged and open PRs raised in one organisation (closed-unmerged are skipped), newest first. */
