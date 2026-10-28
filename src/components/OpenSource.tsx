@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { OPEN_SOURCE } from "@/data/portfolio";
-import type { OrgStats } from "@/lib/github-oss";
+import type { OrgStats, OssActivity } from "@/lib/github-oss";
 
 /**
  * Open Source — organisations contributed to, with live counts from /api/oss.
@@ -16,6 +16,7 @@ interface OssResponse {
   user: string;
   orgs: OrgStats[];
   totals: { merged: number; open: number; reviews: number; issues: number };
+  activity?: OssActivity;
 }
 
 export const MergeIcon = () => (
@@ -94,6 +95,30 @@ function useCountUp(target: number | null, go: boolean) {
     return () => { cancelAnimationFrame(raf); clearTimeout(settle); };
   }, [target, go]);
   return value;
+}
+
+/** A counting number for the totals tiles. */
+export function Num({ value, go, tone }: { value: number | null; go: boolean; tone?: "merged" | "open" }) {
+  const n = useCountUp(value, go);
+  return <span className={`oss-num ${tone ?? ""}`}>{value === null ? "—" : n}</span>;
+}
+
+/**
+ * Tiny line chart of a running total, drawn behind a tile's number.
+ * `points` are per-day counts; the line starts at zero, is cumulative, and is
+ * scaled to `max` (shared across tiles so bigger totals climb higher).
+ */
+export function Sparkline({ points, go, tone, max: scale }: { points: number[] | null; go: boolean; tone?: "merged" | "open"; max?: number }) {
+  if (!points || points.length < 1) return null;
+  const cum = points.reduce<number[]>((out, v) => [...out, out[out.length - 1] + v], [0]);
+  const max = Math.max(1, scale ?? cum[cum.length - 1]);
+  const W = 100, H = 40, TOP = 4, BOTTOM = 37;
+  const pts = cum.map((v, i) => `${(i / (cum.length - 1)) * W},${BOTTOM - (v / max) * (BOTTOM - TOP)}`).join(" ");
+  return (
+    <svg className={`oss-spark ${tone ?? ""} ${go ? "go" : ""}`} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
+      <polyline points={pts} pathLength={1} vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
 }
 
 export function Stat({ icon, label, value, go, strong, tone }: { icon: React.ReactNode; label: string; value: number | null; go: boolean; strong?: boolean; tone?: "merged" | "open" }) {

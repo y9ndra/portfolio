@@ -6242,3 +6242,75 @@ body::before {
 @media (max-width: 640px) {
   .oss-section-head { margin: 1.9rem 0 1.2rem; }
 }
+
+.oss-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.1rem;
+}
+.oss-tile {
+  position: relative;
+  min-height: 118px;
+  padding: 0.95rem 1rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  cursor: default;
+}
+.oss-tile-icon {
+  display: inline-flex;
+  color: var(--t2);
+  position: relative;
+  z-index: 1;
+}
+.oss-tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  position: relative;
+  z-index: 1;
+}
+.oss-num {
+  font-family: var(--font-sans-alt), sans-serif;
+  font-size: 1.95rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--t1);
+  font-variant-numeric: tabular-nums;
+}
+.oss-num.merged { color: var(--gh-merged); }
+.oss-num.open { color: var(--gh-open); }
+.oss-spark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 68%;
+  height: 56%;
+  opacity: 0.32;
+  color: var(--t2);
+  pointer-events: none;
+}
+.oss-spark.merged { color: var(--gh-merged); }
+.oss-spark.open { color: var(--gh-open); }
+.oss-spark polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.oss-spark.go polyline { animation: oss-spark-draw 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+@keyframes oss-spark-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .oss-spark polyline { stroke-dashoffset: 0; animation: none; }
+}
+@media (max-width: 640px) {
+  .oss-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .oss-tile { min-height: 104px; padding: 0.85rem 0.9rem 0.8rem; }
+  .oss-num { font-size: 1.7rem; }
+}
