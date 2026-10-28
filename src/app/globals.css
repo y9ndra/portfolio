@@ -6314,3 +6314,216 @@ body::before {
   .oss-tile { min-height: 104px; padding: 0.85rem 0.9rem 0.8rem; }
   .oss-num { font-size: 1.7rem; }
 }
+
+/* merged / open pill, in the style of the experience badges */
+.oss-pr-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.5rem;
+  border-radius: 3px;
+  color: var(--t2);
+  border: 1px solid var(--border-h);
+  background: rgba(255, 255, 255, 0.03);
+  min-width: 4.6rem;
+  justify-content: center;
+}
+.oss-pr-pill svg { flex-shrink: 0; }
+.oss-pr-pill.merged svg { color: var(--gh-merged); }
+.oss-pr-pill.open svg { color: var(--gh-open); }
+.oss-org-tags { margin-top: 0.75rem; }
+/* Open-source org page (/open-source/[org]) */
+.oss-org-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  padding: 1.5rem 1.5rem 1.4rem;
+  margin: 0.35rem 0 1.5rem;
+  flex-wrap: wrap;
+  background:
+    radial-gradient(ellipse 60% 120% at 85% 50%, rgba(255, 255, 255, 0.035), transparent 70%),
+    rgba(255, 255, 255, 0.015);
+}
+.oss-org-header > * { position: relative; z-index: 1; }
+.oss-org-watermark {
+  position: absolute;
+  z-index: 0;
+  right: -70px;
+  top: 50%;
+  width: 300px;
+  height: 300px;
+  transform: translateY(-50%) rotate(-8deg);
+  opacity: 0.07;
+  filter: grayscale(1);
+  pointer-events: none;
+  mask-image: radial-gradient(circle at 45% 50%, #000 25%, transparent 68%);
+  -webkit-mask-image: radial-gradient(circle at 45% 50%, #000 25%, transparent 68%);
+}
+.oss-org-watermark img { width: 100%; height: 100%; object-fit: cover; border-radius: 24%; display: block; }
+[data-theme='light'] .oss-org-header {
+  background:
+    radial-gradient(ellipse 60% 120% at 85% 50%, rgba(0, 0, 0, 0.035), transparent 70%),
+    rgba(0, 0, 0, 0.01);
+}
+[data-theme='light'] .oss-org-watermark { opacity: 0.06; }
+.oss-org-aside {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.9rem;
+  flex-shrink: 0;
+  padding-top: 0.2rem;
+}
+.oss-org-header .oss-stats-inline { padding-top: 0.9rem; }
+.oss-logo-lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+}
+.oss-org-title-col { min-width: 0; flex: 1; }
+.oss-org-header .proj-detail-title-row { margin-top: 0.1rem; }
+.oss-org-header .proj-detail-desc { margin-top: 0.35rem; }
+.oss-stats-inline {
+  border-top: none;
+  padding-top: 0.65rem;
+}
+/* "Pull Requests" pill, dashed rule, then All / Merged / Open chips at the right */
+.oss-pr-head {
+  gap: 1rem;
+  margin: 2.5rem 0 1.5rem;
+}
+.oss-filters {
+  display: flex;
+  gap: 0.4rem;
+  flex: none;
+}
+.oss-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t2);
+  padding: 0.4rem 0.8rem;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.012);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.oss-filter:hover { color: var(--t1); border-color: var(--border-h); }
+.oss-filter.on {
+  color: var(--t1);
+  border-style: solid;
+  border-color: var(--border-h);
+  background: rgba(255, 255, 255, 0.04);
+}
+.oss-filter:focus-visible { outline: 1px dashed var(--t2); outline-offset: 2px; }
+.oss-filter-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.oss-filter.merged .oss-filter-dot { background: var(--gh-merged); }
+.oss-filter.open .oss-filter-dot { background: var(--gh-open); }
+[data-theme='light'] .oss-filter { border-color: rgba(0, 0, 0, 0.12); background: rgba(0, 0, 0, 0.015); }
+[data-theme='light'] .oss-filter.on { background: rgba(0, 0, 0, 0.05); }
+.oss-pr-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+}
+.oss-pr {
+  padding: 1.4rem 1.6rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.oss-pr-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.oss-pr-date {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+  white-space: nowrap;
+}
+.oss-pr-title {
+  font-family: var(--font-sans-alt), sans-serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--t1);
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+.oss-pr-title a { color: inherit; text-decoration: none; }
+.oss-pr-title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.oss-pr-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border);
+}
+.oss-pr-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.oss-pr-empty {
+  font-size: 0.85rem;
+  color: var(--t2);
+}
+.oss-pr-empty a { color: var(--t1); }
+[data-theme='light'] .oss-pr-pill { background: rgba(0, 0, 0, 0.03); }
+@media (max-width: 640px) {
+  /* org page header: logo + title row, then everything stacked */
+  .oss-org-header { gap: 0.75rem; margin-bottom: 1.25rem; padding: 1.1rem 1rem 1rem; }
+  .oss-org-watermark { width: 200px; height: 200px; right: -60px; }
+  .oss-logo-lg { width: 44px; height: 44px; border-radius: 10px; }
+  .oss-org-title-col { flex-basis: calc(100% - 44px - 0.75rem); }
+  /* phones: icon-only Site / GitHub pinned to the card's top-right corner */
+  .oss-org-aside { position: absolute; top: 0.9rem; right: 0.9rem; margin: 0; width: auto; padding: 0; z-index: 2; }
+  .oss-org-aside .proj-actions { gap: 0.35rem; }
+  .oss-org-aside .proj-live-btn,
+  .oss-org-aside .proj-gh-btn { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 8px; }
+  .oss-org-aside .btn-label { display: none; }
+  .oss-org-title-col { padding-right: 84px; }
+  .oss-org-header .oss-stats-inline { padding-top: 0.7rem; }
+
+  /* PR cards */
+  .oss-pr { padding: 1.1rem 1.1rem 1rem; gap: 0.65rem; }
+  .oss-pr-list { gap: 1rem; }
+  /* phones: pill on the first line, chips drop beneath it, right-aligned, rule last */
+  .oss-pr-head { flex-wrap: wrap; gap: 0.75rem; margin: 1.9rem 0 1.2rem; }
+  .oss-pr-head .oss-section-rule { flex-basis: 100%; order: 3; }
+  .oss-filters { margin-left: auto; }
+  .oss-pr-top { flex-wrap: wrap; gap: 0.35rem 0.6rem; }
+  .oss-pr-date { font-size: 0.58rem; }
+  .oss-pr-title { font-size: 0.95rem; }
+  .oss-pr-bottom { gap: 0.6rem; }
+  .oss-pr-bottom .proj-gh-btn { margin-left: auto; }
+}
+@media (max-width: 420px) {
+  .oss-pr-bottom { flex-direction: column; align-items: stretch; }
+  .oss-pr-bottom .proj-gh-btn { margin-left: 0; justify-content: center; }
+}
