@@ -6228,3 +6228,17 @@ body::before {
   .oss-stat-num { font-size: 1.05rem; }
   .oss-stat.strong .oss-stat-num { font-size: 1.25rem; }
 }
+
+/* Pill + dashed rule separating the totals from the project cards */
+.oss-section-head {
+  margin: 2.5rem 0 1.5rem;
+  gap: 1rem;
+}
+.oss-section-rule {
+  flex: 1;
+  height: 0;
+  border-top: 1px dashed var(--border-h);
+}
+@media (max-width: 640px) {
+  .oss-section-head { margin: 1.9rem 0 1.2rem; }
+}
