@@ -222,6 +222,33 @@ export const PROJECTS = [
   },
 ];
 
+export const OPEN_SOURCE = [
+  {
+    org: "ente",
+    aliases: ["ente-io"],
+    featured: true,
+    name: "Ente",
+    tagline: "End-to-end encrypted photos and 2FA · open source",
+    url: "https://ente.io",
+    areas: ["Go server", "Web · photos", "Desktop"],
+  },
+  {
+    org: "heyform",
+    featured: true,
+    name: "HeyForm",
+    tagline: "Open-source form builder",
+    url: "https://heyform.net",
+    areas: ["TypeScript", "Answer validation"],
+  },
+  {
+    org: "usebruno",
+    name: "Bruno",
+    tagline: "Open-source API client, Git-friendly",
+    url: "https://www.usebruno.com",
+    areas: ["Electron", "Response view"],
+  },
+];
+
 export const EXPERIENCES = [
   {
     company: "BigSIBucks Innovation",
