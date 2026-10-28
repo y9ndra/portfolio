@@ -5,6 +5,7 @@ import Hero           from "@/components/Hero";
 import Skills         from "@/components/Skills";
 import Experience     from "@/components/Experience";
 import Projects       from "@/components/Projects";
+import OpenSource     from "@/components/OpenSource";
 import Blog           from "@/components/Blog";
 import Contact        from "@/components/Contact";
 import QuoteSection    from "@/components/QuoteSection";
@@ -37,6 +38,9 @@ export default function Home() {
 
         {/* Projects */}
         <Projects />
+
+        {/* Open Source */}
+        <OpenSource />
 
         {/* Blog */}
         <Blog />
