@@ -320,8 +320,10 @@ export default function Galaxy({
     let animateId: number;
 
     let lastTime = 0;
-    // 60 FPS cap on desktop (saves GPU on 120Hz/144Hz displays); 30 FPS on touch devices
-    const minFrameInterval = coarsePointer ? 1000 / 30 : 1000 / 60;
+    // The field only drifts and twinkles very slowly, so 30 FPS is visually
+    // identical to 60 and halves the GPU work. This also halves how often every
+    // backdrop-filter layered over the canvas has to be recomputed.
+    const minFrameInterval = 1000 / 30;
 
     function update(t: number) {
       animateId = requestAnimationFrame(update);
@@ -336,7 +338,7 @@ export default function Galaxy({
         program.uniforms.uStarSpeed.value = (t * 0.001 * starSpeed) / 10.0;
       }
 
-      const lerpFactor = 0.05;
+      const lerpFactor = 0.1;   // tuned for 30 FPS (was 0.05 at 60)
       smoothMousePos.current.x += (targetMousePos.current.x - smoothMousePos.current.x) * lerpFactor;
       smoothMousePos.current.y += (targetMousePos.current.y - smoothMousePos.current.y) * lerpFactor;
 

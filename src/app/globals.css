@@ -1397,8 +1397,8 @@ body::before {
   border-bottom: 3.5px solid var(--border-h);
   border-radius: 12px 12px 36px 36px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.008) 60%, rgba(255, 255, 255, 0.025) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* no backdrop-filter: blurring faint stars behind a near-black card looks the
+     same as not blurring them, and the blur re-ran on every galaxy frame */
   overflow: hidden;
   box-shadow:
     0 16px 40px -15px rgba(0, 0, 0, 0.5),
@@ -1438,8 +1438,6 @@ body::before {
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   position: relative;
   z-index: 25;
 }
@@ -1764,8 +1762,8 @@ body::before {
   overflow: hidden;
   border-radius: 10px;
   background: var(--bg-2);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* no backdrop-filter: the background is opaque, so the blur was invisible but
+     still recomputed on every galaxy frame */
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   cursor: pointer;
   align-items: center;
