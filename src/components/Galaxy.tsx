@@ -176,7 +176,10 @@ void main() {
     float alpha = length(col);
     alpha = smoothstep(0.0, 0.3, alpha);
     alpha = min(alpha, 1.0);
-    gl_FragColor = vec4(col, alpha);
+    // premultiplied output: browsers composite this identically, whereas a
+    // straight-alpha canvas is converted per frame and some Chrome GPU paths
+    // get it wrong (every star blooms) or do it on the CPU (lag)
+    gl_FragColor = vec4(col * alpha, alpha);
   } else {
     gl_FragColor = vec4(col, 1.0);
   }
@@ -243,7 +246,7 @@ export default function Galaxy({
     try {
       renderer = new Renderer({
         alpha: transparent,
-        premultipliedAlpha: false
+        premultipliedAlpha: true
       });
     } catch {
       return;
@@ -255,7 +258,7 @@ export default function Galaxy({
       gl.clearColor(1, 1, 1, 1);
     } else if (transparent) {
       gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);   // premultiplied source
       gl.clearColor(0, 0, 0, 0);
     } else {
       gl.clearColor(0, 0, 0, 1);
