@@ -54,7 +54,7 @@ export default function GalaxyBackground() {
     >
       <Galaxy
         mouseRepulsion={true}
-        mouseInteraction={true}
+        mouseInteraction={false}
         density={isLight ? 1.5 : 3}
         glowIntensity={isLight ? 0.06 : 0.07}
         saturation={0}
