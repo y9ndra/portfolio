@@ -6543,7 +6543,7 @@ body::before {
   }
 }
 /* Sun and crescent moon orbit during a theme change. */
-.theme-orbit-scene { view-transition-name: theme-orbit; position: fixed; inset: 0; z-index: 9999; overflow: hidden; pointer-events: none; }
+.theme-orbit-scene { view-transition-name: theme-orbit; position: fixed; inset: 0; z-index: 9999; overflow: hidden; pointer-events: none; animation: theme-orbit-fade 1.9s ease-out forwards; }
 .theme-orbit-track { position: absolute; width: min(75vw, 520px); aspect-ratio: 1; left: 50%; top: 100%; transform: translate(-50%, -50%); }
 .theme-orbit-wheel { position: absolute; inset: 0; }
 .theme-orbit-wheel.to-light { animation: theme-orbit-light 1.8s cubic-bezier(.42,0,.25,1) forwards; }
@@ -6551,6 +6551,7 @@ body::before {
 .theme-orbit-moon, .theme-orbit-sun { position: absolute; left: 50%; width: clamp(52px, 12vw, 95px); aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%); }
 .theme-orbit-moon { top: 0; background: #ececf1; -webkit-mask: radial-gradient(circle at 72% 30%, transparent 48%, #000 50%); mask: radial-gradient(circle at 72% 30%, transparent 48%, #000 50%); }
 .theme-orbit-sun { top: 100%; background: radial-gradient(circle at 38% 32%, #fff4bb, #f5b44c 67%, #e98732); box-shadow: 0 0 35px 12px rgba(255,190,88,.45); }
+@keyframes theme-orbit-fade { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes theme-orbit-light { from { transform: rotate(0deg); } to { transform: rotate(180deg); } }
 @keyframes theme-orbit-dark { from { transform: rotate(180deg); } to { transform: rotate(360deg); } }
 ::view-transition-group(theme-orbit),
