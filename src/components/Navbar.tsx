@@ -414,9 +414,9 @@ export default function Navbar() {
               style={{
                 transform: showLink
                   ? `translate(${x}px, ${y}px) scale(1)` 
-                  : `translate(0, 0) scale(0)`,
+                  : `translate(0, 0) scale(0.35)`,
                 opacity: showLink ? 1 : 0,
-                transitionDelay: showLink ? `${idx * 20}ms` : "0ms",
+                transitionDelay: showLink ? `${idx * 35}ms` : `${(LINKS.length - 1 - idx) * 25}ms`,
                 pointerEvents: showLink ? "auto" : "none",
               }}
             >
@@ -452,9 +452,9 @@ export default function Navbar() {
               style={{
                 transform: showChapter
                   ? `translate(${x}px, ${y}px) scale(1)` 
-                  : `translate(0, 0) scale(0)`,
+                  : `translate(0, 0) scale(0.35)`,
                 opacity: showChapter ? 1 : 0,
-                transitionDelay: showChapter ? `${idx * 20}ms` : "0ms",
+                transitionDelay: showChapter ? `${idx * 35}ms` : `${(chapters.length - 1 - idx) * 25}ms`,
                 pointerEvents: showChapter ? "auto" : "none",
               }}
             >
@@ -491,7 +491,8 @@ export default function Navbar() {
               ? "translate(0px, -62px) scale(1)" 
               : "translate(0px, 0px) scale(0)",
             opacity: isOpen ? 1 : 0,
-            transitionDelay: isOpen ? "120ms" : "0ms",
+            transitionDelay: isOpen ? "120ms" : "75ms",
+            pointerEvents: isOpen ? "auto" : "none",
           }}
         >
           <span className="radial-tooltip">Theme</span>
