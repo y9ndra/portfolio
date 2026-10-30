@@ -6556,3 +6556,10 @@ body::before {
 ::view-transition-old(theme-orbit),
 ::view-transition-new(theme-orbit) { animation: none; }
 ::view-transition-old(theme-orbit) { display: none; }
+
+html.theme-orbit-reveal::view-transition-old(root) { animation: none; }
+html.theme-orbit-reveal::view-transition-new(root) {
+  animation: theme-reveal-hold 1.8s linear both;
+  clip-path: circle(0px at 50% 100%);
+}
+@keyframes theme-reveal-hold { from, to { opacity: 1; } }

@@ -210,15 +210,35 @@ export default function Navbar() {
     scene.append(track);
     document.body.append(scene);
 
-    window.setTimeout(() => {
-      if (typeof document.startViewTransition === "function") {
-        document.startViewTransition(applyTheme);
-      } else {
+    if (typeof document.startViewTransition === "function") {
+      root.classList.add("theme-orbit-reveal");
+      const transition = document.startViewTransition(applyTheme);
+      transition.ready.then(() => {
+        const orbitRadius = Math.min(window.innerWidth * 0.75, 520) / 2;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight;
+        const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.35;
+        const frames = Array.from({ length: 41 }, (_, index) => {
+          const progress = index / 40;
+          const x = centerX - orbitRadius * Math.sin(Math.PI * progress);
+          const y = centerY + orbitRadius * Math.cos(Math.PI * progress);
+          const radius = Math.pow(progress, 1.45) * maxRadius;
+          return { clipPath: `circle(${radius}px at ${x}px ${y}px)` };
+        });
+        root.animate(frames, {
+          duration: 1800,
+          easing: "cubic-bezier(.42,0,.25,1)",
+          fill: "forwards",
+          pseudoElement: "::view-transition-new(root)",
+        });
+      }).catch(() => {});
+      transition.finished.finally(() => root.classList.remove("theme-orbit-reveal"));    } else {
+      window.setTimeout(() => {
         root.classList.add("theme-transitioning");
         applyTheme();
         window.setTimeout(() => root.classList.remove("theme-transitioning"), 450);
-      }
-    }, 900);
+      }, 900);
+    }
     window.setTimeout(() => {
       scene.remove();
       themeAnimating.current = false;
