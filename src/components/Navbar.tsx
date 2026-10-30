@@ -177,14 +177,53 @@ export default function Navbar() {
     return () => clearTimeout(timer);
   }, []);
   const navRef = useRef<HTMLDivElement | null>(null);
+  const themeAnimating = useRef(false);
 
   const toggleTheme = () => {
+    if (themeAnimating.current) return;
     const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    localStorage.setItem("theme", nextTheme);
-  };
+    const root = document.documentElement;
+    const applyTheme = () => {
+      setTheme(nextTheme);
+      root.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("theme", nextTheme);
+    };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      applyTheme();
+      return;
+    }
 
+    themeAnimating.current = true;
+    const scene = document.createElement("div");
+    scene.className = "theme-orbit-scene";
+    scene.setAttribute("aria-hidden", "true");
+    const track = document.createElement("div");
+    track.className = "theme-orbit-track";
+    const wheel = document.createElement("div");
+    wheel.className = `theme-orbit-wheel ${nextTheme === "light" ? "to-light" : "to-dark"}`;
+    const moon = document.createElement("span");
+    moon.className = "theme-orbit-moon";
+    const sun = document.createElement("span");
+    sun.className = "theme-orbit-sun";
+    wheel.append(moon, sun);
+    track.append(wheel);
+    scene.append(track);
+    document.body.append(scene);
+
+    window.setTimeout(() => {
+      if (typeof document.startViewTransition === "function") {
+        document.startViewTransition(applyTheme);
+      } else {
+        root.classList.add("theme-transitioning");
+        applyTheme();
+        window.setTimeout(() => root.classList.remove("theme-transitioning"), 450);
+      }
+    }, 900);
+    window.setTimeout(() => {
+      scene.remove();
+      themeAnimating.current = false;
+    }, 1900);
+  };
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
