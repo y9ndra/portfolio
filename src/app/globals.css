@@ -6544,7 +6544,7 @@ body::before {
 }
 /* Sun and crescent moon orbit during a theme change. */
 .theme-orbit-scene { view-transition-name: theme-orbit; position: fixed; inset: 0; z-index: 9999; overflow: hidden; pointer-events: none; animation: theme-orbit-fade 1.9s ease-out forwards; }
-.theme-orbit-track { position: absolute; width: min(75vw, 520px); aspect-ratio: 1; left: 50%; top: 100%; transform: translate(-50%, -50%); }
+.theme-orbit-track { position: absolute; width: 520px; aspect-ratio: 1; left: 50%; top: 100%; transform: translate(-50%, -50%); }
 .theme-orbit-wheel { position: absolute; inset: 0; }
 .theme-orbit-wheel.to-light { animation: theme-orbit-light 1.8s cubic-bezier(.42,0,.25,1) forwards; }
 .theme-orbit-wheel.to-dark { animation: theme-orbit-dark 1.8s cubic-bezier(.42,0,.25,1) forwards; }

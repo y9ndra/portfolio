@@ -214,7 +214,7 @@ export default function Navbar() {
       root.classList.add("theme-orbit-reveal");
       const transition = document.startViewTransition(applyTheme);
       transition.ready.then(() => {
-        const orbitRadius = Math.min(window.innerWidth * 0.75, 520) / 2;
+        const orbitRadius = track.offsetWidth / 2;
         const centerX = window.innerWidth / 2;
         const centerY = window.innerHeight;
         const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.35;
