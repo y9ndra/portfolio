@@ -51,10 +51,12 @@ function PRCard({ pr }: { pr: OssPR }) {
     <li className="oss-pr corner-box">
       <div className="oss-pr-top">
         <span className={`oss-pr-pill ${pr.state}`}>
-          {pr.state === "merged" ? <MergeIcon /> : <PrIcon />}{pr.state}
+          {pr.state === "merged" ? <MergeIcon /> : <PrIcon />}{pr.mergedVia ? "merged via another PR" : pr.state}
         </span>
         <span className="oss-pr-date">
-          {pr.state === "merged" && pr.mergedAt ? `merged ${fmtDate(pr.mergedAt)}` : `opened ${fmtDate(pr.createdAt)}`}
+                    {pr.mergedVia ? (
+            <>via <a href={pr.mergedVia.url} target="_blank" rel="noopener noreferrer">#{pr.mergedVia.number}</a> · {pr.mergedAt && fmtDate(pr.mergedAt)}</>
+          ) : pr.state === "merged" && pr.mergedAt ? `merged ${fmtDate(pr.mergedAt)}` : `opened ${fmtDate(pr.createdAt)}`}
         </span>
       </div>
       <h2 className="oss-pr-title">

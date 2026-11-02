@@ -62,6 +62,7 @@ export interface OssPR {
   state: "merged" | "open";
   createdAt: string;
   mergedAt: string | null;
+  mergedVia?: { number: number; url: string };
 }
 
 export function ossMeta(org: string): OssMeta | undefined {
@@ -103,15 +104,29 @@ async function search(q: string): Promise<SearchItem[]> {
 }
 
 const repoOf = (item: SearchItem) => item.repository_url.split("/repos/")[1];
-const toPR = (it: SearchItem, merged: boolean): OssPR => ({
-  title: it.title,
-  number: it.number,
-  url: it.html_url,
-  repo: repoOf(it),
-  state: merged ? "merged" : "open",
-  createdAt: it.created_at,
-  mergedAt: it.pull_request?.merged_at ?? null,
-});
+// The maintainer confirmed #14108 was included in #14215, which cherry-picked
+// the original author's commits and merged on this date.
+const mergedVia = new Map<string, { number: number; url: string; mergedAt: string }>([
+  ["ente/ente#14108", { number: 14215, url: "https://github.com/ente/ente/pull/14215", mergedAt: "2026-11-02T04:27:40Z" }],
+]);
+const mergeInfo = (it: SearchItem) => {
+  if (it.pull_request?.merged_at) return { mergedAt: it.pull_request.merged_at };
+  if (it.state !== "closed") return null;
+  return mergedVia.get(`${repoOf(it).toLowerCase()}#${it.number}`) ?? null;
+};
+const toPR = (it: SearchItem): OssPR => {
+  const merge = mergeInfo(it);
+  return {
+    title: it.title,
+    number: it.number,
+    url: it.html_url,
+    repo: repoOf(it),
+    state: merge ? "merged" : "open",
+    createdAt: it.created_at,
+    mergedAt: merge?.mergedAt ?? null,
+    ...(merge && "number" in merge ? { mergedVia: { number: merge.number, url: merge.url } } : {}),
+  };
+};
 
 // Renamed organisations still show their old login on older PRs; fold aliases
 // into the current login.
@@ -150,14 +165,14 @@ export async function fetchOssStats() {
     const org = orgOf(it);
     if (!org) continue;
     const s = get(org);
-    const merged = !!it.pull_request?.merged_at;
+    const merged = !!mergeInfo(it);
     if (merged) s.merged++;
     else if (it.state === "open") s.open++;
     else s.closed++;
     touch(s, it);
     if (merged || it.state === "open") {
       const list = candidates.get(org) ?? [];
-      list.push(toPR(it, merged));
+      list.push(toPR(it));
       candidates.set(org, list);
     }
   }
@@ -207,7 +222,8 @@ export async function fetchOssStats() {
   for (const it of prs) {
     const org = orgOf(it);
     if (!org) continue;
-    if (it.pull_request?.merged_at) events.push({ kind: "merged", day: dayKey(it.pull_request.merged_at), org });
+    const mergedAt = mergeInfo(it)?.mergedAt;
+    if (mergedAt) events.push({ kind: "merged", day: dayKey(mergedAt), org });
     else if (it.state === "open") events.push({ kind: "open", day: dayKey(it.created_at), org });
   }
   for (const it of issues) {
@@ -254,9 +270,9 @@ export async function fetchOrgPRs(meta: OssMeta): Promise<OssPR[]> {
   for (const it of lists.flat()) {
     if (seen.has(it.html_url)) continue;
     seen.add(it.html_url);
-    const merged = !!it.pull_request?.merged_at;
+    const merged = !!mergeInfo(it);
     if (!merged && it.state !== "open") continue;
-    out.push(toPR(it, merged));
+    out.push(toPR(it));
   }
   out.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   return out;
