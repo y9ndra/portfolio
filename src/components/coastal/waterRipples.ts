@@ -400,6 +400,24 @@ void main() {
     float halo = exp(-distanceToMoon / 100.) * sky * night * moonlight;
     color = mix(color, vec3(.53, .66, .78), halo * .22);
 
+    float depth = max(uv.y - .505, 0.);
+    float refraction = depth * .55 / max(.505 - moonCenter.y, .08);
+    float entryX = (uv.x + refraction * moonCenter.x) / (1. + refraction);
+    float rayX = entryX + .0025 * sin(time * .22);
+    float rays = lightShaft(rayX, .145, .029) * .45
+      + lightShaft(rayX, .325, .022) * .55
+      + lightShaft(rayX, .535, .035) * .50
+      + lightShaft(rayX, .735, .026) * .50
+      + lightShaft(rayX, .94, .031) * .40;
+    vec2 entry = vec2(entryX, .49);
+    float shadow = max(blocksSun(moonCenter, entry, vec2(.589, .27), .012),
+      max(blocksSun(moonCenter, entry, vec2(.72, .145), .072) * .8,
+        blocksSun(moonCenter, entry, vec2(.69, .27), .013)));
+    float depthFade = smoothstep(.505, .54, uv.y) * (1. - smoothstep(.66, .87, uv.y));
+    float openWater = smoothstep(.005, .04, color.b - color.r) * smoothstep(.08, .20, color.g);
+    float light = night * moonlight * depthFade * openWater * min(rays, 1.) * .16 * (1. - shadow * .88);
+    color = mix(color, vec3(.49, .64, .72), light);
+
     float moonDisc = (1. - smoothstep(14., 16., distanceToMoon)) * ridgeVisibility * (1. - foreground);
     // A faint surface texture lets the moon remain legible at the banner's small size.
     float detail = .035 * sin(printPoint.x * .19) * sin(printPoint.y * .14);
