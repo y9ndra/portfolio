@@ -124,6 +124,57 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
       gl.drawArrays(gl.TRIANGLES, 6, vertexCount);
     }
 
+    gl.uniform1i(kind, 2);
+    for (let i = 0; i < 2; i++) {
+      const animal = animals[fish.length + i];
+      const flight = flights[i];
+      const scale = i === 0 ? 1.12 : 0.84;
+      const left = 800 * (1 - cropX) - 42 * scale;
+      const right = 1600 - left;
+      if (sceneTime < animal.enterAt) continue;
+      if (!animal.radiusX) {
+        flight.direction = Math.random() < 0.5 ? 1 : -1;
+        flight.speed = 30 + Math.random() * 10;
+        flight.altitude = 65 + Math.random() * 50;
+        animal.x = flight.direction === 1 ? left : right;
+      }
+      let step = dt;
+      let stroke = gullStroke(sceneTime * (1 + i * 0.06) + i * 2.3);
+      if (flight.started !== -Infinity) {
+        const age = sceneTime - flight.started;
+        // Add three wingbeats to the current pose, even during a glide.
+        stroke += gullStroke(Math.min(age * 2.1, 3.1));
+        const progress = Math.min(1, Math.max(0, (age - wingbeatLead) / escapeDuration));
+        // Distance under a smooth speed pulse, starting after the first wingbeat.
+        const extraTravel = escapeDistance * (progress - Math.sin(2 * Math.PI * progress) / (2 * Math.PI));
+        step += extraTravel - flight.extraTravel;
+        flight.extraTravel = extraTravel;
+        if (progress === 1) {
+          flight.extraTravel = 0;
+          flight.started = -Infinity;
+        }
+      }
+      animal.x += flight.direction * flight.speed * step;
+      if ((flight.direction === 1 && animal.x > right) || (flight.direction === -1 && animal.x < left)) {
+        animal.enterAt = sceneTime + respawnDelay;
+        flight.started = -Infinity;
+        flight.extraTravel = 0;
+        animal.radiusX = 0;
+        if (hoveredGull === fish.length + i) hoveredGull = -1;
+        continue;
+      }
+      // A narrowing crop can move the entry edge past an incoming bird.
+      animal.x = Math.max(left, Math.min(right, animal.x));
+      const frame = Math.round(stroke * 48) % 48;
+      const lift = Math.sin(stroke * Math.PI * 2);
+      const y = flight.altitude + 12 * Math.sin(animal.x / 184 + i) - 1.35 * lift;
+      animal.y = y;
+      animal.radiusX = 39 * scale;
+      animal.radiusY = 31 * scale;
+      gl.uniform4f(pose, animal.x, y, flight.direction * scale, scale);
+      gl.uniform4f(region, (frame % 6) * 84, 272 + Math.floor(frame / 6) * 72, 84, 72);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
     gl.disable(gl.BLEND);
     gl.uniform1i(kind, 0);
   }
