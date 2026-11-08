@@ -381,6 +381,30 @@ void main() {
       color = mix(color, vec3(.92, .94, .90), min(starlight, 1.) * night * sky * .95);
     }
   }
+  if (sunHour >= 0. && (sunHour >= 18. || sunHour < 6.)) {
+    // The illustrative moon follows a twelve-hour path on the visitor's clock.
+    float nightHour = sunHour >= 18. ? sunHour - 18. : sunHour + 6.;
+    float progress = nightHour / 12.;
+    vec2 moonCenter = skyPath(progress);
+    float distanceToMoon = length((uv - moonCenter) * printSize);
+    float leftRidge = mix(112., 207., smoothstep(135., 270., printPoint.x));
+    float rightRidge = mix(202., 173., smoothstep(1190., 1400., printPoint.x))
+      + 18. * smoothstep(1400., 1600., printPoint.x);
+    float leftMask = 1. - smoothstep(leftRidge - 1., leftRidge + 1., printPoint.y);
+    float rightMask = 1. - smoothstep(rightRidge - 1., rightRidge + 1., printPoint.y);
+    float ridgeVisibility = mix(leftMask, 1., smoothstep(250., 300., printPoint.x))
+      * mix(1., rightMask, smoothstep(1180., 1240., printPoint.x));
+    float night = 1. - daytime(sunHour);
+    float moonlight = smoothstep(0., .035, progress) * (1. - smoothstep(.965, 1., progress));
+    float sky = (1. - smoothstep(.36, .43, uv.y)) * ridgeVisibility * (1. - foreground);
+    float halo = exp(-distanceToMoon / 100.) * sky * night * moonlight;
+    color = mix(color, vec3(.53, .66, .78), halo * .22);
+
+    float moonDisc = (1. - smoothstep(14., 16., distanceToMoon)) * ridgeVisibility * (1. - foreground);
+    // A faint surface texture lets the moon remain legible at the banner's small size.
+    float detail = .035 * sin(printPoint.x * .19) * sin(printPoint.y * .14);
+    color = mix(color, vec3(.91, .93, .87) - detail, moonDisc * .96);
+  }
   color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
 }`;
