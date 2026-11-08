@@ -353,6 +353,21 @@ void main() {
     float halo = exp(-lampDistance / 22.) * (1. - day);
     color = mix(color, vec3(1., .78, .43), lamp * .85 + halo * .28);
   }
+  if (sunHour >= 0. && uv.y > .44 && uv.y < .52) {
+    bool sunVisible = sunHour >= 6. && sunHour < 18.;
+    float elapsedHours = sunVisible ? sunHour - 6. : (sunHour >= 18. ? sunHour - 18. : sunHour + 6.);
+    float progress = elapsedHours / 12.;
+    float sourceX = skyPath(progress).x;
+    float drift = .012 * sin(time * .28);
+    float glints = surfaceGlint(uv, vec2(sourceX - .055 + drift, .474), vec2(.018, .0018)) * .55
+      + surfaceGlint(uv, vec2(sourceX + .022 - drift * .7, .489), vec2(.026, .0015)) * .75
+      + surfaceGlint(uv, vec2(sourceX + .085 + drift * .5, .501), vec2(.012, .0018)) * .45;
+    float skyTime = smoothstep(0., .06, progress) * (1. - smoothstep(.94, 1., progress));
+    float visibleWater = smoothstep(.18, .27, color.b) * smoothstep(.19, .30, color.g);
+    vec3 glintColor = sunVisible ? vec3(.95, .84, .64) : vec3(.55, .66, .73);
+    float strength = sunVisible ? .22 : .09;
+    color = mix(color, glintColor, min(glints, 1.) * skyTime * visibleWater * strength);
+  }
   color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
 }`;
