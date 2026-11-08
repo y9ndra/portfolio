@@ -348,6 +348,10 @@ void main() {
       * (1. - foreground) * (1. - day);
     color = mix(color, vec3(.82, .75, .57), beam * facing * .32);
 
+    float lampDistance = length(fromLamp);
+    float lamp = (1. - smoothstep(3., 7., lampDistance)) * (1. - day);
+    float halo = exp(-lampDistance / 22.) * (1. - day);
+    color = mix(color, vec3(1., .78, .43), lamp * .85 + halo * .28);
   }
   color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
