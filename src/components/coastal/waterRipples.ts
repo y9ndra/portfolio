@@ -335,6 +335,19 @@ void main() {
     vec3 warmTint = mix(vec3(1.08, 1.015, .94), vec3(1.16, 1.035, .90), horizon);
     color = sceneColor * mix(vec3(1.), warmTint, warm * .55);
 
+    // The rotating lamp casts a soft beam across the night sky.
+    vec2 lampPoint = vec2(.589, .226) * printSize;
+    vec2 fromLamp = printPoint - lampPoint;
+    float sweep = cos(time * .22);
+    float facing = .5 + .5 * sign(fromLamp.x) * sweep;
+    float beamWidth = 5. + abs(fromLamp.x) * .065;
+    float beamHeight = fromLamp.y + abs(fromLamp.x) * .035;
+    float beam = exp(-pow(beamHeight / beamWidth, 2.))
+      * exp(-abs(fromLamp.x) / 310.)
+      * smoothstep(8., 32., abs(fromLamp.x))
+      * (1. - foreground) * (1. - day);
+    color = mix(color, vec3(.82, .75, .57), beam * facing * .32);
+
   }
   color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
