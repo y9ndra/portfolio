@@ -119,6 +119,8 @@ void main() {
   float tide = sin(uv.x * 11.0 - time * 0.95) + 0.32 * sin(uv.x * 22.0 + time * 0.7);
   vec2 swell = vec2(0.0018 * cos(uv.x * 11.0 - time * 0.95), 0.012 * tide) * crest;
 
+  // Kelp tips sway in the current. The holdfasts stay anchored to the rocks.
+  swell.x += kelpSway(uv);
   vec2 printSize = vec2(1600., 640.);
   vec2 printPoint = uv * printSize;
   const float mainCurlX = 750.;
