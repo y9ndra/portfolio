@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
 import { GH, LiveIcon, NPMIcon } from "@/components/ProjectCard";
+import "./ProjectCircle.css";
 
 export { GH, LiveIcon, NPMIcon };
 
@@ -57,554 +58,154 @@ const ArrowRight = () => (
   </svg>
 );
 
-let savedActiveIndex = 0;
-if (typeof window !== "undefined") {
-  try {
-    const s = sessionStorage.getItem("home_active_project_index");
-    if (s !== null) {
-      const p = parseInt(s, 10);
-      if (!isNaN(p) && p >= 0 && p < 3) {
-        savedActiveIndex = p;
-      }
-    }
-  } catch {
-    // sessionStorage unavailable
-  }
-}
+
+const projects = PROJECTS.slice(0, 3);
 
 export default function Projects() {
   const router = useRouter();
-  const [activeIndex, setActiveIndex] = useState(savedActiveIndex);
+  const [rotation, setRotation] = useState(0);
+  const [dragAngle, setDragAngle] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [viewportWidth, setViewportWidth] = useState(1024);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const start = useRef<{x: number; y: number; offset: number; time: number; lastX: number; lastTime: number; velocity: number} | null>(null);
+  const swiped = useRef(false);
+  const activeIndex = ((-rotation % projects.length) + projects.length) % projects.length;
 
   useEffect(() => {
-    const handleResize = () => {
-      setViewportWidth(window.innerWidth);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const frame = requestAnimationFrame(() => {
+      try {
+        const saved = Number(sessionStorage.getItem("home_active_project_index"));
+        if (Number.isInteger(saved) && saved > 0 && saved < projects.length) {
+          setRotation(-saved);
+        }
+      } catch {}
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
-  const stageRef = useRef<HTMLDivElement>(null);
-  const glareRef = useRef<HTMLDivElement>(null);
-  const dragStartX = useRef<number | null>(null);
-  const dragStartY = useRef<number | null>(null);
-  const capturedPointerId = useRef<number | null>(null);
-  const hasSwiped = useRef(false);
+  const rotate = useCallback((step: number) => {
+    setRotation(current => {
+      const next = current + step;
+      const index = ((-next % projects.length) + projects.length) % projects.length;
+      try { sessionStorage.setItem("home_active_project_index", String(index)); } catch {}
+      return next;
+    });
+  }, []);
 
-  const projects = PROJECTS.slice(0, 3);
-  const total = projects.length;
-  const [prevActiveIndex, setPrevActiveIndex] = useState(savedActiveIndex);
-
-  // Sync state if sessionStorage was updated
   useEffect(() => {
+    function key(event: KeyboardEvent) {
+      const target = event.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable=true]")) return;
+      const rect = stageRef.current?.getBoundingClientRect();
+      if (!rect || rect.top >= innerHeight || rect.bottom <= 0) return;
+      if (event.key === "ArrowLeft") { event.preventDefault(); rotate(1); }
+      if (event.key === "ArrowRight") { event.preventDefault(); rotate(-1); }
+    }
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [rotate]);
+
+  function openProject(event: React.MouseEvent, index: number, id: string) {
+    if (swiped.current || (event.target as HTMLElement).closest("a, button")) return;
+    if (index !== activeIndex) {
+      rotate((index - activeIndex + projects.length) % projects.length === 1 ? -1 : 1);
+      return;
+    }
     try {
-      const saved = sessionStorage.getItem("home_active_project_index");
-      if (saved !== null) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= 0 && parsed < total && parsed !== activeIndex) {
-          savedActiveIndex = parsed;
-          setActiveIndex(parsed);
-          setPrevActiveIndex(parsed);
-        }
-      }
-    } catch {
-      // sessionStorage unavailable
+      sessionStorage.setItem("projects_back_url", "/#projects");
+      sessionStorage.setItem("home_active_project_index", String(index));
+    } catch {}
+    if (event.metaKey || event.ctrlKey) window.open(`/projects/${id}`, "_blank");
+    else router.push(`/projects/${id}`);
+  }
+
+  function pointerDown(event: React.PointerEvent) {
+    if (event.button !== 0 || (event.target as HTMLElement).closest("a, button")) return;
+    const ring = stageRef.current?.querySelector(".project-circle-ring");
+    let offset = 0;
+    if (ring) {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(ring).transform);
+      const angle = Math.atan2(-matrix.m13, matrix.m11) * 180 / Math.PI;
+      const target = rotation * 120;
+      const currentAngle = angle + Math.round((target - angle) / 360) * 360;
+      offset = currentAngle - target;
     }
-  }, [total, activeIndex]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPrevActiveIndex(activeIndex);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [activeIndex]);
-
-  const handlePrev = useCallback(() => {
-    setPrevActiveIndex(activeIndex);
-    setActiveIndex((prev) => {
-      const next = (prev - 1 + total) % total;
-      savedActiveIndex = next;
-      try {
-        sessionStorage.setItem("home_active_project_index", String(next));
-      } catch {}
-      return next;
-    });
-  }, [activeIndex, total]);
-
-  const handleNext = useCallback(() => {
-    setPrevActiveIndex(activeIndex);
-    setActiveIndex((prev) => {
-      const next = (prev + 1) % total;
-      savedActiveIndex = next;
-      try {
-        sessionStorage.setItem("home_active_project_index", String(next));
-      } catch {}
-      return next;
-    });
-  }, [activeIndex, total]);
-
-  const handleCardClick = (e: React.MouseEvent, index: number, id: string) => {
-    const target = e.target as HTMLElement;
-    if (target.closest(".proj-actions") || target.closest("a") || target.closest("button")) {
-      return;
+    start.current = { x: event.clientX, y: event.clientY, offset, time: event.timeStamp, lastX: event.clientX, lastTime: event.timeStamp, velocity: 0 };
+    swiped.current = false;
+  }
+  function pointerMove(event: React.PointerEvent) {
+    if (!start.current) return;
+    const dx = event.clientX - start.current.x;
+    const dy = event.clientY - start.current.y;
+    if (!swiped.current && (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy))) return;
+    if (!swiped.current) {
+      swiped.current = true;
+      setDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
     }
-    if (hasSwiped.current) {
-      e.preventDefault();
-      return;
+    const elapsed = event.timeStamp - start.current.lastTime;
+    if (elapsed > 0) {
+      start.current.velocity = (event.clientX - start.current.lastX) / elapsed;
+      start.current.lastX = event.clientX;
+      start.current.lastTime = event.timeStamp;
     }
-    if (index === activeIndex) {
-      savedActiveIndex = index;
-      try {
-        sessionStorage.setItem("projects_back_url", "/#projects");
-        sessionStorage.setItem("home_active_project_index", String(index));
-      } catch {
-        // sessionStorage not available
-      }
-      if (e.metaKey || e.ctrlKey) {
-        window.open(`/projects/${id}`, "_blank");
-        return;
-      }
-      router.push(`/projects/${id}`);
-    } else {
-      e.preventDefault();
-      setPrevActiveIndex(activeIndex);
-      setActiveIndex(index);
-      savedActiveIndex = index;
-      try {
-        sessionStorage.setItem("home_active_project_index", String(index));
-      } catch {}
+    const width = event.currentTarget.clientWidth;
+    setDragAngle(start.current.offset + dx / Math.max(width * 0.45, 1) * 120);
+  }
+  function pointerUp(event: React.PointerEvent) {
+    if (!start.current) return;
+    const dx = event.clientX - start.current.x;
+    const dy = event.clientY - start.current.y;
+    const gesture = start.current;
+    start.current = null;
+    if (swiped.current && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      const width = event.currentTarget.clientWidth;
+      const velocity = event.timeStamp - gesture.lastTime < 100 ? gesture.velocity : 0;
+      const projected = gesture.offset + (dx + velocity * 140) / Math.max(width * 0.45, 1) * 120;
+      let steps = Math.round(projected / 120);
+      if (steps === 0 && Math.abs(gesture.offset) < 30) steps = dx > 0 ? 1 : -1;
+      rotate(steps);
     }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent, index: number, id: string) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      if (index === activeIndex) {
-        savedActiveIndex = index;
-        try {
-          sessionStorage.setItem("projects_back_url", "/#projects");
-          sessionStorage.setItem("home_active_project_index", String(index));
-        } catch {
-          // sessionStorage not available
-        }
-        router.push(`/projects/${id}`);
-      } else {
-        setPrevActiveIndex(activeIndex);
-        setActiveIndex(index);
-        savedActiveIndex = index;
-        try {
-          sessionStorage.setItem("home_active_project_index", String(index));
-        } catch {}
-      }
-    }
-  };
-
-  // Keyboard left/right arrow navigation when projects section is in view
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement;
-      if (
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          activeEl.getAttribute("contenteditable") === "true")
-      ) {
-        return;
-      }
-
-      const stage = stageRef.current;
-      if (!stage) return;
-      const rect = stage.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight && rect.bottom > 0;
-      if (!inView) return;
-
-      if (e.key === "ArrowLeft") {
-        handlePrev();
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [handleNext, handlePrev]);
-
-  const pointerRaf = useRef<number | null>(null);
-  const pendingPointer = useRef<{ clientX: number; clientY: number; target: HTMLElement } | null>(null);
-
-  // Pointer drag & 3D tilt tracking
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const target = e.target as HTMLElement;
-    if (target.closest("a") || target.closest("button")) {
-      return;
-    }
-    dragStartX.current = e.clientX;
-    dragStartY.current = e.clientY;
-    hasSwiped.current = false;
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (dragStartX.current !== null) {
-      const deltaX = e.clientX - dragStartX.current;
-      const deltaY = e.clientY - (dragStartY.current ?? e.clientY);
-
-      // Only enter drag mode if horizontal displacement exceeds threshold
-      if (!hasSwiped.current && Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
-        hasSwiped.current = true;
-        setIsDragging(true);
-        try {
-          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-          capturedPointerId.current = e.pointerId;
-        } catch {}
-      }
-
-      if (hasSwiped.current) {
-        setDragOffset(deltaX);
-      }
-    }
-
-    pendingPointer.current = { clientX: e.clientX, clientY: e.clientY, target: e.target as HTMLElement };
-    if (!pointerRaf.current) {
-      pointerRaf.current = requestAnimationFrame(() => {
-        pointerRaf.current = null;
-        const ev = pendingPointer.current;
-        if (!ev) return;
-        const stage = stageRef.current;
-        if (!stage) return;
-        const rect = stage.getBoundingClientRect();
-        const normX = (ev.clientX - rect.left) / rect.width - 0.5;
-        const normY = (ev.clientY - rect.top) / rect.height - 0.5;
-
-        // Cursor tilt and fan spread are written as CSS variables on the stage,
-        // so hovering never re-renders the deck.
-        if (ev.target.closest(".proj-actions") || ev.target.closest("a") || ev.target.closest("button")) {
-          stage.style.setProperty("--tx", "0");
-          stage.style.setProperty("--ty", "0");
-        } else {
-          stage.style.setProperty("--tx", String(Math.round(-normY * 4.5)));
-          stage.style.setProperty("--ty", String(Math.round(normX * 5)));
-        }
-        stage.style.setProperty("--fan", (Math.abs(normX) * 1.5).toFixed(3));
-
-        if (glareRef.current) {
-          const cardRect = glareRef.current.getBoundingClientRect();
-          const px = Math.round(((ev.clientX - cardRect.left) / cardRect.width) * 100);
-          const py = Math.round(((ev.clientY - cardRect.top) / cardRect.height) * 100);
-          glareRef.current.style.background = `radial-gradient(circle 380px at ${px}% ${py}%, var(--card-glare-color, rgba(255,255,255,0.18)), transparent 68%)`;
-          glareRef.current.style.opacity = "1";
-        }
-      });
-    }
-  };
-
-  const handlePointerUp = (e?: React.PointerEvent) => {
-    if (capturedPointerId.current !== null && stageRef.current) {
-      try {
-        stageRef.current.releasePointerCapture(capturedPointerId.current);
-      } catch {}
-      capturedPointerId.current = null;
-    }
-    if (e && e.currentTarget) {
-      try {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {}
-    }
-    if (pointerRaf.current) {
-      cancelAnimationFrame(pointerRaf.current);
-      pointerRaf.current = null;
-    }
-    if (dragStartX.current !== null) {
-      if (dragOffset < -40) {
-        handleNext();
-      } else if (dragOffset > 40) {
-        handlePrev();
-      }
-    }
-    dragStartX.current = null;
-    dragStartY.current = null;
-    setDragOffset(0);
-    setIsDragging(false);
-    if (hasSwiped.current) {
-      setTimeout(() => {
-        hasSwiped.current = false;
-      }, 100);
-    }
-  };
-
-  const handlePointerLeave = (e: React.PointerEvent) => {
-    handlePointerUp(e);
-    if (stageRef.current) {
-      stageRef.current.style.setProperty("--tx", "0");
-      stageRef.current.style.setProperty("--ty", "0");
-      stageRef.current.style.setProperty("--fan", "0");
-    }
-    if (glareRef.current) {
-      glareRef.current.style.opacity = "0";
-    }
-  };
-
-  // Touch swipe support for mobile devices
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest("a") || target.closest("button")) {
-      return;
-    }
-    dragStartX.current = e.touches[0].clientX;
-    dragStartY.current = e.touches[0].clientY;
-    hasSwiped.current = false;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (dragStartX.current === null) return;
-    const deltaX = e.touches[0].clientX - dragStartX.current;
-    const deltaY = e.touches[0].clientY - (dragStartY.current ?? e.touches[0].clientY);
-    if (!hasSwiped.current && Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      hasSwiped.current = true;
-      setIsDragging(true);
-    }
-    if (hasSwiped.current) {
-      setDragOffset(deltaX);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    handlePointerUp();
-  };
+    setDragging(false);
+    setDragAngle(0);
+  }
 
   return (
     <section id="projects" className="section" aria-label="Projects">
       <div className="wrap">
-
         <div className="section-head section-head-split" data-reveal>
           <span className="section-title">Projects</span>
           <div className="proj-deck-controls">
-            <button
-              type="button"
-              className="proj-deck-nav-btn"
-              onClick={handlePrev}
-              aria-label="Previous project"
-              title="Previous project"
-            >
-              <ArrowLeftNav />
-            </button>
-            <button
-              type="button"
-              className="proj-deck-nav-btn"
-              onClick={handleNext}
-              aria-label="Next project"
-              title="Next project"
-            >
-              <ArrowRightNav />
-            </button>
+            <button type="button" className="proj-deck-nav-btn" onClick={() => rotate(1)} aria-label="Previous project" title="Previous project"><ArrowLeftNav /></button>
+            <button type="button" className="proj-deck-nav-btn" onClick={() => rotate(-1)} aria-label="Next project" title="Next project"><ArrowRightNav /></button>
           </div>
         </div>
-
         <div className="proj-deck-wrap" data-reveal data-delay="1">
-
-          {/* 3D Arc Fan Stage with Swipe & Drag Interaction */}
-          <div
-            ref={stageRef}
-            className={`proj-deck-stage ${isDragging ? "dragging" : ""}`}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onDragStart={(e) => e.preventDefault()}
-          >
-            {/* Natural Height Spacer for responsive container sizing */}
-            <div className="proj-deck-spacer" aria-hidden="true">
-              <div className="proj-item proj-deck-item corner-box" style={{ visibility: "hidden", pointerEvents: "none" }}>
-                <div className="proj-deck-banner-wrap">
-                  <div className="proj-deck-banner" />
-                </div>
+          <div ref={stageRef} className={`project-circle-stage${dragging ? " is-dragging" : ""}`} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { start.current = null; setDragging(false); setDragAngle(0); }} onDragStart={event => event.preventDefault()}>
+            <div className="project-circle-sizing" aria-hidden="true">
+              {projects.map(p => <div className="proj-item proj-deck-item corner-box" key={p.id}>
+                <div className="proj-deck-banner-wrap"><div className="proj-deck-banner" /></div>
                 <div className="proj-body proj-deck-body">
-                  <div className="proj-row">
-                    <h3 className="proj-name">{PROJECTS[2].title}</h3>
-                    <div className="proj-actions">
-                      <span className="proj-live-btn"><LiveIcon /> <span className="btn-label">Live</span></span>
-                      <span className="proj-gh-btn"><GH /> <span className="btn-label">GitHub</span></span>
-                    </div>
-                  </div>
-                  <p className="proj-desc">{PROJECTS[0].description}</p>
-                  <div className="proj-tech-section">
-                    <span className="proj-tech-label">Technologies Used:</span>
-                    <div className="proj-tags">
-                      <span className="proj-tag">TypeScript</span>
-                      <span className="proj-tag">React 19</span>
-                      <span className="proj-tag">Node.js</span>
-                      <span className="proj-tag">Socket.IO</span>
-                      <span className="proj-tag">Redis</span>
-                      <span className="proj-tag">+20 more</span>
-                    </div>
-                  </div>
+                  <div className="proj-row"><h3 className="proj-name">{p.title}</h3><div className="proj-actions">{p.demo && p.demo !== "#" && <span className="proj-live-btn"><LiveIcon /> <span className="btn-label">Live</span></span>}{p.github && p.github !== "#" && <span className="proj-gh-btn"><GH /> <span className="btn-label">GitHub</span></span>}</div></div>
+                  <p className="proj-desc">{p.description}</p>
+                  <div className="proj-tech-section"><span className="proj-tech-label">Technologies Used:</span><div className="proj-tags">{p.tech.slice(0, 6).map(t => <span key={t} className="proj-tag">{t}</span>)}{p.tech.length > 6 && <span className="proj-tag">+{p.tech.length - 6} more</span>}</div></div>
                   <span className="proj-view-more">View details →</span>
                 </div>
-              </div>
+              </div>)}
             </div>
-
-            {/* 3D Stacked Cards: Stable DOM order to prevent DOM-reordering transition glitches */}
-            {projects.map((p, i) => {
-              const diff = (i - activeIndex + total) % total;
-              const isFront = diff === 0;
-              const isRight = diff === 1;
-              const isLeft = diff === 2;
-              const isExiting = i === prevActiveIndex && !isFront;
-
-              // Normalized drag progress (-1 to 1) along the triangle
-              const dragProgress = Math.max(-1, Math.min(1, dragOffset / 180));
-
-              let fanDir = 0;
-              let x = 0;
-              let y = 0;
-              let z = 35;
-              let rotZ = 0;
-              let scale = 0.91;
-              let opacity = 1;
-              let zIndex = isFront ? 60 : isExiting ? 25 : 10;
-              let boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
-
-              const isMobile = viewportWidth < 640;
-              const wingOffset = viewportWidth >= 640
-                ? 56
-                : viewportWidth <= 360
-                ? 44
-                : 52;
-              const wingRot = 5;
-
-              if (isDragging && dragOffset !== 0) {
-                // Interactive Triangle Carousel: all 3 cards move synchronously during drag!
-                if (dragProgress > 0) {
-                  // User dragging RIGHT:
-                  // Mid -> Right, Right -> Left (across back), Left -> Mid
-                  const pNorm = dragProgress;
-                  if (isFront) {
-                    x = Math.round(dragOffset * 0.72);
-                    y = Math.round(pNorm * 6);
-                    z = Math.round(35 - pNorm * 80);
-                    rotZ = Number((pNorm * wingRot).toFixed(2));
-                    scale = Number((0.91 + pNorm * 0.02).toFixed(3));
-                    opacity = Number((1 - pNorm * 0.45).toFixed(2));
-                  } else if (isRight) {
-                    x = Math.round(wingOffset - pNorm * (wingOffset * 2));
-                    y = 6;
-                    z = -45;
-                    rotZ = Number((wingRot - pNorm * (wingRot * 2)).toFixed(2));
-                    scale = 0.93;
-                    opacity = 0.55;
-                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
-                  } else if (isLeft) {
-                    x = Math.round(-wingOffset + pNorm * wingOffset);
-                    y = Math.round(6 - pNorm * 6);
-                    z = Math.round(-45 + pNorm * 80);
-                    rotZ = Number((-wingRot + pNorm * wingRot).toFixed(2));
-                    scale = Number((0.93 - pNorm * 0.02).toFixed(3));
-                    opacity = Number((0.55 + pNorm * 0.45).toFixed(2));
-                    zIndex = 40; // Rising Left card comes forward
-                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
-                  }
-                } else {
-                  // User dragging LEFT:
-                  // Mid -> Left, Left -> Right (across back), Right -> Mid
-                  const mag = -dragProgress;
-                  if (isFront) {
-                    x = Math.round(dragOffset * 0.72);
-                    y = Math.round(mag * 6);
-                    z = Math.round(35 - mag * 80);
-                    rotZ = Number((-mag * wingRot).toFixed(2));
-                    scale = Number((0.91 + mag * 0.02).toFixed(3));
-                    opacity = Number((1 - mag * 0.45).toFixed(2));
-                  } else if (isLeft) {
-                    x = Math.round(-wingOffset + mag * (wingOffset * 2));
-                    y = 6;
-                    z = -45;
-                    rotZ = Number((-wingRot + mag * (wingRot * 2)).toFixed(2));
-                    scale = 0.93;
-                    opacity = 0.55;
-                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
-                  } else if (isRight) {
-                    x = Math.round(wingOffset - mag * wingOffset);
-                    y = Math.round(6 - mag * 6);
-                    z = Math.round(-45 + mag * 80);
-                    rotZ = Number((wingRot - mag * wingRot).toFixed(2));
-                    scale = Number((0.93 - mag * 0.02).toFixed(3));
-                    opacity = Number((0.55 + mag * 0.45).toFixed(2));
-                    zIndex = 40; // Rising Right card comes forward
-                    boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
-                  }
-                }
-              } else {
-                // Resting positions with subtle hover fan expansion:
-                if (isFront) {
-                  x = 0;
-                  y = 0;
-                  z = 35;
-                  rotZ = 0;
-                  scale = 0.91;
-                  opacity = 1;
-                  boxShadow = "0 20px 42px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-h)";
-                } else if (isRight) {
-                  x = Math.round(wingOffset);
-                  y = 6;
-                  z = -45;
-                  rotZ = Number(wingRot.toFixed(2));
-                  fanDir = 1;
-                  scale = 0.93;
-                  opacity = 0.55;
-                  boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
-                } else if (isLeft) {
-                  x = Math.round(-wingOffset);
-                  y = 6;
-                  z = -45;
-                  rotZ = Number((-wingRot).toFixed(2));
-                  fanDir = -1;
-                  scale = 0.93;
-                  opacity = 0.55;
-                  boxShadow = "0 10px 24px rgba(0, 0, 0, 0.3)";
-                }
-              }
-
-              // Subtle cursor 3D tilt and hover fan, read from the stage's CSS variables
-              const tiltK = isMobile ? 0 : isFront ? 1 : 0.25;
-              const fanK = isMobile ? 0 : fanDir;
-              const transform =
-                `translate3d(calc(${x}px + var(--fan, 0) * ${fanK * 14}px), ${y}px, ${z}px) ` +
-                `rotateZ(calc(${rotZ}deg + var(--fan, 0) * ${fanK * 1.5}deg)) ` +
-                `rotateX(calc(var(--tx, 0) * ${tiltK}deg)) rotateY(calc(var(--ty, 0) * ${tiltK}deg)) scale(${scale})`;
-
-              const imgErr = !!imgErrors[p.id];
-              const showImg = !!p.image && !imgErr;
-
-              return (
-                <div
-                  key={p.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => handleCardClick(e, i, p.id)}
-                  onKeyDown={(e) => handleKeyDown(e, i, p.id)}
-                  className={`proj-deck-card-wrap ${isFront ? "front" : "wing"}${isExiting ? " exiting" : ""}`}
-                  style={{
-                    transform,
-                    zIndex,
-                    opacity,
-                    boxShadow,
-                    transition: isDragging
-                      ? "none"
-                      : "transform 0.55s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.5s ease, box-shadow 0.45s ease",
-                  }}
-                  aria-label={`${p.title} project card${isFront ? " (active)" : ""}`}
-                >
+            <div className="project-circle-ring" style={{ transform: `translateZ(calc(-1 * var(--project-radius))) rotateY(${rotation * 120 + dragAngle}deg)` }}>
+              {projects.map((p, i) => {
+                const isFront = i === activeIndex;
+                const imgErr = !!imgErrors[p.id];
+                const showImg = !!p.image && !imgErr;
+                return <div className="project-circle-position" key={p.id} style={{ transform: `rotateY(${i * 120}deg) translateZ(var(--project-radius))` }}>
+                  <div className={`proj-deck-card-wrap project-circle-card ${isFront ? "front" : "wing"}`}
+                    style={{ transform: `rotateY(${-(i * 120 + rotation * 120 + dragAngle)}deg)` }}
+                    role="button" tabIndex={0} aria-label={`${p.title} project card${isFront ? " (active)" : ""}`}
+                    onClick={event => openProject(event, i, p.id)}
+                    onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); event.currentTarget.click(); } }}>
                   <article id={`proj-deck-${p.id}`} className="proj-item proj-deck-item corner-box tilt-card">
-                    {/* Active card glare sheen */}
-                    {isFront && <div ref={glareRef} className="card-glare" aria-hidden="true" />}
 
                     {/* Top: Full-width Banner Image */}
                     <div className="proj-deck-banner-wrap">
@@ -683,21 +284,13 @@ export default function Projects() {
                       <span className="proj-view-more">View details →</span>
                     </div>
                   </article>
-                </div>
-              );
-            })}
+                  </div>
+                </div>;
+              })}
+            </div>
           </div>
-
         </div>
-
-        {/* Compact Right-Aligned All Projects Link */}
-        <div className="proj-view-all-wrap" data-reveal>
-          <Link href="/projects" className="btn btn-line proj-view-all-btn">
-            <span className="btn-label">All Projects</span>
-            <ArrowRight />
-          </Link>
-        </div>
-
+        <div className="proj-view-all-wrap" data-reveal><Link href="/projects" className="btn btn-line proj-view-all-btn"><span className="btn-label">All Projects</span><ArrowRight /></Link></div>
       </div>
     </section>
   );
