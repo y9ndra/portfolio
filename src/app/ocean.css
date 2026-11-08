@@ -19,7 +19,7 @@
   border-radius: 4px;
   isolation: isolate;
   transition: aspect-ratio var(--banner-motion), border-radius var(--banner-motion);
-  background: #8db7d4;
+  background: #101010;
   container-type: size;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
