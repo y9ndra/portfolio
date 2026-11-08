@@ -161,6 +161,14 @@ void main() {
   vec2 offset = clamp(slope, vec2(-1.5), vec2(1.5)) * vec2(0.009, 0.004) * water;
   vec2 source = clamp(uv + swell + offset, 0.001, 0.999);
   vec3 color = texture2D(scene, source, -0.35).rgb;
+  if (printPoint.y < 200.) {
+    float companion = mix(-320., 2340., fract(time / 8.4 + .76));
+    float breeze = windPath(printPoint, windHead, 106., mainCurlX, mainRadius, 132.);
+    breeze = max(breeze, .67 * windPath(printPoint, windHead - 215., 141., 1020., -14., 76.));
+    breeze = max(breeze, .78 * windPath(printPoint, companion, 68., 560., 17., 98.));
+    float skyMask = smoothstep(.54, .72, dot(color, vec3(.299, .587, .114)));
+    color = mix(color, vec3(1., .98, .94), breeze * skyMask * .59);
+  }
   color += clamp(slope.y * 0.025, -0.035, 0.035) * water;
   gl_FragColor = vec4(color, 1.0);
 }`;
