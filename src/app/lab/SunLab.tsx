@@ -51,6 +51,7 @@ export default function SunLab() {
   return <main className="sun-lab">
     <Link href="/">← Portfolio</Link>
     <h1>Sun and moon over the inlet</h1>
+    <p><Link href="/lab/character">Open character lab →</Link></p>
     <div className="water-frame sun-lab-frame" onDragStart={event => event.preventDefault()} onContextMenu={event => event.preventDefault()}>
       <Image ref={still} className="water-image" src="/assets/water/inlet-unlit.webp" width={1600} height={640} alt="An inlet with a lighthouse and fish beneath the water" draggable={false} preload unoptimized />
       <canvas ref={canvas} className="water-ripples" aria-hidden="true" />
