@@ -369,6 +369,31 @@ void main() {
     color = mix(color, glintColor, min(glints, 1.) * skyTime * visibleWater * strength);
   }
   if (sunHour >= 0.) {
+    // A lingering glow marks where the sun is about to rise or has just set.
+    float dawn = smoothstep(4.9, 5.8, sunHour) * (1. - smoothstep(6.38, 6.7, sunHour));
+    float dusk = smoothstep(17.1, 17.55, sunHour) * (1. - smoothstep(18.25, 19.15, sunHour));
+    // Use the same path and ridges as the sun disc: the glow peaks when
+    // the mountain crosses its center and softens as the disc clears it.
+    float sunProgress = clamp((sunHour - 6.) / 12., 0., 1.);
+    vec2 sunPosition = skyPath(sunProgress) * printSize;
+    float sunRidge = sunProgress < .5
+      ? mix(112., 207., smoothstep(135., 270., sunPosition.x))
+      : mix(202., 173., smoothstep(1190., 1400., sunPosition.x))
+        + 18. * smoothstep(1400., 1600., sunPosition.x);
+    float crossing = (sunPosition.y - sunRidge) / 20.;
+    float intensity = .45 + .55 * exp(-crossing * crossing);
+    vec2 glowCenter = dawn > dusk ? vec2(.10, .23) : vec2(.90, .32);
+    vec2 distance = (uv - glowCenter) / vec2(.25, .16);
+    float glow = exp(-dot(distance, distance) * 1.25) * max(dawn, dusk) * intensity;
+    float leftRidge = mix(112., 207., smoothstep(135., 270., printPoint.x));
+    float rightRidge = mix(202., 173., smoothstep(1190., 1400., printPoint.x))
+      + 18. * smoothstep(1400., 1600., printPoint.x);
+    float sky = mix(1. - smoothstep(leftRidge - 1., leftRidge + 1., printPoint.y), 1., smoothstep(250., 300., printPoint.x))
+      * mix(1., 1. - smoothstep(rightRidge - 1., rightRidge + 1., printPoint.y), smoothstep(1180., 1240., printPoint.x))
+      * (1. - smoothstep(.36, .43, uv.y)) * (1. - foreground);
+    color = mix(color, vec3(.98, .48, .23), glow * sky * .64);
+  }
+  if (sunHour >= 0.) {
     // A few steady points of starlight fade in with the night sky.
     float night = 1. - daytime(sunHour);
     if (night > .01 && printPoint.y < 145.) {
