@@ -129,6 +129,13 @@ void main() {
   float windHead = mix(-240., 2180. + loopLength, fract(time / 8.4 + .29));
   // The pressure front continues past the curl with the leading stroke.
   float gustFront = windHead - clamp(windHead - mainCurlX, 0., loopLength);
+  if (printPoint.x > 785. && printPoint.x < 1310. && printPoint.y < 241.) {
+    vec2 deflection = pineBend(printPoint, vec2(1080., 207.), vec2(1144., 57.), 159., gustFront)
+      * smoothstep(1005., 1028., printPoint.x)
+      + pineBend(printPoint, vec2(1026., 210.), vec2(1041., 147.), 55., gustFront)
+      + pineBend(printPoint, vec2(867., 239.), vec2(854., 190.), 53., gustFront);
+    swell -= deflection / printSize;
+  }
   vec2 slope = vec2(0.0);
   vec2 offset = clamp(slope, vec2(-1.5), vec2(1.5)) * vec2(0.009, 0.004) * water;
   vec2 source = clamp(uv + swell + offset, 0.001, 0.999);
