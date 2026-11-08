@@ -282,6 +282,35 @@ void main() {
     color = mix(color, vec3(1., .36, .16), horizonHalo * .25);
     visibleSunColor = mix(visibleSunColor, vec3(1., .66, .32), horizonWarmth * .85);
 
+    // Sunlight enters along the whole surface, with uneven, drifting shafts.
+    float illumination = smoothstep(6., 6.3, sunHour) * (1. - smoothstep(17.7, 18., sunHour));
+    float depth = max(uv.y - .505, 0.);
+    // Project back to the point where a ray from the sun entered the water.
+    // Refraction bends it towards vertical while retaining the sun's direction.
+    float refraction = depth * .55 / max(.505 - sunCenter.y, .08);
+    float entryX = (uv.x + refraction * sunCenter.x) / (1. + refraction);
+    float drift = .0025 * sin(time * .22);
+    float rayX = entryX + drift;
+    float rays = lightShaft(rayX, .075, .012) * .45
+      + lightShaft(rayX, .145, .029) * .68
+      + lightShaft(rayX, .245, .009) * .43
+      + lightShaft(rayX, .325, .022) * .74
+      + lightShaft(rayX, .455, .015) * .50
+      + lightShaft(rayX, .535, .035) * .72
+      + lightShaft(rayX, .66, .011) * .45
+      + lightShaft(rayX, .735, .026) * .63
+      + lightShaft(rayX, .85, .014) * .55
+      + lightShaft(rayX, .94, .031) * .52;
+    vec2 entry = vec2(entryX, .49);
+    float lighthouseShadow = blocksSun(sunCenter, entry, vec2(.589, .27), .012);
+    float canopyShadow = blocksSun(sunCenter, entry, vec2(.72, .145), .072);
+    float trunkShadow = blocksSun(sunCenter, entry, vec2(.69, .27), .013);
+    float shadow = max(lighthouseShadow, max(canopyShadow * .8, trunkShadow));
+    float depthFade = smoothstep(.505, .54, uv.y) * (1. - smoothstep(.66, .87, uv.y));
+    float openWater = smoothstep(.015, .08, color.b - color.r) * smoothstep(.24, .42, color.g);
+    float light = illumination * depthFade * openWater * min(rays, 1.) * .40 * (1. - shadow * .88);
+    color = mix(color, vec3(.91, .89, .67), light);
+
   }
   if (printPoint.y < 200.) {
     float companion = mix(-320., 2340., fract(time / 8.4 + .76));
