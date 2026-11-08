@@ -248,6 +248,41 @@ void main() {
   if (sunHour >= 0.) foreground = foregroundCoverage(source, color);
   float sunDisc = 0.;
   vec3 visibleSunColor = vec3(1., .91, .72);
+  if (sunHour >= 6. && sunHour <= 18.) {
+    float progress = (sunHour - 6.) / 12.;
+    vec2 sunCenter = skyPath(progress);
+    float distanceToSun = length((uv - sunCenter) * printSize);
+    float daylight = 1.;
+    float sky = smoothstep(.48, .70, dot(color, vec3(.299, .587, .114))) * (1. - smoothstep(.35, .42, uv.y));
+    // Follow the distant right-hand ridge so the sun is occluded by the mountain.
+    float ridge = mix(202., 173., smoothstep(1190., 1400., printPoint.x))
+      + 18. * smoothstep(1400., 1600., printPoint.x);
+    float mountainMask = 1. - smoothstep(ridge - 1., ridge + 1., printPoint.y);
+    sky *= mix(1., mountainMask, smoothstep(1180., 1240., printPoint.x));
+    // The left mountain slopes downward toward the bay.
+    float leftRidge = mix(112., 207., smoothstep(135., 270., printPoint.x));
+    float leftMask = 1. - smoothstep(leftRidge - 1., leftRidge + 1., printPoint.y);
+    sky *= mix(leftMask, 1., smoothstep(250., 300., printPoint.x));
+    float dusk = 1. - sin(progress * 3.14159265);
+    float centerX = sunCenter.x * 1600.;
+    float centerRidge = progress < .5
+      ? mix(112., 207., smoothstep(135., 270., centerX))
+      : mix(202., 173., smoothstep(1190., 1400., centerX)) + 18. * smoothstep(1400., 1600., centerX);
+    // The reddish color peaks only when the ridge crosses the sun's middle.
+    float horizonWarmth = smoothstep(-10., -3., sunCenter.y * 640. - centerRidge)
+      * (1. - smoothstep(8., 18., sunCenter.y * 640. - centerRidge));
+    horizonWarmth *= 1. - smoothstep(.06, .12, min(progress, 1. - progress));
+    float glow = exp(-distanceToSun / 150.) * daylight * sky;
+    float halo = exp(-distanceToSun / 350.) * dusk * sky;
+    float horizonHalo = exp(-distanceToSun / 115.) * horizonWarmth * sky;
+    float ridgeVisibility = mix(leftMask, 1., smoothstep(250., 300., printPoint.x))
+      * mix(1., mountainMask, smoothstep(1180., 1240., printPoint.x));
+    sunDisc = (1. - smoothstep(17., 20., distanceToSun)) * ridgeVisibility * (1. - foreground);
+    color = mix(color, vec3(1., .68, .40), halo * .16 + glow * (.14 + .16 * dusk));
+    color = mix(color, vec3(1., .36, .16), horizonHalo * .25);
+    visibleSunColor = mix(visibleSunColor, vec3(1., .66, .32), horizonWarmth * .85);
+
+  }
   if (printPoint.y < 200.) {
     float companion = mix(-320., 2340., fract(time / 8.4 + .76));
     float breeze = windPath(printPoint, windHead, 106., mainCurlX, mainRadius, 132.);
