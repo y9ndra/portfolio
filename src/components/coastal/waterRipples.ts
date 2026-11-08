@@ -137,6 +137,27 @@ void main() {
     swell -= deflection / printSize;
   }
   vec2 slope = vec2(0.0);
+  for (int i = 0; i < 8; i++) {
+    float age = time - ripples[i].z;
+    if (ripples[i].w > 0.0 && age >= 0.0 && age < 3.0) {
+      // Foreshortened rings: a travelling wave packet with damping and
+      // radial spreading. Its slope refracts the existing water texture.
+      float rippleDepth = smoothstep(0.49, 0.64, ripples[i].y);
+      vec2 aspect = vec2(1.0, mix(1.8, 0.4, rippleDepth));
+      vec2 delta = (uv - ripples[i].xy) * aspect;
+      float radius = length(delta);
+      float front = radius - age * mix(0.035, 0.08, rippleDepth);
+      float width = 0.025 + age * 0.008;
+      float phase = front * 220.0;
+      float envelope = exp(-front * front / (width * width))
+        * exp(-age * 1.5) / (1.0 + radius * 15.0)
+        * smoothstep(0.0, 0.1, age)
+        * (1.0 - smoothstep(2.4, 3.0, age));
+      float derivative = cos(phase) - sin(phase) *
+        (2.0 * front / (width * width) + 15.0 / (1.0 + radius * 15.0)) / 220.0;
+      slope += delta / max(radius, 0.001) * derivative * envelope * ripples[i].w;
+    }
+  }
   vec2 offset = clamp(slope, vec2(-1.5), vec2(1.5)) * vec2(0.009, 0.004) * water;
   vec2 source = clamp(uv + swell + offset, 0.001, 0.999);
   vec3 color = texture2D(scene, source, -0.35).rgb;
