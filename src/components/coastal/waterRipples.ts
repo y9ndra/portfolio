@@ -8,6 +8,7 @@ attribute vec2 position;
 varying vec2 screenUV;
 varying vec2 printUV;
 uniform mediump vec2 crop;
+uniform mediump float viewHeight;
 uniform mediump int spriteKind;
 uniform vec4 spriteRegion, spritePose;
 uniform vec2 spriteBend;
@@ -28,7 +29,7 @@ void main() {
   }
   vec2 pixel = spritePose.xy + (local - spriteRegion.zw * 0.5) * spritePose.zw;
   printUV = pixel / vec2(1600., 640.);
-  vec2 clip = (printUV - 0.5) * 2. / crop;
+  vec2 clip = (printUV - 0.5) * 2. / (crop * vec2(1., viewHeight));
   gl_Position = vec4(clip.x, -clip.y, 0., 1.);
 }`;
 
@@ -39,13 +40,88 @@ precision highp float;
 precision mediump float;
 #endif
 uniform sampler2D scene;
+uniform sampler2D extension;
 uniform sampler2D wildlife;
 uniform mediump int spriteKind;
 uniform mediump vec2 crop;
+uniform mediump float viewHeight;
+uniform mediump float fishForeground;
 uniform float time;
+uniform float sunHour;
+uniform vec3 stars[11];
 uniform vec4 ripples[8];
 varying vec2 screenUV;
 varying vec2 printUV;
+
+vec3 sceneInk(vec2 point) {
+  vec3 original = texture2D(scene, clamp(point, .001, .999), -0.35).rgb;
+  if (viewHeight < 1.01 || (point.y >= .06 && point.y <= .94)) return original;
+  vec2 extended = vec2(point.x, (point.y - .5) / viewHeight + .5);
+  vec3 extra = texture2D(extension, clamp(extended, .001, .999), -0.35).rgb;
+  float originalWeight = smoothstep(0., .06, point.y) * (1. - smoothstep(.94, 1., point.y));
+  return mix(extra, original, originalWeight);
+}
+
+float daytime(float hour) {
+  return smoothstep(5.1, 7.5, hour) * (1. - smoothstep(16.9, 19.3, hour));
+}
+
+float twilight(float hour) {
+  float dawn = smoothstep(5.1, 6.15, hour) * (1. - smoothstep(6.4, 7.8, hour));
+  float dusk = smoothstep(16.6, 17.8, hour) * (1. - smoothstep(18.4, 19.5, hour));
+  return max(dawn, dusk);
+}
+
+vec2 skyPath(float progress) {
+  float risingY = mix(.23, .32, progress) - .22 * sin(progress * 3.14159265);
+  // Descend smoothly towards the right ridge during the second half.
+  float settingY = mix(.055, .32, pow(max(0., progress * 2. - 1.), 3.3));
+  return vec2(mix(.10, .90, progress), mix(risingY, settingY, smoothstep(.48, .58, progress)));
+}
+
+// Trace a ray from the sun to the water surface through a simplified object silhouette.
+float blocksSun(vec2 sun, vec2 entry, vec2 objectCenter, float halfWidth) {
+  float verticalSpan = entry.y - sun.y;
+  float crossesObject = smoothstep(.0, .02, objectCenter.y - sun.y)
+    * smoothstep(.0, .02, entry.y - objectCenter.y);
+  float rayX = mix(sun.x, entry.x, clamp((objectCenter.y - sun.y) / max(verticalSpan, .001), 0., 1.));
+  return crossesObject * (1. - smoothstep(halfWidth * .82, halfWidth * 1.15, abs(rayX - objectCenter.x)));
+}
+
+float lightShaft(float entryX, float center, float width) {
+  float distance = (entryX - center) / width;
+  return exp(-distance * distance);
+}
+
+float surfaceGlint(vec2 point, vec2 center, vec2 radius) {
+  vec2 delta = (point - center) / radius;
+  return exp(-dot(delta, delta) * 2.);
+}
+
+float starPoint(vec2 point, vec2 center, float radius) {
+  float size = radius * 1.7;
+  return 1. - smoothstep(size * .45, size, length(point - center));
+}
+
+// Recover the dark pine silhouette from the print, and keep the pale lighthouse
+// in front as well. Use the warped source coordinate so the mask follows wind.
+float foregroundCoverage(vec2 source, vec3 ink) {
+  vec2 pixel = source * vec2(1600., 640.);
+  float treeArea = smoothstep(980., 1015., pixel.x) * (1. - smoothstep(1290., 1320., pixel.x))
+    * smoothstep(45., 60., pixel.y) * (1. - smoothstep(222., 245., pixel.y));
+  float inkBrightness = dot(ink, vec3(.299, .587, .114));
+  float pine = treeArea * (1. - smoothstep(.40, .62, inkBrightness));
+  float towerWidth = mix(12., 23., smoothstep(145., 225., pixel.y));
+  float tower = (1. - smoothstep(towerWidth - 1., towerWidth + 1., abs(pixel.x - 943.)))
+    * smoothstep(130., 134., pixel.y) * (1. - smoothstep(229., 233., pixel.y));
+  // Compare with nearby sky so the naturally brighter horizon isn't mistaken
+  // for a cloud. Pale ink still softens the disc at actual cloud edges.
+  vec3 skyAbove = sceneInk(vec2(source.x, source.y - .055));
+  float skyBrightness = dot(skyAbove, vec3(.299, .587, .114));
+  float cloud = smoothstep(.025, .09, inkBrightness - skyBrightness)
+    * smoothstep(.79, .88, inkBrightness) * (1. - smoothstep(210., 240., pixel.y));
+  return max(cloud, max(pine, tower));
+}
 
 float kelpSway(vec2 uv) {
   float edges = smoothstep(.16, .38, abs(uv.x - .5));
@@ -102,17 +178,24 @@ float windPath(vec2 p, float head, float altitude, float curlX, float radius, fl
 void main() {
   if (spriteKind != 0) {
     vec4 animal = texture2D(wildlife, screenUV, -0.25);
-    if (spriteKind == 1) {
+    if (spriteKind == 1 && fishForeground < .5) {
       // The foreground kelp and rocks interrupt the open-water channel.
-      vec3 ink = texture2D(scene, printUV + vec2(kelpSway(printUV), 0.)).rgb;
+      vec3 ink = sceneInk(printUV + vec2(kelpSway(printUV), 0.));
       float openWater = smoothstep(.015, .09, ink.b - ink.r) * smoothstep(.26, .42, ink.g);
       float banks = smoothstep(.20, .36, abs(printUV.x - .5));
       animal *= mix(1., openWater, banks);
+    }
+    if (sunHour >= 0.) {
+      float day = daytime(sunHour);
+      vec3 nightTint = spriteKind == 1 ? vec3(.37, .54, .65) : vec3(.45, .52, .64);
+      animal.rgb *= mix(nightTint, vec3(1.), day);
+      animal.rgb *= mix(vec3(1.), vec3(1.06, 1.01, .95), twilight(sunHour) * .45);
     }
     gl_FragColor = animal;
     return;
   }
   vec2 uv = (screenUV - 0.5) * crop + 0.5;
+  uv.y = (uv.y - .5) * viewHeight + .5;
   // In the print, the island ends near 44% and the crest crosses at 50%.
   float water = smoothstep(0.445, 0.475, uv.y);
   float crest = water * (1.0 - smoothstep(0.515, 0.61, uv.y));
@@ -159,8 +242,12 @@ void main() {
     }
   }
   vec2 offset = clamp(slope, vec2(-1.5), vec2(1.5)) * vec2(0.009, 0.004) * water;
-  vec2 source = clamp(uv + swell + offset, 0.001, 0.999);
-  vec3 color = texture2D(scene, source, -0.35).rgb;
+  vec2 source = uv + swell + offset;
+  vec3 color = sceneInk(source);
+  float foreground = 0.;
+  if (sunHour >= 0.) foreground = foregroundCoverage(source, color);
+  float sunDisc = 0.;
+  vec3 visibleSunColor = vec3(1., .91, .72);
   if (printPoint.y < 200.) {
     float companion = mix(-320., 2340., fract(time / 8.4 + .76));
     float breeze = windPath(printPoint, windHead, 106., mainCurlX, mainRadius, 132.);
@@ -170,29 +257,38 @@ void main() {
     color = mix(color, vec3(1., .98, .94), breeze * skyMask * .59);
   }
   color += clamp(slope.y * 0.025, -0.035, 0.035) * water;
+  color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
 }`;
 
+export function localSceneHour() {
+  const now = new Date();
+  return now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+}
+
 /** Animates the water and marine life in the split-view illustration. */
-export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void) {
-  const surface = canvas.parentElement;
+export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number) {
+  const sceneSurface = canvas.parentElement;
+  const surface = canvas.closest<HTMLElement>(".water-frame");
   const gl = canvas.getContext("webgl", { alpha: true, antialias: false, depth: false, premultipliedAlpha: false });
-  if (!surface || !gl) { onState(false, false); return; }
+  if (!surface || !sceneSurface || !gl) { onState(false, false); return; }
 
   const shaders: WebGLShader[] = [];
   const program = gl.createProgram();
   const buffer = gl.createBuffer();
   const texture = gl.createTexture();
   const atlasTexture = gl.createTexture();
+  const extensionTexture = gl.createTexture();
   const release = () => {
     shaders.forEach((shader) => gl.deleteShader(shader));
     gl.deleteProgram(program);
     gl.deleteBuffer(buffer);
     gl.deleteTexture(texture);
     gl.deleteTexture(atlasTexture);
+    gl.deleteTexture(extensionTexture);
   };
   const fail = () => { release(); onState(false, false); };
-  if (!program || !buffer || !texture || !atlasTexture) { fail(); return; }
+  if (!program || !buffer || !texture || !atlasTexture || !extensionTexture) { fail(); return; }
   for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]] as const) {
     const shader = gl.createShader(type);
     if (!shader) { fail(); return; }
@@ -205,6 +301,13 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { fail(); return; }
   gl.useProgram(program);
+  const stars = new Float32Array(11 * 3);
+  for (let i = 0; i < 11; i++) {
+    stars[i * 3] = 30 + Math.random() * 1540;
+    stars[i * 3 + 1] = 12 + Math.random() * 110;
+    stars[i * 3 + 2] = Math.random();
+  }
+  gl.uniform3fv(gl.getUniformLocation(program, "stars[0]"), stars);
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   // The scenery and gull frames use the first quad. Fish use the subdivided
   // mesh to bend smoothly along the spine.
@@ -232,13 +335,25 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   }
   gl.uniform1i(gl.getUniformLocation(program, "scene"), 0);
   gl.uniform1i(gl.getUniformLocation(program, "wildlife"), 1);
+  gl.activeTexture(gl.TEXTURE2);
+  gl.bindTexture(gl.TEXTURE_2D, extensionTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.uniform1i(gl.getUniformLocation(program, "extension"), 2);
   const wildlife = createWildlifeDraw(gl, program, vertices.length / 2 - 6);
   const atlasImage = new Image();
+  const extensionImage = new Image();
   const cropLocation = gl.getUniformLocation(program, "crop");
+  const viewHeightLocation = gl.getUniformLocation(program, "viewHeight");
   const timeLocation = gl.getUniformLocation(program, "time");
+  const sunLocation = gl.getUniformLocation(program, "sunHour");
   const rippleLocation = gl.getUniformLocation(program, "ripples[0]");
   const waves = new Float32Array(32);
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const mobile = matchMedia("(max-width: 600px)");
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   let elapsed = 0;
   let lastTime = 0;
@@ -253,6 +368,9 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   let unavailable = false;
   let cropX = 1;
   let cropY = 1;
+  let viewHeight = 1;
+  let extensionReady = false;
+  let extensionLoading: Promise<void> | undefined;
   let cursor: { x: number; y: number } | null = null;
 
   function leaveBanner() {
@@ -260,11 +378,17 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     wildlife.leaveGulls();
   }
 
+  function needsExtension() {
+    return mobile.matches || sceneSurface !== surface;
+  }
+
   function resize() {
-    const width = surface!.clientWidth;
-    const height = surface!.clientHeight;
-    const sourceAspect = still.naturalWidth && still.naturalHeight ? still.naturalWidth / still.naturalHeight : 2.5;
+    const width = sceneSurface!.clientWidth;
+    const height = sceneSurface!.clientHeight;
     const aspect = width / Math.max(height, 1);
+    const originalAspect = still.naturalWidth && still.naturalHeight ? still.naturalWidth / still.naturalHeight : 2.5;
+    viewHeight = extensionReady ? Math.max(1, Math.min(45 / 32, originalAspect / Math.max(aspect, 0.01))) : 1;
+    const sourceAspect = originalAspect / viewHeight;
     cropX = Math.min(1, aspect / sourceAspect);
     cropY = Math.min(1, sourceAspect / aspect);
     const scale = Math.min(devicePixelRatio || 1, 2, 1600 / Math.max(width, 1));
@@ -274,7 +398,15 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     if (canvas.width !== bufferWidth) canvas.width = bufferWidth;
     if (canvas.height !== bufferHeight) canvas.height = bufferHeight;
     gl!.viewport(0, 0, canvas.width, canvas.height);
-    if (ready && !unavailable) render();
+    if (ready && !unavailable) {
+      if (needsExtension() && !extensionReady) {
+        canvas.style.opacity = "0";
+        stop();
+        void loadExtension().catch(contextLost);
+      } else {
+        render();
+      }
+    }
   }
   function stop() {
     cancelAnimationFrame(frame);
@@ -284,25 +416,36 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     leaveBanner();
   }
   function allowed() {
-    return visible && !document.hidden && !motion.matches && !connection?.saveData && !unavailable && ready;
+    return visible && !document.hidden && !motion.matches && !connection?.saveData && !unavailable && ready && (!needsExtension() || extensionReady);
   }
   function render() {
+    const rect = sceneSurface!.getBoundingClientRect();
+    const frameRect = surface!.getBoundingClientRect();
+    const xScale = canvas.width / Math.max(rect.width, 1);
+    const yScale = canvas.height / Math.max(rect.height, 1);
+    const left = Math.max(0, Math.floor((frameRect.left - rect.left) * xScale));
+    const right = Math.min(canvas.width, Math.ceil((frameRect.right - rect.left) * xScale));
+    const top = Math.max(0, Math.floor((frameRect.top - rect.top) * yScale));
+    const bottom = Math.min(canvas.height, Math.ceil((frameRect.bottom - rect.top) * yScale));
+    gl!.enable(gl!.SCISSOR_TEST);
+    gl!.scissor(left, canvas.height - bottom, Math.max(0, right - left), Math.max(0, bottom - top));
     gl!.uniform2f(cropLocation, cropX, cropY);
+    gl!.uniform1f(viewHeightLocation, viewHeight);
     gl!.uniform1f(timeLocation, elapsed);
+    gl!.uniform1f(sunLocation, getSunHour ? getSunHour() : -1);
     gl!.uniform4fv(rippleLocation, waves);
     gl!.drawArrays(gl!.TRIANGLES, 0, 6);
-    wildlife.draw(elapsed, cropX);
+    wildlife.draw(elapsed, cropX, mobile.matches);
     if (cursor) {
-      const rect = surface!.getBoundingClientRect();
       const screenX = (cursor.x - rect.left) / rect.width;
       const screenY = (cursor.y - rect.top) / rect.height;
       if (screenX >= 0 && screenX <= 1 && screenY >= 0 && screenY <= 1) {
         const reach = 24; // CSS pixels beyond the wings, at either banner size.
         wildlife.approachGulls(
           ((screenX - 0.5) * cropX + 0.5) * 1600,
-          ((screenY - 0.5) * cropY + 0.5) * 640,
+          ((screenY - 0.5) * cropY * viewHeight + 0.5) * 640,
           reach * cropX * 1600 / rect.width,
-          reach * cropY * 640 / rect.height,
+          reach * cropY * viewHeight * 640 / rect.height,
         );
       } else {
         leaveBanner();
@@ -330,12 +473,12 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     if (!pressed && event.pointerType !== "touch") cursor = { x: event.clientX, y: event.clientY };
     if (pressed && event.button !== 0) return;
     if (!pressed && (event.pointerType === "touch" || now - lastTouch < 100)) return;
-    const rect = surface!.getBoundingClientRect();
+    const rect = sceneSurface!.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * cropX + 0.5;
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * cropY + 0.5;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * cropY * viewHeight + 0.5;
     if (pressed) {
-      const padding = event.pointerType === "touch" ? 7 : 2;
-      if (wildlife.startle(x * 1600, y * 640, padding * cropX * 1600 / rect.width, padding * cropY * 640 / rect.height, event.pointerType === "touch")) return;
+      const padding = event.pointerType === "touch" ? (mobile.matches ? 14 : 7) : 2;
+      if (wildlife.startle(x * 1600, y * 640, padding * cropX * 1600 / rect.width, padding * cropY * viewHeight * 640 / rect.height, event.pointerType === "touch")) return;
     }
     if (x < 0 || x > 1 || y < 0.455 || y > 1) return;
     lastTouch = now;
@@ -368,7 +511,30 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA, gl!.RGBA, gl!.UNSIGNED_BYTE, staging);
     gl!.generateMipmap(gl!.TEXTURE_2D);
     gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MIN_FILTER, gl!.LINEAR_MIPMAP_LINEAR);
-    staging.width = staging.height = 1;
+  }
+  function loadExtension() {
+    if (extensionReady) return Promise.resolve();
+    if (!extensionLoading) {
+      extensionImage.src = "/assets/water/inlet-mobile.webp";
+      extensionLoading = extensionImage.decode().then(() => {
+        if (disposed || unavailable) return;
+        upload(extensionImage, gl!.TEXTURE2, extensionTexture!);
+        extensionReady = true;
+        resize();
+        sync();
+      });
+    }
+    return extensionLoading;
+  }
+  function mobileChanged() {
+    if (needsExtension() && !extensionReady) {
+      canvas.style.opacity = "0";
+      stop();
+      void loadExtension().catch(contextLost);
+    } else {
+      resize();
+      sync();
+    }
   }
   async function load() {
     try {
@@ -377,6 +543,8 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
       if (disposed || unavailable) return;
       upload(still, gl!.TEXTURE0, texture!);
       upload(atlasImage, gl!.TEXTURE1, atlasTexture!);
+      if (needsExtension()) await loadExtension();
+      if (disposed || unavailable) return;
       if (gl!.getError() !== gl!.NO_ERROR) {
         contextLost();
         return;
@@ -394,7 +562,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     sync();
   });
   resize();
-  sizeObserver.observe(surface);
+  sizeObserver.observe(sceneSurface);
   visibilityObserver.observe(surface);
   surface.addEventListener("pointermove", disturb, { passive: true });
   surface.addEventListener("pointerdown", disturb, { passive: true });
@@ -403,11 +571,13 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   still.addEventListener("error", contextLost);
   document.addEventListener("visibilitychange", sync);
   motion.addEventListener("change", sync);
+  mobile.addEventListener("change", mobileChanged);
   canvas.addEventListener("webglcontextlost", contextLost);
   atlasImage.addEventListener("error", contextLost);
   atlasImage.src = wildlifeAtlas.src;
   void load();
   return {
+    refresh() { if (ready && !unavailable && (!needsExtension() || extensionReady)) render(); },
     dispose() {
       disposed = true;
       stop();
@@ -420,6 +590,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
       still.removeEventListener("error", contextLost);
       document.removeEventListener("visibilitychange", sync);
       motion.removeEventListener("change", sync);
+      mobile.removeEventListener("change", mobileChanged);
       canvas.removeEventListener("webglcontextlost", contextLost);
       atlasImage.removeEventListener("error", contextLost);
       release();

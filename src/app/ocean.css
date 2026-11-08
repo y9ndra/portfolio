@@ -3,21 +3,22 @@
 }
 
 .water-stage {
+  --banner-motion: 2.1s cubic-bezier(.4, 0, .15, 1);
   position: relative;
   width: calc(100% - 32px);
   max-width: 650px;
   margin: 73px auto 0;
-  transition: max-width 1.5s cubic-bezier(.22,1,.36,1),margin-top 1.5s cubic-bezier(.22,1,.36,1);
+  transition: max-width var(--banner-motion), margin-top var(--banner-motion);
   z-index: 1;
 }
 
 .water-frame {
   position: relative;
-  height: 250px;
+  aspect-ratio: 1600 / 640;
   overflow: hidden;
   border-radius: 4px;
   isolation: isolate;
-  transition: height 1.5s cubic-bezier(.22,1,.36,1),border-radius 1.5s;
+  transition: aspect-ratio var(--banner-motion), border-radius var(--banner-motion);
   background: #8db7d4;
   container-type: size;
   -webkit-touch-callout: none;
@@ -25,16 +26,31 @@
   user-select: none;
 }
 
-.water-stage:not([data-arrival='settled']),
 .water-stage.water-expanded {
-  max-width: 980px;
-  margin-top: max(86px,calc((100svh - 570px)/2));
+  max-width: min(980px, calc(177.778svh - 28.445px));
+  margin-top: calc(50svh - min(275.625px, 28.125vw - 9px, 50svh - 16px));
 }
 
-.water-stage:not([data-arrival='settled']) .water-frame,
 .water-expanded .water-frame {
-  height: min(64svh,570px);
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
+}
+
+.water-scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.water-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('/assets/water/inlet-mobile.webp') center / cover no-repeat;
 }
 
 .water-image {
@@ -45,6 +61,11 @@
   object-fit: cover;
   object-position: center;
   pointer-events: none;
+}
+
+.water-scene .water-image {
+  inset: 14.444% 0 auto;
+  height: 71.112%;
 }
 
 .water-ripples {
@@ -81,6 +102,13 @@
   transition: opacity .3s;
 }
 
+.water-touch-hint { display: none; }
+
+@media (hover: none) and (pointer: coarse) {
+  .water-mouse-hint { display: none; }
+  .water-touch-hint { display: inline; }
+}
+
 .water-frame:hover .water-controls>span,
 .water-frame:focus-within .water-controls>span {
   opacity: 1;
@@ -108,14 +136,71 @@
   background: #fff;
 }
 
-@media (max-width:600px) {
-  .water-frame {
-    height: 210px;
+html:has(.water-stage:not([data-phase="settled"])) {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: pinch-zoom;
+}
+
+body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, #about > .hero-inner) {
+  display: none;
+}
+
+#about > .hero-inner {
+  position: relative;
+  z-index: 2;
+}
+
+#about:has(.water-stage) .hero-profile {
+  margin-top: 1rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body:has(.water-stage) :is(nav, footer, #about ~ *) {
+    animation: ocean-content-in 1s ease .12s backwards;
   }
 
-  .water-stage:not([data-arrival='settled']) .water-frame,
-  .water-expanded .water-frame {
-    height: 55svh;
+  #about:has(.water-stage) .hero-inner > * {
+    animation: fadeUp 1.1s cubic-bezier(.25, .65, .25, 1) var(--reveal-delay, 0s) backwards;
+  }
+
+  #about .hero-bio { --reveal-delay: .16s; }
+  #about .hero-actions { --reveal-delay: .30s; }
+  #about .a4 { --reveal-delay: .44s; }
+
+  @supports (transition-behavior: allow-discrete) {
+    body:has(.water-expanded) :is(nav, footer, #about ~ *, #about > .hero-inner) {
+      opacity: 0;
+      transition: opacity .3s ease-out, display .3s allow-discrete;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes ocean-content-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.water-expanded .water-intro-hint {
+  opacity: 1;
+}
+
+@media (max-width:600px) {
+  .water-frame {
+    aspect-ratio: 16 / 9;
+  }
+
+  .sun-lab-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('/assets/water/inlet-mobile.webp') center / cover no-repeat;
+  }
+
+  .sun-lab-frame .water-image {
+    inset: 14.444% 0 auto;
+    height: 71.112%;
   }
 
   .water-controls>span {
@@ -125,15 +210,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .water-stage:not([data-arrival='settled']) {
-    max-width: 650px;
-    margin-top: 73px;
-  }
-
-  .water-stage:not([data-arrival='settled']) .water-frame {
-    height: 250px;
-  }
-
   .water-stage, .water-frame {
     transition: none;
   }

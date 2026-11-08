@@ -2,11 +2,13 @@
 const fish = [
   [0, 14, 0.91], [90, -14, 0.78], [135, 5, 0.80], [190, -24, 0.68],
   [248, 8, 0.53], [279, -36, 0.58], [332, -4, 0.43], [348, -13, 0.35],
+  [430, 16, 0.72], [550, -15, 0.62],
 ];
+const deeperFishLanes = [0, 0, 0, 0, 0, 0, 0, 0, 180, 220];
+const foregroundFishCount = 2;
 
 const respawnDelay = 2;
-const wingbeatLead = 0.56;
-const escapeDuration = 1.45;
+const escapeDuration = 3.1 / 2.1;
 const escapePeakSpeed = 3.5; // Additional speed, in multiples of cruising speed.
 const escapeDistance = escapePeakSpeed * escapeDuration / 2;
 
@@ -26,6 +28,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
   const region = gl.getUniformLocation(program, "spriteRegion");
   const pose = gl.getUniformLocation(program, "spritePose");
   const bend = gl.getUniformLocation(program, "spriteBend");
+  const foreground = gl.getUniformLocation(program, "fishForeground");
 
   const firstGull = Math.floor(Math.random() * 2);
   const animals = Array.from({ length: fish.length + 2 }, (_, i) => ({
@@ -77,7 +80,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     return true;
   }
 
-  function draw(sceneTime: number, cropX: number) {
+  function draw(sceneTime: number, cropX: number, mobile: boolean) {
     const decayTime = 0.7;
     const dt = sceneTime - lastDraw;
     const decay = Math.exp(-dt / decayTime);
@@ -90,12 +93,16 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
       const animal = animals[i];
       if (sceneTime < animal.enterAt) continue;
       const [spacing, lane, size] = fish[i];
+      // Keep smaller fish farther away while making the foreground easier to see on phones.
+      const mobileScale = mobile ? 1.2 + 0.25 * (size - 0.35) / (0.91 - 0.35) : 1;
+      const depth = deeperFishLanes[i];
+      const foregroundScale = 1 + 0.35 * depth / 245;
       const extraStep = animal.boost * decayTime * (1 - decay);
       animal.boost *= decay;
       animal.extraTime += extraStep;
       const time = sceneTime + animal.extraTime;
       // Choose the next entrance only once the entire sprite clears the visible crop.
-      const margin = 70 * size * 1.05 + 9;
+      const margin = 70 * size * mobileScale * foregroundScale * 1.05 + 9;
       const left = 800 * (1 - cropX) - margin;
       const right = 1600 - left;
       if (!animal.radiusX) {
@@ -113,14 +120,15 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
       }
       const facing = animal.facing; // The fish in the print faces left.
       const x = animal.routeX + 7 * Math.sin(time * 0.59 + i);
-      const y = 414 + lane + 7 * facing + 4 * Math.sin(time * 0.68 + i * 1.2);
-      const scale = size * (1 + facing * 0.05);
+      const y = 414 + lane + depth + 7 * facing + 4 * Math.sin(time * 0.68 + i * 1.2);
+      const scale = size * mobileScale * foregroundScale * (1 + facing * 0.05);
       animal.x = x;
       animal.y = y;
       animal.radiusX = 68 * scale;
       animal.radiusY = 20 * scale;
       gl.uniform4f(pose, x, y, scale * facing, scale);
       gl.uniform2f(bend, time * (8.1 + i * 0.42) + i * 1.7, 0);
+      gl.uniform1f(foreground, i >= fish.length - foregroundFishCount ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 6, vertexCount);
     }
 
@@ -128,7 +136,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     for (let i = 0; i < 2; i++) {
       const animal = animals[fish.length + i];
       const flight = flights[i];
-      const scale = i === 0 ? 1.12 : 0.84;
+      const scale = (i === 0 ? 1.12 : 0.84) * (mobile ? (i === 0 ? 1.4 : 1.3) : 1);
       const left = 800 * (1 - cropX) - 42 * scale;
       const right = 1600 - left;
       if (sceneTime < animal.enterAt) continue;
@@ -144,8 +152,8 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         const age = sceneTime - flight.started;
         // Add three wingbeats to the current pose, even during a glide.
         stroke += gullStroke(Math.min(age * 2.1, 3.1));
-        const progress = Math.min(1, Math.max(0, (age - wingbeatLead) / escapeDuration));
-        // Distance under a smooth speed pulse, starting after the first wingbeat.
+        const progress = Math.min(1, Math.max(0, age / escapeDuration));
+        // The speed pulse begins and ends with the three-wingbeat burst.
         const extraTravel = escapeDistance * (progress - Math.sin(2 * Math.PI * progress) / (2 * Math.PI));
         step += extraTravel - flight.extraTravel;
         flight.extraTravel = extraTravel;
