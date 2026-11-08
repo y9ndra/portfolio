@@ -368,6 +368,19 @@ void main() {
     float strength = sunVisible ? .22 : .09;
     color = mix(color, glintColor, min(glints, 1.) * skyTime * visibleWater * strength);
   }
+  if (sunHour >= 0.) {
+    // A few steady points of starlight fade in with the night sky.
+    float night = 1. - daytime(sunHour);
+    if (night > .01 && printPoint.y < 145.) {
+      float starlight = 0.;
+      for (int i = 0; i < 11; i++) {
+        starlight += starPoint(printPoint, stars[i].xy, mix(1.3, 2.1, stars[i].z))
+          * mix(.38, .70, stars[i].z);
+      }
+      float sky = (1. - foreground) * (1. - smoothstep(110., 145., printPoint.y));
+      color = mix(color, vec3(.92, .94, .90), min(starlight, 1.) * night * sky * .95);
+    }
+  }
   color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
 }`;
