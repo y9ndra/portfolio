@@ -321,6 +321,21 @@ void main() {
     color = mix(color, vec3(1., .98, .94), breeze * skyMask * .59);
   }
   color += clamp(slope.y * 0.025, -0.035, 0.035) * water;
+  if (sunHour >= 0.) {
+    float day = daytime(sunHour);
+    // Cool the whole print at night while retaining the original painted detail.
+    vec3 nightColor = color * vec3(.30, .42, .57);
+    float skyArea = 1. - smoothstep(.20, .44, uv.y);
+    nightColor = mix(nightColor, color * vec3(.24, .32, .48), skyArea * .55);
+    vec3 sceneColor = mix(nightColor, color, day);
+    // A gentle, time-varying warmth bridges daylight and night without
+    // obscuring the original illustration's texture.
+    float warm = twilight(sunHour);
+    float horizon = smoothstep(.04, .20, uv.y) * (1. - smoothstep(.43, .55, uv.y));
+    vec3 warmTint = mix(vec3(1.08, 1.015, .94), vec3(1.16, 1.035, .90), horizon);
+    color = sceneColor * mix(vec3(1.), warmTint, warm * .55);
+
+  }
   color = mix(color, visibleSunColor, sunDisc * .96);
   gl_FragColor = vec4(color, 1.0);
 }`;
