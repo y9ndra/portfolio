@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Playfair_Display, Hanken_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import ClickSound from "@/components/ClickSound";
-import GalaxyBackground from "@/components/GalaxyBackground";
 import "./globals.css";
+import "./ocean.css";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -93,7 +93,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                var theme = localStorage.getItem('theme') || 'dark';
+                var theme; try { theme = localStorage.getItem('theme'); } catch (_) {}
+                if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', theme);
               })();
             `,
@@ -104,7 +105,6 @@ export default function RootLayout({
         className="antialiased"
         style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
       >
-        <GalaxyBackground />
         <ClickSound />
         <Navbar />
         {children}

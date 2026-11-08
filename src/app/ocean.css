@@ -1,0 +1,140 @@
+#about {
+  padding-top: 0;
+}
+
+.water-stage {
+  position: relative;
+  width: calc(100% - 32px);
+  max-width: 650px;
+  margin: 73px auto 0;
+  transition: max-width 1.5s cubic-bezier(.22,1,.36,1),margin-top 1.5s cubic-bezier(.22,1,.36,1);
+  z-index: 1;
+}
+
+.water-frame {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 4px;
+  isolation: isolate;
+  transition: height 1.5s cubic-bezier(.22,1,.36,1),border-radius 1.5s;
+  background: #8db7d4;
+  container-type: size;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.water-stage:not([data-arrival='settled']),
+.water-stage.water-expanded {
+  max-width: 980px;
+  margin-top: max(86px,calc((100svh - 570px)/2));
+}
+
+.water-stage:not([data-arrival='settled']) .water-frame,
+.water-expanded .water-frame {
+  height: min(64svh,570px);
+  border-radius: 12px;
+}
+
+.water-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+.water-ripples {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+[data-theme='dark'] .water-frame {
+  filter: brightness(.78) saturate(.8);
+}
+
+.water-controls {
+  position: absolute;
+  top: 13px;
+  left: 16px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.water-controls>span {
+  font: 9px var(--font-mono);
+  color: #242424;
+  background: #ffffffe0;
+  padding: 5px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.water-frame:hover .water-controls>span,
+.water-frame:focus-within .water-controls>span {
+  opacity: 1;
+}
+
+.water-controls>div {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.water-controls button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff4d;
+  border-radius: 5px;
+  background: #ffffffe0;
+  color: #242424;
+}
+
+.water-controls button:hover {
+  background: #fff;
+}
+
+@media (max-width:600px) {
+  .water-frame {
+    height: 210px;
+  }
+
+  .water-stage:not([data-arrival='settled']) .water-frame,
+  .water-expanded .water-frame {
+    height: 55svh;
+  }
+
+  .water-controls>span {
+    font-size: 8px;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .water-stage:not([data-arrival='settled']) {
+    max-width: 650px;
+    margin-top: 73px;
+  }
+
+  .water-stage:not([data-arrival='settled']) .water-frame {
+    height: 250px;
+  }
+
+  .water-stage, .water-frame {
+    transition: none;
+  }
+}

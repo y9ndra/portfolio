@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { PERSONAL } from "@/data/portfolio";
 import OdometerClock from "@/components/OdometerClock";
-import MoonBanner from "@/components/MoonBanner";
+import Ocean from "@/components/coastal/Ocean";
 import GithubCalendar from "@/components/GithubCalendar";
 
 const GH = () => (
@@ -50,12 +50,8 @@ export default function Hero() {
 
   return (
     <section id="about" className="section" aria-label="About">
+      <Ocean />
       <div className="hero-inner">
-
-        {/* Interactive banner */}
-        <div className="hero-banner-wrap a0">
-          <MoonBanner />
-        </div>
 
         {/* Profile row */}
         <div className="hero-profile a1">
