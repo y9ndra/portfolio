@@ -56,5 +56,3 @@ body:has(.character-lab) > nav { display: none; }
 .character-lab-note { max-width: 450px; }
 @media (max-width: 640px) { .character-lab .character-lab-avatar, .character-switch { width: 110px; height: 110px; } .character-lab-preview { gap: 1.25rem; } }
 @media (max-width: 480px) { .character-lab .character-lab-avatar, .character-switch { width: 100px; height: 100px; } .character-lab-preview { gap: 1rem; } }
-
-.character-lab-avatar.is-hat-only .character-hat { animation: character-hat-drop .55s cubic-bezier(.55,.02,.98,.58) both; }

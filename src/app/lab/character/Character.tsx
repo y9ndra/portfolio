@@ -40,11 +40,13 @@ export default function Character() {
   function greet() {
     if (active.current) return;
     active.current = true; setGreeting(true);
+    timers.current.push(window.setTimeout(() => { setBlinking(true); setLook({ x: 0, y: -.65 }); }, 550));
+    timers.current.push(window.setTimeout(() => setBlinking(false), 1250));
     timers.current.push(window.setTimeout(() => { setGreeting(false); active.current = false; setLook(lastTouch.current ?? { x: 0, y: 0 }); timers.current = []; }, 1500));
   }
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
-  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${greeting ? " is-hat-only" : ""}${curious && !greeting ? " is-curious" : ""}`} role="button" tabIndex={0} aria-label="Greet the character" onClick={event => { event.stopPropagation(); greet(); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); greet(); } }}>
+  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${greeting ? " is-greeting" : ""}${curious && !greeting ? " is-curious" : ""}`} role="button" tabIndex={0} aria-label="Greet the character" onClick={event => { event.stopPropagation(); greet(); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); greet(); } }}>
     {image("body.png", "character-body")}
     <div className="character-head">
     {image("straw-hat.png", "character-hat", { opacity: greeting ? 1 : 0 })}
