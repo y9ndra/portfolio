@@ -2,12 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { PERSONAL } from "@/data/portfolio";
 import Character from "./Character";
+import LabTheme from "./LabTheme";
 import "./character.css";
 
 export default function CharacterLab() {
   return (
     <main className="character-lab">
-      <Link href="/lab">← Back to lab</Link>
+      <div className="character-lab-header"><Link href="/lab">← Back to lab</Link><LabTheme /></div>
       <h1>Character lab</h1>
       <p>Preview the character in the portfolio’s hero section.</p>
       <div className="water-stage character-lab-banner" aria-label="Coastal banner preview">
