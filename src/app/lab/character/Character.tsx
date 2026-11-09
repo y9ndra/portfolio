@@ -7,6 +7,7 @@ export default function Character() {
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [blinking, setBlinking] = useState(false);
   const [curious, setCurious] = useState(false);
+  const lastTouch = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let blinkTimer = 0, reopen = 0;
@@ -23,9 +24,10 @@ export default function Character() {
       const next = { x: (horizontal < 0 ? 1.8 : 1.5) * horizontal * scale, y: .65 * vertical * scale };
       const ex = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right), ey = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
       if (event.pointerType !== "touch") setCurious(Math.hypot(ex, ey) < 80);
+      if (event.pointerType === "touch") lastTouch.current = next; else lastTouch.current = null;
       setLook(next);
     }
-    function leave() { setLook({ x: 0, y: 0 }); }
+    function leave(event: PointerEvent) { if (event.pointerType !== "touch" && !lastTouch.current) setLook({ x: 0, y: 0 }); }
     window.addEventListener("pointermove", move, { passive: true });
     document.documentElement.addEventListener("pointerleave", leave);
     function touch(event: PointerEvent) { if (event.pointerType === "touch") move(event); }
