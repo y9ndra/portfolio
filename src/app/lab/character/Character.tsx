@@ -6,6 +6,7 @@ export default function Character() {
   const frame = useRef<HTMLDivElement>(null);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [blinking, setBlinking] = useState(false);
+  const [curious, setCurious] = useState(false);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let blinkTimer = 0, reopen = 0;
@@ -20,6 +21,8 @@ export default function Character() {
       const dy = y / Math.max((y < 0 ? centerY : window.innerHeight - centerY) * .7, 1);
       const horizontal = Math.max(-1, Math.min(1, dx)), vertical = Math.max(-1, Math.min(1, dy));
       const next = { x: (horizontal < 0 ? 1.8 : 1.5) * horizontal * scale, y: .65 * vertical * scale };
+      const ex = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right), ey = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
+      if (event.pointerType !== "touch") setCurious(Math.hypot(ex, ey) < 80);
       setLook(next);
     }
     function leave() { setLook({ x: 0, y: 0 }); }
@@ -29,7 +32,7 @@ export default function Character() {
   }, []);
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
-  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar`} role="img" aria-label="Illustrated character">
+  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${curious ? " is-curious" : ""}`} role="img" aria-label="Illustrated character">
     {image("body.png", "character-body")}
     <div className="character-head">
     {image("head.png", "character-base")}
