@@ -27,7 +27,7 @@ export default function Character() {
     document.documentElement.addEventListener("pointerleave", leave);
     return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); };
   }, []);
-  const eyeY = look.y;
+  const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
   return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar`} role="img" aria-label="Illustrated character">
     {image("body.png", "character-body")}
@@ -35,7 +35,7 @@ export default function Character() {
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
     {image("mouth-normal.png", "character-mouth")}
-    {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px)` })}
+    {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px) scaleY(${1 - Math.min(.12, Math.max(0, -look.y) * .18)})` })}
     {image("blink-cover.svg", "character-eyes character-blink-cover", { transform: `scaleY(${blinking ? 1 : 0})` })}
     {image("eyelid.png", "character-eyes character-upper-lid", { transform: `translateY(${eyeY + (blinking ? 2 : 0)}px)` })}
     {image("hair.png", "character-hair")}
