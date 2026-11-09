@@ -8,13 +8,16 @@ export default function Character() {
   const [blinking, setBlinking] = useState(false);
   const [curious, setCurious] = useState(false);
   const lastTouch = useRef<{ x: number; y: number } | null>(null);
+  const [greeting, setGreeting] = useState(false);
+  const active = useRef(false);
+  const timers = useRef<number[]>([]);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let blinkTimer = 0, reopen = 0;
-    function blink() { if (!reduced.matches && !document.hidden) { setBlinking(true); reopen = window.setTimeout(() => setBlinking(false), 150); } blinkTimer = window.setTimeout(blink, 3200 + Math.random() * 2200); }
+    function blink() { if (!reduced.matches && !document.hidden && !active.current) { setBlinking(true); reopen = window.setTimeout(() => setBlinking(false), 150); } blinkTimer = window.setTimeout(blink, 3200 + Math.random() * 2200); }
     blinkTimer = window.setTimeout(blink, 3200);
     function move(event: PointerEvent) {
-      if (!frame.current || reduced.matches || (event.pointerType === "touch" && event.type !== "pointerdown")) return;
+      if (!frame.current || reduced.matches || (active.current && event.pointerType !== "touch") || (event.pointerType === "touch" && event.type !== "pointerdown")) return;
       const rect = frame.current.getBoundingClientRect();
       const centerX = rect.left + rect.width * .43, centerY = rect.top + rect.height * .61;
       const x = event.clientX - centerX, y = event.clientY - centerY, scale = rect.width / 140;
@@ -25,20 +28,26 @@ export default function Character() {
       const ex = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right), ey = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
       if (event.pointerType !== "touch") setCurious(Math.hypot(ex, ey) < 80);
       if (event.pointerType === "touch") lastTouch.current = next; else lastTouch.current = null;
-      setLook(next);
+      if (!active.current) setLook(next);
     }
     function leave(event: PointerEvent) { if (event.pointerType !== "touch" && !lastTouch.current) setLook({ x: 0, y: 0 }); }
     window.addEventListener("pointermove", move, { passive: true });
     document.documentElement.addEventListener("pointerleave", leave);
     function touch(event: PointerEvent) { if (event.pointerType === "touch") move(event); }
     window.addEventListener("pointerdown", touch, { passive: true });
-    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); window.removeEventListener("pointerdown", touch); };
+    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); window.removeEventListener("pointerdown", touch); timers.current.forEach(clearTimeout); };
   }, []);
+  function greet() {
+    if (active.current) return;
+    active.current = true; setGreeting(true);
+    timers.current.push(window.setTimeout(() => { setGreeting(false); active.current = false; setLook(lastTouch.current ?? { x: 0, y: 0 }); timers.current = []; }, 1500));
+  }
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
-  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${curious ? " is-curious" : ""}`} role="img" aria-label="Illustrated character">
+  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${greeting ? " is-hat-only" : ""}${curious && !greeting ? " is-curious" : ""}`} role="button" tabIndex={0} aria-label="Greet the character" onClick={event => { event.stopPropagation(); greet(); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); greet(); } }}>
     {image("body.png", "character-body")}
     <div className="character-head">
+    {image("straw-hat.png", "character-hat", { opacity: greeting ? 1 : 0 })}
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
     {image("mouth-normal.png", "character-mouth")}
