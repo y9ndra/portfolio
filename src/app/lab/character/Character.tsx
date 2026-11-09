@@ -13,7 +13,7 @@ export default function Character() {
     function blink() { if (!reduced.matches && !document.hidden) { setBlinking(true); reopen = window.setTimeout(() => setBlinking(false), 150); } blinkTimer = window.setTimeout(blink, 3200 + Math.random() * 2200); }
     blinkTimer = window.setTimeout(blink, 3200);
     function move(event: PointerEvent) {
-      if (!frame.current || reduced.matches || event.pointerType === "touch") return;
+      if (!frame.current || reduced.matches || (event.pointerType === "touch" && event.type !== "pointerdown")) return;
       const rect = frame.current.getBoundingClientRect();
       const centerX = rect.left + rect.width * .43, centerY = rect.top + rect.height * .61;
       const x = event.clientX - centerX, y = event.clientY - centerY, scale = rect.width / 140;
@@ -28,7 +28,9 @@ export default function Character() {
     function leave() { setLook({ x: 0, y: 0 }); }
     window.addEventListener("pointermove", move, { passive: true });
     document.documentElement.addEventListener("pointerleave", leave);
-    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); };
+    function touch(event: PointerEvent) { if (event.pointerType === "touch") move(event); }
+    window.addEventListener("pointerdown", touch, { passive: true });
+    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); window.removeEventListener("pointerdown", touch); };
   }, []);
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
