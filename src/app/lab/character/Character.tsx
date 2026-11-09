@@ -62,5 +62,6 @@ export default function Character() {
     {image("hair.png", "character-hair")}
     </div>
   </div>
+  {speaking && <span className="character-greeting" aria-hidden="true">yo!</span>}
   </div>;
 }
