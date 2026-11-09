@@ -11,6 +11,7 @@ export default function Character() {
   const [greeting, setGreeting] = useState(false);
   const active = useRef(false);
   const timers = useRef<number[]>([]);
+  const [speaking, setSpeaking] = useState(false);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let blinkTimer = 0, reopen = 0;
@@ -42,17 +43,19 @@ export default function Character() {
     active.current = true; setGreeting(true);
     timers.current.push(window.setTimeout(() => { setBlinking(true); setLook({ x: 0, y: -.65 }); }, 550));
     timers.current.push(window.setTimeout(() => setBlinking(false), 1250));
-    timers.current.push(window.setTimeout(() => { setGreeting(false); active.current = false; setLook(lastTouch.current ?? { x: 0, y: 0 }); timers.current = []; }, 1500));
+    timers.current.push(window.setTimeout(() => { setLook({ x: 0, y: 0 }); setSpeaking(true); }, 1850));
+    timers.current.push(window.setTimeout(() => { setGreeting(false); active.current = false; setSpeaking(false); setLook(lastTouch.current ?? { x: 0, y: 0 }); timers.current = []; }, 2950));
   }
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
-  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${greeting ? " is-greeting" : ""}${curious && !greeting ? " is-curious" : ""}`} role="button" tabIndex={0} aria-label="Greet the character" onClick={event => { event.stopPropagation(); greet(); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); greet(); } }}>
+  return <div className="character-portrait"><div ref={frame} className={`hero-avatar character-lab-avatar${greeting ? " is-greeting" : ""}${speaking ? " is-speaking" : ""}${curious && !greeting ? " is-curious" : ""}`} role="button" tabIndex={0} aria-label="Greet the character" onClick={event => { event.stopPropagation(); greet(); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); greet(); } }}>
     {image("body.png", "character-body")}
+    {image("hand.png", "character-hand", { opacity: speaking ? 1 : 0 })}
     <div className="character-head">
     {image("straw-hat.png", "character-hat", { opacity: greeting ? 1 : 0 })}
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
-    {image("mouth-normal.png", "character-mouth")}
+    {image(speaking ? "yo-mouth.png" : "mouth-normal.png", "character-mouth")}
     {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px) scaleY(${1 - Math.min(.12, Math.max(0, -look.y) * .18)})` })}
     {image("blink-cover.svg", "character-eyes character-blink-cover", { transform: `scaleY(${blinking ? 1 : 0})` })}
     {image("eyelid.png", "character-eyes character-upper-lid", { transform: `translateY(${eyeY + (blinking ? 2 : 0)}px)` })}
