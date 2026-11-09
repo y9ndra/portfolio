@@ -5,8 +5,12 @@ import { useEffect, useRef, useState } from "react";
 export default function Character() {
   const frame = useRef<HTMLDivElement>(null);
   const [look, setLook] = useState({ x: 0, y: 0 });
+  const [blinking, setBlinking] = useState(false);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let blinkTimer = 0, reopen = 0;
+    function blink() { if (!reduced.matches && !document.hidden) { setBlinking(true); reopen = window.setTimeout(() => setBlinking(false), 150); } blinkTimer = window.setTimeout(blink, 3200 + Math.random() * 2200); }
+    blinkTimer = window.setTimeout(blink, 3200);
     function move(event: PointerEvent) {
       if (!frame.current || reduced.matches || event.pointerType === "touch") return;
       const rect = frame.current.getBoundingClientRect();
@@ -21,7 +25,7 @@ export default function Character() {
     function leave() { setLook({ x: 0, y: 0 }); }
     window.addEventListener("pointermove", move, { passive: true });
     document.documentElement.addEventListener("pointerleave", leave);
-    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); };
+    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); };
   }, []);
   const eyeY = look.y;
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
@@ -32,7 +36,8 @@ export default function Character() {
     {image("eyebrow.png", "character-eyebrow")}
     {image("mouth-normal.png", "character-mouth")}
     {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px)` })}
-    {image("eyelid.png", "character-upper-lid")}
+    {image("blink-cover.svg", "character-eyes character-blink-cover", { transform: `scaleY(${blinking ? 1 : 0})` })}
+    {image("eyelid.png", "character-eyes character-upper-lid", { transform: `translateY(${eyeY + (blinking ? 2 : 0)}px)` })}
     {image("hair.png", "character-hair")}
     </div>
   </div>
