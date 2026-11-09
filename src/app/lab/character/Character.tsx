@@ -13,8 +13,11 @@ export default function Character() {
   const timers = useRef<number[]>([]);
   const [speaking, setSpeaking] = useState(false);
   const [breeze, setBreeze] = useState(false);
+  const landing = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const audio = new Audio("/assets/sound/character-straw-landing.mp3");
+    audio.preload = "auto"; audio.volume = .25; landing.current = audio;
     let blinkTimer = 0, reopen = 0;
     function blink() { if (!reduced.matches && !document.hidden && !active.current) { setBlinking(true); reopen = window.setTimeout(() => setBlinking(false), 150); } blinkTimer = window.setTimeout(blink, 3200 + Math.random() * 2200); }
     blinkTimer = window.setTimeout(blink, 3200);
@@ -37,11 +40,12 @@ export default function Character() {
     document.documentElement.addEventListener("pointerleave", leave);
     function touch(event: PointerEvent) { if (event.pointerType === "touch") move(event); }
     window.addEventListener("pointerdown", touch, { passive: true });
-    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); window.removeEventListener("pointerdown", touch); timers.current.forEach(clearTimeout); };
+    return () => { window.removeEventListener("pointermove", move); document.documentElement.removeEventListener("pointerleave", leave); clearTimeout(blinkTimer); clearTimeout(reopen); window.removeEventListener("pointerdown", touch); timers.current.forEach(clearTimeout); audio.pause(); landing.current = null; };
   }, []);
   function greet() {
     if (active.current) return;
     active.current = true; setGreeting(true);
+    if (landing.current) { landing.current.currentTime = 0; void landing.current.play().catch(() => {}); }
     timers.current.push(window.setTimeout(() => { setBlinking(true); setLook({ x: 0, y: -.65 }); }, 550));
     timers.current.push(window.setTimeout(() => setBlinking(false), 1250));
     timers.current.push(window.setTimeout(() => { setLook({ x: 0, y: 0 }); setSpeaking(true); }, 1850));
