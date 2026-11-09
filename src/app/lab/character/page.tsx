@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PERSONAL } from "@/data/portfolio";
-import Character from "./Character";
+import ProfileSwitch from "./ProfileSwitch";
 import LabTheme from "./LabTheme";
 import "./character.css";
 
@@ -18,7 +18,7 @@ export default function CharacterLab() {
       </div>
       <div className="hero-inner">
       <div className="hero-profile character-lab-preview">
-        <Character />
+        <ProfileSwitch />
         <div className="hero-info">
           <div className="hero-name">Yugendhra E</div>
           <div className="hero-tagline">{PERSONAL.title}<span className="hero-tagline-extra"> · Building scalable systems</span></div>

@@ -51,3 +51,9 @@ body:has(.character-lab) > nav { display: none; }
 .character-theme-toggle:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
 .character-theme-moon, [data-theme="light"] .character-theme-sun { display: none; }
 [data-theme="light"] .character-theme-moon { display: block; }
+
+.character-switch { position: relative; flex-shrink: 0; }
+.character-lab-avatar.character-static img { inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover; }
+.character-switch-button { position: absolute; z-index: 5; right: -10px; bottom: -10px; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--border-h); border-radius: 50%; background: var(--bg); color: var(--t1); cursor: pointer; }
+.character-switch-button:hover { background: var(--t1); color: var(--bg); }
+.character-switch-button:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
