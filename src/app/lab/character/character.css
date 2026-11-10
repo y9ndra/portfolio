@@ -29,7 +29,7 @@
 #about .hero-profile { --profile-size: clamp(100px, 27vw, 160px); --profile-overlap: clamp(18px, 4.86vw, 28.8px); display: grid; grid-template-columns: var(--profile-size) minmax(0, 1fr); grid-template-rows: 1fr auto; grid-template-areas: "portrait info" "portrait meta"; align-items: end; column-gap: 1.75rem; row-gap: .35rem; }
 #about .character-switch.is-lab { width: var(--profile-size); height: auto; aspect-ratio: 1; border-radius: 19px; background: #f7f7f7; box-shadow: 0 0 0 1px #c9c9c9; transition: background-color .3s ease, box-shadow .3s ease; }
 #about .hero-profile .character-switch { grid-area: portrait; align-self: start; }
-#about .hero-profile .hero-info { grid-area: info; padding-top: calc(var(--profile-overlap) + 12px); }
+#about .hero-profile .hero-info { grid-area: info; padding-top: calc(var(--profile-overlap) + 38px); }
 #about .hero-profile .hero-name { font-size: clamp(1.5rem, 5vw, 2.5rem); white-space: normal; overflow-wrap: anywhere; }
 #about .hero-profile .hero-meta { grid-area: meta; flex-wrap: wrap; row-gap: .3rem; margin: 0; }
 :root:not([data-theme="light"]) #about .character-switch.is-lab { background: #292929; box-shadow: 0 0 0 1px #666; }
@@ -71,9 +71,15 @@ body:has(.character-lab) > nav { display: none; }
 .character-switch-button:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
 .character-switch.is-lab .character-switch-button { left: calc(100% + 1rem); right: auto; top: var(--profile-overlap, 0px); bottom: auto; width: 36px; height: 36px; border: 0; background: transparent; color: var(--t1); }
 .character-switch.is-lab .character-switch-button:hover { background: var(--bg-3); color: var(--t1); }
-.character-greeting { position: absolute; z-index: 4; left: 78%; top: -18px; padding: 7px 13px; white-space: nowrap; border: 1px solid var(--t2); border-radius: 13px 13px 13px 3px; background: var(--bg); color: var(--t1); font: italic 15px/1 var(--font-serif, serif); pointer-events: none; transform-origin: left bottom; animation: character-greeting-in .18s ease-out both; }
-.character-greeting::after { content: ""; position: absolute; bottom: -5px; left: 8px; width: 8px; height: 8px; background: var(--bg); border-left: 1px solid var(--t2); border-bottom: 1px solid var(--t2); transform: skewY(-25deg); }
-@keyframes character-greeting-in { from { opacity: 0; transform: translate(-3px, 3px) scale(.9); } to { opacity: 1; transform: translate(0) scale(1); } }
+.character-greeting { position: absolute; z-index: 4; left: calc(100% + 8px); top: calc(var(--profile-overlap, 22px) + 2px); padding: 3px 8px; white-space: nowrap; border: 1px solid var(--t1); border-radius: 14px 10px 16px 7px; background: var(--t1); color: var(--bg); box-shadow: 2px 2px 0 var(--t3); font: italic 18px/1.2 var(--font-serif, serif); pointer-events: none; animation: whisper-surface-in .18s ease .4s both; }
+.character-greeting::after { content: "✦"; position: absolute; top: -10px; right: -9px; color: var(--t1); font: 11px/1 sans-serif; opacity: 0; animation: whisper-dot-in .15s ease .4s both; }
+.whisper-dots { position: absolute; left: -16px; bottom: -3px; display: flex; align-items: center; gap: 3px; transform: rotate(-25deg); transform-origin: right center; }
+.whisper-dots i { width: 3px; height: 3px; border-radius: 50%; background: var(--t2); opacity: 0; animation: whisper-dot-in .15s ease both; }
+.whisper-dots i:nth-child(2) { animation-delay: .12s; }
+.whisper-dots i:nth-child(3) { animation-delay: .24s; }
+.character-greeting-text { opacity: 0; animation: whisper-dot-in .15s ease .6s both; }
+@keyframes whisper-dot-in { to { opacity: 1; } }
+@keyframes whisper-surface-in { from { background: transparent; border-color: transparent; box-shadow: none; } to { background: var(--t1); border-color: var(--t1); box-shadow: 2px 2px 0 var(--t3); } }
 .character-lab-avatar .character-hand { transform-origin: 38% 69%; transition: opacity .18s ease; }
 .character-lab-avatar.is-speaking .character-hand { animation: character-raise .35s ease-out both; }
 .character-lab-avatar.is-greeting .character-hat { animation: character-hat-drop .55s cubic-bezier(.55, .02, .98, .58) both; }
@@ -92,7 +98,7 @@ body:has(.character-lab) > nav { display: none; }
 @media (prefers-reduced-motion: reduce) { .character-lab-avatar .character-eyes { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .character-lab-avatar .character-eyebrow { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .character-lab-avatar.is-speaking .character-hand, .character-lab-avatar.is-greeting .character-hat, .character-lab-avatar.is-greeting .character-head { animation: none; } }
-@media (prefers-reduced-motion: reduce) { .character-greeting { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .character-greeting, .character-greeting::after, .character-greeting-text, .whisper-dots i { animation: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .character-switch-layer { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .character-lab .character-switch.is-lab, .character-lab .character-switch.is-lab .character-lab-avatar { transition: none; } }
 @media (prefers-reduced-motion: reduce) { #about .character-switch.is-lab, #about .character-switch.is-lab .character-lab-avatar { transition: none; } }

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import WhisperDots from "./WhisperDots";
 
 export default function Character() {
   const frame = useRef<HTMLDivElement>(null);
@@ -103,9 +104,9 @@ export default function Character() {
     }
     greetingTimers.current.push(window.setTimeout(() => { setLook(lastTouchLook.current ?? tapLook); setSpeaking(true); }, reduced ? 0 : 1850));
     if (!reduced) {
-      greetingTimers.current.push(window.setTimeout(() => { setSpeaking(false); setBreeze(true); setLook({ x: 0, y: -.65 }); setBlinking(true); }, 2750));
+      greetingTimers.current.push(window.setTimeout(() => { setSpeaking(false); setBreeze(true); setLook({ x: 0, y: -.65 }); setBlinking(true); }, 3200));
     }
-    greetingTimers.current.push(window.setTimeout(() => { setGreeting(false); setSpeaking(false); setBreeze(false); setBlinking(false); setLook(lastTouchLook.current ?? { x: 0, y: 0 }); greetingActive.current = false; greetingTimers.current = []; }, reduced ? 1100 : 4050));
+    greetingTimers.current.push(window.setTimeout(() => { setGreeting(false); setSpeaking(false); setBreeze(false); setBlinking(false); setLook(lastTouchLook.current ?? { x: 0, y: 0 }); greetingActive.current = false; greetingTimers.current = []; }, reduced ? 1100 : 4500));
   }
 
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
@@ -127,6 +128,6 @@ export default function Character() {
     </div>
     {breeze && <svg className="character-wind" viewBox="0 0 140 140" aria-hidden="true"><path pathLength="1" d="M-12 35 C15 32 32 27 50 24 C67 21 72 27 69 31 C66 35 58 32 61 27 C65 20 80 19 97 17 C116 15 133 12 152 8" /></svg>}
   </div>
-  {speaking && <span className="character-greeting" aria-hidden="true">yo!</span>}
+  {speaking && <span className="character-greeting" aria-hidden="true"><WhisperDots /><span className="character-greeting-text">yo!</span></span>}
   </div>;
 }
