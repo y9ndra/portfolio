@@ -65,7 +65,7 @@ body:has(.character-lab) > nav { display: none; }
 .character-switch { position: relative; flex-shrink: 0; width: 140px; height: 140px; }
 .character-switch-layer { position: absolute; inset: 0; opacity: 0; transform: scale(.97); pointer-events: none; transition: opacity .45s ease, transform .45s ease; }
 .character-switch-layer.is-visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-.character-lab-avatar.character-static img { inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover; }
+.character-lab-avatar.character-static img { inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover; transform: translateY(4%); }
 .character-switch-button { position: absolute; z-index: 5; right: -10px; bottom: -10px; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--border-h); border-radius: 50%; background: var(--bg); color: var(--t1); cursor: pointer; }
 .character-switch-button:hover { background: var(--t1); color: var(--bg); }
 .character-switch-button:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
