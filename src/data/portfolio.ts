@@ -3,9 +3,8 @@ export const PERSONAL = {
   title: "Backend-focused Full-Stack Engineer",
   tagline: "Building reliable backends, and the apps on top of them.",
   about: [
-    "I'm a <strong>backend-focused full-stack engineer</strong> from Chennai. I mostly live in <strong>TypeScript and Go</strong>, building APIs, background jobs and real-time stuff.",
-    "I have a habit of opening things up to see how they work under the hood. Lately, that habit has turned into <strong>open-source contributions</strong> across backend, web and desktop.",
-    "When I'm not doing that, I'm turning random ideas into projects and occasionally reminding myself that DSA exists."
+    "I build with <strong>TypeScript and Go</strong>, and I enjoy understanding how things actually work. I like turning ideas into reliable applications and figuring out the details along the way.",
+    "I also contribute to <strong>open source</strong>, where I've worked on projects like <strong>Ente and HeyForm</strong> and explored codebases across backend, web and desktop."
   ],
   email: "yugendhra18@gmail.com",
   github: "https://github.com/y9ndra",
