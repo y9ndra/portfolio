@@ -11,6 +11,8 @@ export default function Character() {
   const [speaking, setSpeaking] = useState(false);
   const [breeze, setBreeze] = useState(false);
   const [curious, setCurious] = useState(false);
+  const wasNear = useRef(false);
+  const curiousBlinkTimer = useRef(0);
   const greetingActive = useRef(false);
   const lastTouchLook = useRef<{ x: number; y: number } | null>(null);
   const greetingTimers = useRef<number[]>([]);
@@ -41,7 +43,16 @@ export default function Character() {
       const rect = frame.current.getBoundingClientRect();
       const distanceX = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right);
       const distanceY = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
-      if (event.pointerType !== "touch") setCurious(Math.hypot(distanceX, distanceY) < 80);
+      if (event.pointerType !== "touch") {
+        const near = Math.hypot(distanceX, distanceY) < 80;
+        if (near && !wasNear.current) {
+          clearTimeout(curiousBlinkTimer.current);
+          setBlinking(true);
+          curiousBlinkTimer.current = window.setTimeout(() => setBlinking(false), 150);
+        }
+        wasNear.current = near;
+        setCurious(near);
+      }
       const centerX = rect.left + rect.width * 0.43;
       const centerY = rect.top + rect.height * 0.61;
       const x = event.clientX - centerX;
@@ -56,17 +67,19 @@ export default function Character() {
       else lastTouchLook.current = null;
       if (!greetingActive.current) setLook(nextLook);
     }
-    function leave(event: PointerEvent) { if (event.pointerType !== "touch" && !greetingActive.current && !lastTouchLook.current) { setLook({ x: 0, y: 0 }); setCurious(false); } }
+    function leave(event: PointerEvent) { if (event.pointerType !== "touch" && !greetingActive.current && !lastTouchLook.current) { setLook({ x: 0, y: 0 }); setCurious(false); wasNear.current = false; } }
     function touch(event: PointerEvent) { if (event.pointerType === "touch") move(event); }
     timer = window.setTimeout(blink, 3200);
     window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("pointerdown", touch, { passive: true });
     document.documentElement.addEventListener("pointerleave", leave);
-    return () => { clearTimeout(timer); clearTimeout(reopen); greetingTimers.current.forEach(clearTimeout); audio.pause(); landing.pause(); windAudio.current = null; landingAudio.current = null; window.removeEventListener("pointermove", move); window.removeEventListener("pointerdown", touch); document.documentElement.removeEventListener("pointerleave", leave); };
+    return () => { clearTimeout(timer); clearTimeout(reopen); clearTimeout(curiousBlinkTimer.current); greetingTimers.current.forEach(clearTimeout); audio.pause(); landing.pause(); windAudio.current = null; landingAudio.current = null; window.removeEventListener("pointermove", move); window.removeEventListener("pointerdown", touch); document.documentElement.removeEventListener("pointerleave", leave); };
   }, []);
 
   function greet(clientX?: number, clientY?: number) {
     if (greetingActive.current) return;
+    clearTimeout(curiousBlinkTimer.current);
+    setBlinking(false);
     greetingActive.current = true;
     const rect = frame.current?.getBoundingClientRect();
     const scale = rect ? rect.width / 140 : 1;
@@ -96,6 +109,7 @@ export default function Character() {
   }
 
   const eyeY = look.y > 0 ? look.y * 1.8 : look.y;
+  const pupilHeight = (1 - Math.min(.12, Math.max(0, -look.y) * .18)) * (curious && !blinking && !greeting ? 1.25 : 1);
   const image = (src: string, className: string, style?: React.CSSProperties) => <Image src={`/assets/images/character/${src}`} alt="" fill sizes="140px" unoptimized className={className} style={style} />;
   return <div className="character-portrait">
   <div ref={frame} className={`hero-avatar character-lab-avatar${greeting ? " is-greeting" : ""}${speaking ? " is-speaking" : ""}${breeze ? " is-breeze" : ""}${curious && !greeting ? " is-curious" : ""}`} role="button" tabIndex={0} aria-label="Greet the character" onClick={event => { event.stopPropagation(); greet(event.detail ? event.clientX : undefined, event.detail ? event.clientY : undefined); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); greet(); } }}>
@@ -106,7 +120,7 @@ export default function Character() {
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
     {image(speaking ? "yo-mouth.png" : "mouth-normal.png", "character-mouth")}
-    {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px) scaleY(${1 - Math.min(.12, Math.max(0, -look.y) * .18)})` })}
+    {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px) scaleY(${pupilHeight})` })}
     {image("blink-cover.svg", "character-eyes character-blink-cover", { transform: `scaleY(${blinking ? 1 : 0})` })}
     {image("eyelid.png", "character-eyes character-upper-lid", { transform: `translateY(${eyeY + (blinking ? 2 : 0)}px)` })}
     {image("hair.png", "character-hair")}
