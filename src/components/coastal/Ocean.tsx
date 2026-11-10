@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { attachWaterRipples, localSceneHour } from "./waterRipples";
+import WelcomeEntry from "./WelcomeEntry";
 
 export default function Ocean() {
   const stage = useRef<HTMLElement>(null);
@@ -11,8 +12,37 @@ export default function Ocean() {
   const still = useRef<HTMLImageElement>(null);
   const ripples = useRef<HTMLCanvasElement>(null);
   const [playing, setPlaying] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [introFinished, setIntroFinished] = useState(false);
+  const [intro, setIntro] = useState<"pending" | "playing" | "leaving" | "done">("pending");
   const [phase, setPhase] = useState<"open" | "settling" | "settled">("open");
   const expanded = phase === "open";
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (window.location.hash || window.matchMedia("(prefers-reduced-motion: reduce)").matches) setIntro("done");
+      else setIntro("playing");
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (intro !== "playing") return;
+    const timer = window.setTimeout(() => setIntroFinished(true), 6200);
+    return () => clearTimeout(timer);
+  }, [intro]);
+
+  useEffect(() => {
+    if (intro !== "playing" || !introFinished || !sceneReady) return;
+    const frame = requestAnimationFrame(() => setIntro("leaving"));
+    return () => cancelAnimationFrame(frame);
+  }, [intro, introFinished, sceneReady]);
+
+  useEffect(() => {
+    if (intro !== "leaving") return;
+    const timer = window.setTimeout(() => setIntro("done"), 800);
+    return () => clearTimeout(timer);
+  }, [intro]);
 
   function change(open: boolean) {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -39,11 +69,29 @@ export default function Ocean() {
 
   useEffect(() => {
     if (!still.current || !ripples.current) return;
-    const water = attachWaterRipples(still.current, ripples.current, active => setPlaying(active), localSceneHour);
+    let mounted = true;
+    const image = still.current;
+    const fallback = () => {
+      const extension = new window.Image();
+      extension.src = "/assets/water/inlet-mobile.webp";
+      void Promise.allSettled([image.decode(), extension.decode()]).then(() => { if (mounted) setSceneReady(true); });
+    };
+    const water = attachWaterRipples(image, ripples.current, (active, available) => {
+      setPlaying(active);
+      if (active) setSceneReady(true);
+      else if (!available) fallback();
+    }, localSceneHour);
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || connection?.saveData) fallback();
+    const fallbackTimer = window.setTimeout(fallback, 12000);
+    const limitTimer = window.setTimeout(() => setSceneReady(true), 18000);
     const refresh = () => { if (!document.hidden) water?.refresh(); };
     const timer = window.setInterval(refresh, 30000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
+      mounted = false;
+      clearTimeout(fallbackTimer);
+      clearTimeout(limitTimer);
       clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
       water?.dispose();
@@ -62,7 +110,7 @@ export default function Ocean() {
   }, []);
 
   useEffect(() => {
-    if (phase === "settling") return;
+    if (phase === "settling" || intro !== "done") return;
     let lastWheel = -Infinity;
     let beganAtTop = false;
     let upwardDistance = 0;
@@ -130,10 +178,11 @@ export default function Ocean() {
       window.removeEventListener("touchmove", touchMove);
       window.removeEventListener("keydown", key);
     };
-  }, [expanded, phase]);
+  }, [expanded, phase, intro]);
 
   return (
     <section ref={stage} data-phase={phase} className={`water-stage${expanded ? " water-expanded" : ""}`} aria-label="Tidal inlet with interactive waves">
+      {intro === "pending" ? <div className="welcome-entry" aria-hidden="true" /> : intro !== "done" && <WelcomeEntry leaving={intro === "leaving"} onSkip={() => setIntro("leaving")} />}
       <div
         className="water-frame"
         onContextMenu={(event) => event.preventDefault()}

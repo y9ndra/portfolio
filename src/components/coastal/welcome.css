@@ -1,0 +1,52 @@
+.welcome-entry { position: fixed; z-index: 200; inset: 0; overflow: hidden; background: var(--bg); color: var(--t1); opacity: 1; transition: opacity .8s ease; }
+.welcome-entry.is-leaving { opacity: 0; pointer-events: none; }
+.welcome-character-wrap { position: absolute; width: clamp(120px, 19vw, 160px); aspect-ratio: 1; left: 50%; top: 49%; transform: translate(-50%, -50%); animation: welcome-arrive .55s ease both; }
+.welcome-character { width: 100%; height: 100%; pointer-events: none; }
+.welcome-character .character-portrait, .welcome-character .character-lab-avatar { width: 100%; height: 100%; }
+.welcome-character .character-lab-avatar { border: 1px solid var(--border-h); border-radius: 20px; background: var(--bg); }
+.welcome-character .character-head { animation: welcome-notice 6s ease both; }
+.welcome-character .character-pupils { animation: welcome-eyes 6s ease both; }
+.welcome-character .character-eyebrow { animation: welcome-brow 6s ease both; }
+.welcome-character .character-blink-cover { animation: welcome-blink 6s steps(1, end) both; }
+.welcome-character .character-mouth:not(.entry-whistle-mouth) { animation: welcome-normal-mouth 6s steps(1, end) both; }
+.welcome-character .entry-whistle-mouth { animation: welcome-whistle-mouth 6s steps(1, end) both; }
+.welcome-character .character-hand { opacity: 1 !important; animation: welcome-wave 4.2s ease 2.2s both; }
+.welcome-message { position: absolute; z-index: 4; left: calc(100% + 8px); top: 35%; width: max-content; max-width: calc(50vw - clamp(60px, 9.5vw, 80px) - 12px); padding: 8px 12px; white-space: normal; border: 1px solid var(--t1); border-radius: 14px 10px 16px 7px; background: var(--t1); color: var(--bg); box-shadow: 2px 2px 0 var(--t3); font: italic 17px/1.25 var(--font-serif, serif); pointer-events: none; }
+.welcome-message::after { content: "✦"; position: absolute; top: -10px; right: -9px; color: var(--t1); font: 11px/1 sans-serif; }
+.welcome-message > span > span { opacity: 0; animation: welcome-letter 0s step-end both; }
+.welcome-first { animation: welcome-first 6s ease both; }
+.welcome-second { animation: welcome-second 6s ease both; }
+.welcome-dot-anchor { position: absolute; z-index: 4; left: calc(100% + 8px); top: 35%; width: 0; height: 0; pointer-events: none; }
+.welcome-dot-anchor .whisper-dots { top: 30px; bottom: auto; }
+.welcome-dot-first { animation: welcome-hide .15s ease 3.45s forwards; }
+.welcome-dot-second { animation: welcome-hide .15s ease 5.82s forwards; }
+.welcome-dot-first .whisper-dots i { animation-delay: 1.85s; }
+.welcome-dot-first .whisper-dots i:nth-child(2) { animation-delay: 1.97s; }
+.welcome-dot-first .whisper-dots i:nth-child(3) { animation-delay: 2.09s; }
+.welcome-dot-second .whisper-dots i { animation-delay: 3.52s; }
+.welcome-dot-second .whisper-dots i:nth-child(2) { animation-delay: 3.64s; }
+.welcome-dot-second .whisper-dots i:nth-child(3) { animation-delay: 3.76s; }
+.welcome-notes { position: absolute; z-index: 4; left: 17%; top: 67%; color: var(--t1); text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg); pointer-events: none; }
+.welcome-notes i { position: absolute; font: normal 18px/1 var(--font-serif, serif); opacity: 0; animation: welcome-note 1.3s ease-out both; }
+.welcome-notes i:nth-child(2) { animation-delay: .42s; font-size: 14px; }
+.welcome-notes i:nth-child(3) { animation-delay: .8s; font-size: 16px; }
+.welcome-skip { position: absolute; right: clamp(20px, 5vw, 50px); bottom: clamp(20px, 5vw, 45px); display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 6px 2px; border: 0; color: var(--t2); background: transparent; font: 11px var(--font-mono, monospace); cursor: pointer; transition: color .2s ease; }
+.welcome-skip::after { content: "→"; display: inline-block; font: 15px/1 sans-serif; transition: transform .2s ease; }
+.welcome-skip:hover { color: var(--t1); }
+.welcome-skip:hover::after { transform: translateX(3px); }
+.welcome-skip:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
+@keyframes welcome-arrive { from { opacity: 0; transform: translate(-50%, -44%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes welcome-notice { 0%, 22% { transform: translateX(3px) rotate(2deg); } 29%, 72% { transform: translateX(0) rotate(0); } 82%, 100% { transform: translateX(2px) rotate(1deg); } }
+@keyframes welcome-eyes { 0%, 20% { transform: translate(2px, -.5px) scaleY(1); } 26%, 32% { transform: translate(0, 0) scaleY(1); } 35%, 53% { transform: translate(0, 0) scaleY(1.25); } 61%, 100% { transform: translate(0, 0) scaleY(1); } }
+@keyframes welcome-brow { 0%, 26% { transform: translateY(0); } 31%, 53% { transform: translateY(-2.5px); } 61%, 100% { transform: translateY(0); } }
+@keyframes welcome-blink { 0%, 29% { transform: scaleY(0); } 30%, 32% { transform: scaleY(1); } 32.5%, 100% { transform: scaleY(0); } }
+@keyframes welcome-normal-mouth { 0%, 24% { opacity: 0; } 25%, 100% { opacity: 1; } }
+@keyframes welcome-whistle-mouth { 0%, 24% { opacity: 1; } 25%, 100% { opacity: 0; } }
+@keyframes welcome-wave { 0%, 20% { clip-path: inset(100% 0 0); transform: translateY(14%); } 32% { clip-path: inset(0); transform: translateY(0) rotate(0); } 40%, 55% { clip-path: inset(0); transform: translateY(0) rotate(-7deg); } 47%, 62% { clip-path: inset(0); transform: translateY(0) rotate(5deg); } 78%, 100% { clip-path: inset(100% 0 0); transform: translateY(10%); } }
+@keyframes welcome-first { 0%, 37% { opacity: 0; transform: translate(-5px, 5px) scale(.8); } 40%, 55% { opacity: 1; transform: scale(1); } 58%, 100% { opacity: 0; transform: translateY(-3px) scale(.95); } }
+@keyframes welcome-second { 0%, 65% { opacity: 0; transform: translate(-5px, 5px) scale(.8); } 68%, 91% { opacity: 1; transform: scale(1); } 98%, 100% { opacity: 0; transform: translateY(-3px) scale(.95); } }
+@keyframes welcome-letter { to { opacity: 1; } }
+@keyframes welcome-hide { to { opacity: 0; } }
+@keyframes welcome-note { 0% { opacity: 0; transform: translate(0, 6px) rotate(10deg) scale(.7); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(-26px, -38px) rotate(-12deg) scale(1); } }
+@media (max-width: 600px) { .welcome-message { padding: 7px; font-size: 14px; } }
+@media (prefers-reduced-motion: reduce) { .welcome-entry { display: none; } }

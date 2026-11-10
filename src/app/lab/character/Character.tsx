@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import WhisperDots from "./WhisperDots";
 
-export default function Character() {
+export default function Character({ previewHat = false, trackPointer = true, previewWhistle = false }: { previewHat?: boolean; trackPointer?: boolean; previewWhistle?: boolean }) {
   const frame = useRef<HTMLDivElement>(null);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [blinking, setBlinking] = useState(false);
@@ -21,13 +21,11 @@ export default function Character() {
   const landingAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/assets/sound/character-breeze-soft.mp3");
-    audio.preload = "auto";
-    audio.volume = .3;
+    const audio = trackPointer ? new Audio("/assets/sound/character-breeze-soft.mp3") : null;
+    if (audio) { audio.preload = "auto"; audio.volume = .3; }
     windAudio.current = audio;
-    const landing = new Audio("/assets/sound/character-straw-landing.mp3");
-    landing.preload = "auto";
-    landing.volume = .25;
+    const landing = trackPointer ? new Audio("/assets/sound/character-straw-landing.mp3") : null;
+    if (landing) { landing.preload = "auto"; landing.volume = .25; }
     landingAudio.current = landing;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let timer = 0;
@@ -71,11 +69,13 @@ export default function Character() {
     function leave(event: PointerEvent) { if (event.pointerType !== "touch" && !greetingActive.current && !lastTouchLook.current) { setLook({ x: 0, y: 0 }); setCurious(false); wasNear.current = false; } }
     function touch(event: PointerEvent) { if (event.pointerType === "touch") move(event); }
     timer = window.setTimeout(blink, 3200);
-    window.addEventListener("pointermove", move, { passive: true });
-    window.addEventListener("pointerdown", touch, { passive: true });
-    document.documentElement.addEventListener("pointerleave", leave);
-    return () => { clearTimeout(timer); clearTimeout(reopen); clearTimeout(curiousBlinkTimer.current); greetingTimers.current.forEach(clearTimeout); audio.pause(); landing.pause(); windAudio.current = null; landingAudio.current = null; window.removeEventListener("pointermove", move); window.removeEventListener("pointerdown", touch); document.documentElement.removeEventListener("pointerleave", leave); };
-  }, []);
+    if (trackPointer) {
+      window.addEventListener("pointermove", move, { passive: true });
+      window.addEventListener("pointerdown", touch, { passive: true });
+      document.documentElement.addEventListener("pointerleave", leave);
+    }
+    return () => { clearTimeout(timer); clearTimeout(reopen); clearTimeout(curiousBlinkTimer.current); greetingTimers.current.forEach(clearTimeout); audio?.pause(); landing?.pause(); windAudio.current = null; landingAudio.current = null; window.removeEventListener("pointermove", move); window.removeEventListener("pointerdown", touch); document.documentElement.removeEventListener("pointerleave", leave); };
+  }, [trackPointer]);
 
   function greet(clientX?: number, clientY?: number) {
     if (greetingActive.current) return;
@@ -117,10 +117,11 @@ export default function Character() {
     {image("body.png", "character-body")}
     {image("hand.png", "character-hand", { opacity: speaking ? 1 : 0 })}
     <div className="character-head">
-    {image("straw-hat.png", "character-hat", { opacity: greeting ? 1 : 0 })}
+    {image("straw-hat.png", "character-hat", { opacity: greeting || previewHat ? 1 : 0 })}
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
     {image(speaking ? "yo-mouth.png" : "mouth-normal.png", "character-mouth")}
+    {previewWhistle && image("yo-mouth.png", "character-mouth entry-whistle-mouth")}
     {image("pupil.png", "character-eyes character-pupils", { transform: `translate(${look.x}px, ${eyeY}px) scaleY(${pupilHeight})` })}
     {image("blink-cover.svg", "character-eyes character-blink-cover", { transform: `scaleY(${blinking ? 1 : 0})` })}
     {image("eyelid.png", "character-eyes character-upper-lid", { transform: `translateY(${eyeY + (blinking ? 2 : 0)}px)` })}
