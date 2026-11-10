@@ -53,22 +53,14 @@ export default function Hero() {
 
         {/* Profile row */}
         <div className="hero-profile a1">
-          <ProfileSwitch />
+          <ProfileSwitch lab />
           <div className="hero-info">
             <h1 className="hero-name">Yugendhra E</h1>
-
-            <div className="hero-tagline">
-              {PERSONAL.title}<span className="hero-tagline-extra"> · Building scalable systems</span>
-            </div>
-
-            <div className="hero-meta">
-              <span className="hero-meta-item">
-                <PIN_ICON /> India
-              </span>
-              <span className="hero-meta-item">
-                <CLOCK_ICON /> <OdometerClock />
-              </span>
-            </div>
+            <div className="hero-tagline">{PERSONAL.title}</div>
+          </div>
+          <div className="hero-meta hero-profile-meta">
+            <span className="hero-meta-item"><PIN_ICON /> India</span>
+            <span className="hero-meta-item"><CLOCK_ICON /> <OdometerClock /></span>
           </div>
         </div>
 

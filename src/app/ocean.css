@@ -26,6 +26,10 @@
   user-select: none;
 }
 
+#about > .water-stage:not(.water-expanded) .water-frame {
+  aspect-ratio: 1600 / 620;
+}
+
 .water-stage.water-expanded {
   max-width: min(980px, calc(177.778svh - 28.445px));
   margin-top: calc(50svh - min(275.625px, 28.125vw - 9px, 50svh - 16px));
@@ -152,7 +156,7 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
 }
 
 #about:has(.water-stage) .hero-profile {
-  margin-top: 1rem;
+  margin-top: calc(-1 * var(--profile-overlap, 28px));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -189,6 +193,10 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
 @media (max-width:600px) {
   .water-frame {
     aspect-ratio: 16 / 9;
+  }
+
+  #about > .water-stage:not(.water-expanded) .water-frame {
+    aspect-ratio: 16 / 8.4;
   }
 
   .sun-lab-frame::before {

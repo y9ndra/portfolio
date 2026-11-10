@@ -1,5 +1,42 @@
 .character-lab { width: min(980px, calc(100% - 32px)); margin: 55px auto 100px; }
 .character-lab-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.character-frame-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 20px; color: var(--t2); font: 11px var(--font-mono, monospace); }
+.character-frame-picker > span { margin-right: 5px; }
+.character-frame-picker button { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid var(--border-h); border-radius: 7px; color: var(--t2); cursor: pointer; }
+.character-frame-picker button[aria-pressed="true"] { color: var(--t1); background: var(--bg-3); border-color: var(--t2); }
+.character-frame-picker button:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
+.character-frame-picker i { width: 15px; height: 15px; display: block; background: #ededed; border: 2px solid #999; border-radius: 4px; }
+.character-frame-picker [data-option="outline"] i { background: #f7f7f7; border: 1px solid #bdbdbd; border-radius: 5px; }
+.character-frame-picker [data-option="postcard"] i { background: #f4f4f4; border-color: #bcbcbc; border-radius: 6px 6px 2px 2px; }
+.character-frame-picker [data-option="sea"] i { background: #e2e2e2; border-color: #777; border-radius: 5px; }
+.character-frame-picker [data-option="pebble"] i { background: #e9e9e9; border-color: #888; border-radius: 50%; }
+.character-lab .character-switch.is-lab { --portrait-surface: #ededed; --portrait-radius: 14px; --portrait-inner-radius: 9px; background: #bcbcbc; border-radius: var(--portrait-radius); box-shadow: 0 0 0 1px rgba(128, 128, 128, .35); }
+.character-lab[data-character-frame="postcard"] .character-switch.is-lab { --portrait-surface: #f4f4f4; --portrait-radius: 23px 23px 8px 8px; --portrait-inner-radius: 17px 17px 4px 4px; background: #bcbcbc; box-shadow: 0 2px 0 rgba(80, 80, 80, .2); }
+.character-lab[data-character-frame="sea"] .character-switch.is-lab { --portrait-surface: #e2e2e2; --portrait-radius: 20px; --portrait-inner-radius: 14px; background: #777; box-shadow: 0 0 0 1px rgba(120, 120, 120, .45); }
+.character-lab[data-character-frame="pebble"] .character-switch.is-lab { --portrait-surface: #e9e9e9; --portrait-radius: 50%; --portrait-inner-radius: 50%; background: #8f8f8f; box-shadow: 0 0 0 1px rgba(130, 130, 130, .4); }
+.character-lab[data-character-frame="outline"] .character-switch.is-lab { --portrait-surface: #f7f7f7; --portrait-radius: 19px; --portrait-inner-radius: 15px; background: #f7f7f7; box-shadow: 0 0 0 1px #c9c9c9; }
+:root:not([data-theme="light"]) .character-lab .character-switch.is-lab { --portrait-surface: #292929; background: #555; box-shadow: 0 0 0 1px #696969; }
+:root:not([data-theme="light"]) .character-lab[data-character-frame="postcard"] .character-switch.is-lab { --portrait-surface: #303030; background: #626262; }
+:root:not([data-theme="light"]) .character-lab[data-character-frame="sea"] .character-switch.is-lab { --portrait-surface: #252525; background: #666; }
+:root:not([data-theme="light"]) .character-lab[data-character-frame="pebble"] .character-switch.is-lab { --portrait-surface: #2c2c2c; background: #606060; }
+:root:not([data-theme="light"]) .character-lab[data-character-frame="outline"] .character-switch.is-lab { --portrait-surface: #292929; background: #292929; box-shadow: 0 0 0 1px #666; }
+.character-lab .character-switch.is-lab { transition: background-color .3s ease, box-shadow .3s ease; }
+.character-lab .character-switch.is-lab .character-switch-layer { inset: 6px; }
+.character-lab[data-character-frame="outline"] .character-switch.is-lab .character-switch-layer { inset: 3px; }
+.character-lab .character-switch.is-lab .character-portrait { width: 100%; height: 100%; }
+.character-lab .character-switch.is-lab .character-lab-avatar { width: 100%; height: 100%; border: 0; border-radius: var(--portrait-inner-radius); background: var(--bg); }
+.character-lab .character-switch.is-lab .character-lab-avatar { transition: background-color .3s ease; }
+#about .hero-profile { --profile-size: clamp(100px, 27vw, 160px); --profile-overlap: clamp(18px, 4.86vw, 28.8px); display: grid; grid-template-columns: var(--profile-size) minmax(0, 1fr); grid-template-rows: 1fr auto; grid-template-areas: "portrait info" "portrait meta"; align-items: end; column-gap: 1.75rem; row-gap: .35rem; }
+#about .character-switch.is-lab { width: var(--profile-size); height: auto; aspect-ratio: 1; border-radius: 19px; background: #f7f7f7; box-shadow: 0 0 0 1px #c9c9c9; transition: background-color .3s ease, box-shadow .3s ease; }
+#about .hero-profile .character-switch { grid-area: portrait; align-self: start; }
+#about .hero-profile .hero-info { grid-area: info; padding-top: calc(var(--profile-overlap) + 12px); }
+#about .hero-profile .hero-name { font-size: clamp(1.5rem, 5vw, 2.5rem); white-space: normal; overflow-wrap: anywhere; }
+#about .hero-profile .hero-meta { grid-area: meta; flex-wrap: wrap; row-gap: .3rem; margin: 0; }
+:root:not([data-theme="light"]) #about .character-switch.is-lab { background: #292929; box-shadow: 0 0 0 1px #666; }
+#about .character-switch.is-lab .character-switch-layer { inset: 3px; }
+#about .character-switch.is-lab .character-portrait { width: 100%; height: 100%; }
+#about .character-switch.is-lab .character-lab-avatar { width: 100%; height: 100%; border: 0; border-radius: 15px; background: var(--bg); transition: background-color .3s ease; }
+#about .character-switch.is-lab .character-switch-button { left: auto; right: -10px; top: auto; bottom: -10px; width: 30px; height: 30px; border: 1px solid var(--border-h); background: var(--bg); }
 .character-theme-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid var(--border-h); border-radius: 6px; color: var(--t1); background: var(--bg); font: 11px/1 var(--font-mono, monospace); cursor: pointer; }
 .character-theme-toggle:hover { background: var(--bg-3); }
 .character-theme-toggle:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
@@ -9,7 +46,8 @@ body:has(.character-lab) > nav { display: none; }
 .character-lab h1 { margin: 20px 0; font: normal clamp(28px, 5vw, 42px) var(--font-serif); }
 .character-lab-banner { margin-top: 36px; }
 .character-lab > p, .character-lab-preview p { color: var(--t2); }
-.character-lab .character-lab-preview { margin-top: 1rem; }
+.character-lab .character-lab-preview { --profile-overlap: 40px; margin-top: calc(-1 * var(--profile-overlap)); align-items: flex-start; }
+.character-lab .character-lab-preview .hero-info { padding-top: calc(var(--profile-overlap) + 36px); }
 .character-lab-avatar { position: relative; width: 140px; height: 140px; flex-shrink: 0; overflow: hidden; border: 2px solid var(--t3); border-radius: 14px; background: var(--bg); }
 #about .character-lab-avatar { border: 0; background: var(--bg-3); }
 .character-lab-avatar:hover { transform: none; }
@@ -31,6 +69,8 @@ body:has(.character-lab) > nav { display: none; }
 .character-switch-button { position: absolute; z-index: 5; right: -10px; bottom: -10px; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--border-h); border-radius: 50%; background: var(--bg); color: var(--t1); cursor: pointer; }
 .character-switch-button:hover { background: var(--t1); color: var(--bg); }
 .character-switch-button:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
+.character-switch.is-lab .character-switch-button { left: calc(100% + 1rem); right: auto; top: var(--profile-overlap, 0px); bottom: auto; width: 36px; height: 36px; border: 0; background: transparent; color: var(--t1); }
+.character-switch.is-lab .character-switch-button:hover { background: var(--bg-3); color: var(--t1); }
 .character-greeting { position: absolute; z-index: 4; left: 78%; top: -18px; padding: 7px 13px; white-space: nowrap; border: 1px solid var(--t2); border-radius: 13px 13px 13px 3px; background: var(--bg); color: var(--t1); font: italic 15px/1 var(--font-serif, serif); pointer-events: none; transform-origin: left bottom; animation: character-greeting-in .18s ease-out both; }
 .character-greeting::after { content: ""; position: absolute; bottom: -5px; left: 8px; width: 8px; height: 8px; background: var(--bg); border-left: 1px solid var(--t2); border-bottom: 1px solid var(--t2); transform: skewY(-25deg); }
 @keyframes character-greeting-in { from { opacity: 0; transform: translate(-3px, 3px) scale(.9); } to { opacity: 1; transform: translate(0) scale(1); } }
@@ -54,6 +94,10 @@ body:has(.character-lab) > nav { display: none; }
 @media (prefers-reduced-motion: reduce) { .character-lab-avatar.is-speaking .character-hand, .character-lab-avatar.is-greeting .character-hat, .character-lab-avatar.is-greeting .character-head { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .character-greeting { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .character-switch-layer { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .character-lab .character-switch.is-lab, .character-lab .character-switch.is-lab .character-lab-avatar { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #about .character-switch.is-lab, #about .character-switch.is-lab .character-lab-avatar { transition: none; } }
 .character-lab-note { max-width: 450px; }
-@media (max-width: 640px) { .character-lab-avatar, .character-switch { width: 110px; height: 110px; } .character-lab-preview { gap: 1.25rem; } }
-@media (max-width: 480px) { .character-lab-avatar, .character-switch { width: 100px; height: 100px; } .character-lab-preview { gap: 1rem; } }
+@media (max-width: 640px) { .character-lab-avatar, .character-switch { width: 110px; height: 110px; } .character-lab-preview { gap: 1.25rem; } .character-lab .character-lab-preview { --profile-overlap: 32px; } }
+@media (max-width: 480px) { .character-lab-avatar, .character-switch { width: 100px; height: 100px; } .character-lab-preview { gap: 1rem; } .character-lab .character-lab-preview { --profile-overlap: 28px; } }
+@media (max-width: 480px) { #about .hero-profile { column-gap: 1rem; } }
+@media (max-width: 394px) { #about .hero-profile { grid-template-areas: "portrait info" "meta meta"; grid-template-rows: auto auto; row-gap: .85rem; } #about .hero-profile .hero-meta { flex-wrap: nowrap; } }
