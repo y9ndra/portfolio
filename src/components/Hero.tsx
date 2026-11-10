@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import { PERSONAL } from "@/data/portfolio";
 import OdometerClock from "@/components/OdometerClock";
 import Ocean from "@/components/coastal/Ocean";
 import GithubCalendar from "@/components/GithubCalendar";
+import ProfileSwitch from "@/app/lab/character/ProfileSwitch";
+import "@/app/lab/character/character.css";
 
 const GH = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -46,8 +46,6 @@ const CLOCK_ICON = () => (
 );
 
 export default function Hero() {
-  const [err, setErr] = useState(false);
-
   return (
     <section id="about" className="section" aria-label="About">
       <Ocean />
@@ -55,22 +53,7 @@ export default function Hero() {
 
         {/* Profile row */}
         <div className="hero-profile a1">
-          <div className="hero-avatar">
-            {!err ? (
-              <Image
-                src={PERSONAL.avatar}
-                alt="Yugendhra E"
-                fill
-                unoptimized
-                sizes="(max-width: 480px) 110px, (max-width: 640px) 120px, 160px"
-                style={{ objectFit: "cover" }}
-                priority
-                onError={() => setErr(true)}
-              />
-            ) : (
-              <div className="hero-avatar-fallback">YE</div>
-            )}
-          </div>
+          <ProfileSwitch />
           <div className="hero-info">
             <h1 className="hero-name">Yugendhra E</h1>
 

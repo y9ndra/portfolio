@@ -10,8 +10,9 @@ body:has(.character-lab) > nav { display: none; }
 .character-lab-banner { margin-top: 36px; }
 .character-lab > p, .character-lab-preview p { color: var(--t2); }
 .character-lab .character-lab-preview { margin-top: 1rem; }
-.character-lab .character-lab-avatar { position: relative; width: 140px; height: 140px; flex-shrink: 0; overflow: hidden; border: 2px solid var(--t3); border-radius: 14px; background: var(--bg); }
-.character-lab .character-lab-avatar:hover { transform: none; }
+.character-lab-avatar { position: relative; width: 140px; height: 140px; flex-shrink: 0; overflow: hidden; border: 2px solid var(--t3); border-radius: 14px; background: var(--bg); }
+#about .character-lab-avatar { border: 0; background: var(--bg-3); }
+.character-lab-avatar:hover { transform: none; }
 .character-lab-avatar img { position: absolute !important; inset: auto !important; left: -46% !important; top: -23% !important; width: 195% !important; height: 195% !important; max-width: none; object-fit: cover; }
 .character-head { position: absolute; inset: 0; pointer-events: none; }
 .character-lab-avatar.is-greeting .character-head { animation: character-head-impact 1.3s linear both; }
@@ -54,5 +55,5 @@ body:has(.character-lab) > nav { display: none; }
 @media (prefers-reduced-motion: reduce) { .character-greeting { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .character-switch-layer { transition: none; } }
 .character-lab-note { max-width: 450px; }
-@media (max-width: 640px) { .character-lab .character-lab-avatar, .character-switch { width: 110px; height: 110px; } .character-lab-preview { gap: 1.25rem; } }
-@media (max-width: 480px) { .character-lab .character-lab-avatar, .character-switch { width: 100px; height: 100px; } .character-lab-preview { gap: 1rem; } }
+@media (max-width: 640px) { .character-lab-avatar, .character-switch { width: 110px; height: 110px; } .character-lab-preview { gap: 1.25rem; } }
+@media (max-width: 480px) { .character-lab-avatar, .character-switch { width: 100px; height: 100px; } .character-lab-preview { gap: 1rem; } }

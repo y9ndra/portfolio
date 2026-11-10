@@ -8,6 +8,7 @@ import Character from "./Character";
 export default function ProfileSwitch() {
   const [animated, setAnimated] = useState(true);
   const [mounted, setMounted] = useState(true);
+  const [photoError, setPhotoError] = useState(false);
   const timer = useRef(0);
   const frame = useRef(0);
   useEffect(() => () => { clearTimeout(timer.current); cancelAnimationFrame(frame.current); }, []);
@@ -24,7 +25,7 @@ export default function ProfileSwitch() {
   }
   return <div className="character-switch">
     <div className={`character-switch-layer character-switch-photo${animated ? "" : " is-visible"}`} aria-hidden={animated}>
-      <div className="hero-avatar character-lab-avatar character-static"><Image src={PERSONAL.avatar} alt={animated ? "" : "Yugendhra E"} fill sizes="(max-width: 480px) 100px, (max-width: 640px) 110px, 140px" unoptimized /></div>
+      <div className="hero-avatar character-lab-avatar character-static">{photoError ? <div className="hero-avatar-fallback">YE</div> : <Image src={PERSONAL.avatar} alt={animated ? "" : "Yugendhra E"} fill sizes="(max-width: 480px) 100px, (max-width: 640px) 110px, 140px" unoptimized onError={() => setPhotoError(true)} />}</div>
     </div>
     <div className={`character-switch-layer character-switch-animated${animated ? " is-visible" : ""}`} aria-hidden={!animated} inert={!animated}>
       {mounted && <Character />}
