@@ -226,8 +226,8 @@ export default function Navbar() {
           return { clipPath: `circle(${radius}px at ${x}px ${y}px)` };
         });
         root.animate(frames, {
-          duration: 1800,
-          easing: "cubic-bezier(.42,0,.25,1)",
+          duration: 2500,
+          easing: "cubic-bezier(.37,0,.21,1)",
           fill: "forwards",
           pseudoElement: "::view-transition-new(root)",
         });
@@ -236,13 +236,13 @@ export default function Navbar() {
       window.setTimeout(() => {
         root.classList.add("theme-transitioning");
         applyTheme();
-        window.setTimeout(() => root.classList.remove("theme-transitioning"), 450);
-      }, 900);
+        window.setTimeout(() => root.classList.remove("theme-transitioning"), 700);
+      }, 1250);
     }
     window.setTimeout(() => {
       scene.remove();
       themeAnimating.current = false;
-    }, 1900);
+    }, 2650);
   };
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
