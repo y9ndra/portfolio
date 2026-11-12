@@ -39,7 +39,7 @@ export default function Experience() {
   };
 
   return (
-    <section id="experience" className="section" aria-label="Work Experience">
+    <section id="experience" className="section experience-panels" aria-label="Work Experience">
       <div className="wrap">
         
         <div className="section-head" data-reveal>
@@ -47,12 +47,12 @@ export default function Experience() {
           <div className="section-rule" />
         </div>
 
-        <div className="exp-timeline" data-reveal data-delay="1">
+        <div className="exp-timeline">
           {EXPERIENCES.map((exp, idx) => {
             const isActive = exp.status.toLowerCase() === "active";
             const isExpanded = expandedIndex === idx;
             return (
-              <div key={idx} className="exp-item">
+              <div key={idx} className="exp-item" data-reveal>
                 {/* Timeline node */}
                 <div className="exp-node">
                   <div className={`exp-dot ${isActive ? "active" : "done"}`} />
