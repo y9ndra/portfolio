@@ -63,7 +63,7 @@ const projects = PROJECTS.slice(0, 3);
 
 export default function Projects() {
   const router = useRouter();
-  const [rotation, setRotation] = useState(0);
+  const [rotation, setRotation] = useState(-1);
   const [dragAngle, setDragAngle] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
