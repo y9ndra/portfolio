@@ -26,6 +26,11 @@
 .project-circle-card .proj-deck-banner img { transform:none !important; }
 .project-circle-stage.is-dragging .project-circle-ring,
 .project-circle-stage.is-dragging .project-circle-card { transition:none; cursor:grabbing; }
+.project-circle-stage.is-intro .project-circle-ring,
+.project-circle-stage.is-intro .project-circle-card { transition:none; }
+@media (prefers-reduced-motion:no-preference) {
+  .project-circle-stage.is-entry-pending .project-circle-ring { opacity:0; }
+}
 @media (max-width:640px) {
   .project-circle-stage { --project-radius:clamp(65px,20vw,125px); perspective:850px; }
   .project-circle-sizing { width:calc(100% - 64px); }

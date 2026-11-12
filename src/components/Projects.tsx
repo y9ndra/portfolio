@@ -66,32 +66,114 @@ export default function Projects() {
   const [rotation, setRotation] = useState(-1);
   const [dragAngle, setDragAngle] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [homeEntryPending, setHomeEntryPending] = useState(true);
+  const [homeIntroActive, setHomeIntroActive] = useState(false);
+  const introFrame = useRef(0);
+  const homeIntroRunning = useRef(false);
+  const homeIntroObserver = useRef<IntersectionObserver | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const stageRef = useRef<HTMLDivElement>(null);
   const start = useRef<{x: number; y: number; offset: number; time: number; lastX: number; lastTime: number; velocity: number} | null>(null);
   const swiped = useRef(false);
   const activeIndex = ((-rotation % projects.length) + projects.length) % projects.length;
 
+  const cancelIntro = useCallback(() => {
+    cancelAnimationFrame(introFrame.current);
+    introFrame.current = 0;
+    homeIntroObserver.current?.disconnect();
+    const stage = stageRef.current;
+    if (stage && homeIntroRunning.current) {
+      const ring = stage.querySelector<HTMLElement>(".project-circle-ring");
+      if (ring) {
+        ring.style.transform = "translateZ(calc(-1 * var(--project-radius))) rotateY(-120deg)";
+        ring.querySelectorAll<HTMLElement>(".project-circle-position").forEach((position, index) => {
+          position.style.visibility = "";
+          const card = position.querySelector<HTMLElement>(".project-circle-card");
+          if (card) {
+            card.style.transform = `rotateY(${-(index * 120 - 120)}deg)`;
+            card.classList.toggle("front", index === 1);
+            card.classList.toggle("wing", index !== 1);
+          }
+        });
+      }
+      homeIntroRunning.current = false;
+    }
+    stage?.classList.remove("is-intro", "is-entry-pending");
+    setHomeEntryPending(false);
+    setHomeIntroActive(false);
+  }, []);
+
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      try {
-        const saved = Number(sessionStorage.getItem("home_active_project_index"));
-        if (Number.isInteger(saved) && saved > 0 && saved < projects.length) {
-          setRotation(-saved);
-        }
-      } catch {}
-    });
-    return () => cancelAnimationFrame(frame);
+    const stage = stageRef.current;
+    const ring = stage?.querySelector<HTMLElement>(".project-circle-ring");
+    if (!stage || !ring) return;
+
+    // Returning from a project keeps the card the visitor was looking at.
+    try {
+      const saved = sessionStorage.getItem("home_active_project_index");
+      const index = saved === null ? NaN : Number(saved);
+      if (window.location.hash === "#projects" && Number.isInteger(index) && index >= 0 && index < projects.length) {
+        const frame = requestAnimationFrame(() => { setRotation(-index); setHomeEntryPending(false); });
+        return () => cancelAnimationFrame(frame);
+      }
+    } catch {}
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const frame = requestAnimationFrame(() => setHomeEntryPending(false));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    const positions = Array.from(ring.querySelectorAll<HTMLElement>(".project-circle-position"));
+    const cards = positions.map(position => position.querySelector<HTMLElement>(".project-circle-card"));
+    if (positions.length !== 3 || cards.some(card => !card)) {
+      const frame = requestAnimationFrame(() => setHomeEntryPending(false));
+      return () => cancelAnimationFrame(frame);
+    }
+    let began = 0;
+    const draw = (angle: number) => {
+      ring.style.transform = `translateZ(calc(-1 * var(--project-radius))) rotateY(${angle}deg)`;
+      const front = angle > 60 ? 2 : angle > -60 ? 0 : 1;
+      positions.forEach((position, index) => {
+        position.style.visibility = index === 2 || (index === 0 && angle <= 120) || (index === 1 && angle <= 0) ? "" : "hidden";
+        const card = cards[index]!;
+        card.style.transform = `rotateY(${-(index * 120 + angle)}deg)`;
+        card.classList.toggle("front", index === front);
+        card.classList.toggle("wing", index !== front);
+      });
+    };
+    const animate = (now: number) => {
+      if (!began) began = now;
+      const progress = Math.min((now - began) / 2600, 1);
+      const eased = progress * progress * (3 - 2 * progress);
+      draw(210 - 330 * eased);
+      if (progress < 1) introFrame.current = requestAnimationFrame(animate);
+      else { introFrame.current = 0; homeIntroRunning.current = false; setHomeIntroActive(false); }
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      homeIntroRunning.current = true;
+      stage.classList.add("is-intro");
+      draw(210);
+      stage.classList.remove("is-entry-pending");
+      setHomeIntroActive(true);
+      setHomeEntryPending(false);
+      introFrame.current = requestAnimationFrame(animate);
+    }, { threshold: .15 });
+    homeIntroObserver.current = observer;
+    observer.observe(stage);
+    return () => { observer.disconnect(); homeIntroObserver.current = null; cancelAnimationFrame(introFrame.current); };
   }, []);
 
   const rotate = useCallback((step: number) => {
+    cancelIntro();
     setRotation(current => {
       const next = current + step;
       const index = ((-next % projects.length) + projects.length) % projects.length;
       try { sessionStorage.setItem("home_active_project_index", String(index)); } catch {}
       return next;
     });
-  }, []);
+  }, [cancelIntro]);
 
   useEffect(() => {
     function key(event: KeyboardEvent) {
@@ -131,6 +213,7 @@ export default function Projects() {
       const currentAngle = angle + Math.round((target - angle) / 360) * 360;
       offset = currentAngle - target;
     }
+    if (introFrame.current) { cancelIntro(); setDragAngle(offset); }
     start.current = { x: event.clientX, y: event.clientY, offset, time: event.timeStamp, lastX: event.clientX, lastTime: event.timeStamp, velocity: 0 };
     swiped.current = false;
   }
@@ -182,7 +265,7 @@ export default function Projects() {
           </div>
         </div>
         <div className="proj-deck-wrap" data-reveal data-delay="1">
-          <div ref={stageRef} className={`project-circle-stage${dragging ? " is-dragging" : ""}`} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { start.current = null; setDragging(false); setDragAngle(0); }} onDragStart={event => event.preventDefault()}>
+          <div ref={stageRef} className={`project-circle-stage${dragging ? " is-dragging" : ""}${homeIntroActive ? " is-intro" : ""}${homeEntryPending ? " is-entry-pending" : ""}`} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { start.current = null; setDragging(false); setDragAngle(0); }} onDragStart={event => event.preventDefault()}>
             <div className="project-circle-sizing" aria-hidden="true">
               {projects.map(p => <div className="proj-item proj-deck-item corner-box" key={p.id}>
                 <div className="proj-deck-banner-wrap"><div className="proj-deck-banner" /></div>
@@ -199,9 +282,10 @@ export default function Projects() {
                 const isFront = i === activeIndex;
                 const imgErr = !!imgErrors[p.id];
                 const showImg = !!p.image && !imgErr;
-                return <div className="project-circle-position" key={p.id} style={{ transform: `rotateY(${i * 120}deg) translateZ(var(--project-radius))` }}>
+                const positionAngle = i * 120;
+                return <div className="project-circle-position" key={p.id} style={{ transform: `rotateY(${positionAngle}deg) translateZ(var(--project-radius))` }}>
                   <div className={`proj-deck-card-wrap project-circle-card ${isFront ? "front" : "wing"}`}
-                    style={{ transform: `rotateY(${-(i * 120 + rotation * 120 + dragAngle)}deg)` }}
+                    style={{ transform: `rotateY(${-(positionAngle + rotation * 120 + dragAngle)}deg)` }}
                     role="button" tabIndex={0} aria-label={`${p.title} project card${isFront ? " (active)" : ""}`}
                     onClick={event => openProject(event, i, p.id)}
                     onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); event.currentTarget.click(); } }}>
