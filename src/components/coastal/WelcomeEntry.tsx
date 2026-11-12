@@ -1,7 +1,7 @@
 "use client";
 
-import Character from "@/app/lab/character/Character";
-import WhisperDots from "@/app/lab/character/WhisperDots";
+import Character from "@/components/character/Character";
+import WhisperDots from "@/components/character/WhisperDots";
 import "./welcome.css";
 
 function TypedMessage({ text, delay }: { text: string; delay: number }) {

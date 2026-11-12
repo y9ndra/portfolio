@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import WhisperDots from "./WhisperDots";
 
-export default function Character({ previewHat = false, trackPointer = true, previewWhistle = false }: { previewHat?: boolean; trackPointer?: boolean; previewWhistle?: boolean }) {
+export default function Character({ trackPointer = true, previewWhistle = false }: { trackPointer?: boolean; previewWhistle?: boolean }) {
   const frame = useRef<HTMLDivElement>(null);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [blinking, setBlinking] = useState(false);
@@ -117,7 +117,7 @@ export default function Character({ previewHat = false, trackPointer = true, pre
     {image("body.png", "character-body")}
     {image("hand.png", "character-hand", { opacity: speaking ? 1 : 0 })}
     <div className="character-head">
-    {image("straw-hat.png", "character-hat", { opacity: greeting || previewHat ? 1 : 0 })}
+    {image("straw-hat.png", "character-hat", { opacity: greeting ? 1 : 0 })}
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
     {image(speaking ? "yo-mouth.png" : "mouth-normal.png", "character-mouth")}

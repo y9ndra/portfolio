@@ -4,8 +4,8 @@ import { PERSONAL } from "@/data/portfolio";
 import OdometerClock from "@/components/OdometerClock";
 import Ocean from "@/components/coastal/Ocean";
 import GithubCalendar from "@/components/GithubCalendar";
-import ProfileSwitch from "@/app/lab/character/ProfileSwitch";
-import "@/app/lab/character/character.css";
+import ProfileSwitch from "@/components/character/ProfileSwitch";
+import "@/components/character/character.css";
 
 const GH = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -53,7 +53,7 @@ export default function Hero() {
 
         {/* Profile row */}
         <div className="hero-profile a1">
-          <ProfileSwitch lab />
+          <ProfileSwitch />
           <div className="hero-info">
             <h1 className="hero-name">Yugendhra E</h1>
             <div className="hero-tagline">{PERSONAL.title}</div>
