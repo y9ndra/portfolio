@@ -15,6 +15,7 @@ export default function Ocean() {
   const [playing, setPlaying] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
+  const [welcomeReady, setWelcomeReady] = useState(false);
   const [intro, setIntro] = useState<"pending" | "playing" | "leaving" | "done">("pending");
   const [phase, setPhase] = useState<"open" | "settling" | "settled">("open");
   const expanded = phase === "open";
@@ -28,10 +29,10 @@ export default function Ocean() {
   }, []);
 
   useEffect(() => {
-    if (intro !== "playing") return;
+    if (intro !== "playing" || !welcomeReady) return;
     const timer = window.setTimeout(() => setIntroFinished(true), 6200);
     return () => clearTimeout(timer);
-  }, [intro]);
+  }, [intro, welcomeReady]);
 
   useEffect(() => {
     if (intro !== "playing" || !introFinished || !sceneReady) return;
@@ -189,7 +190,7 @@ export default function Ocean() {
 
   return (
     <section ref={stage} data-phase={phase} className={`water-stage${expanded ? " water-expanded" : ""}`} aria-label="Tidal inlet with interactive waves">
-      {intro === "pending" ? <div className="welcome-entry" aria-hidden="true" /> : intro !== "done" && <WelcomeEntry leaving={intro === "leaving"} onSkip={() => setIntro("leaving")} />}
+      {intro === "pending" ? <div className="welcome-entry" aria-hidden="true" /> : intro !== "done" && <WelcomeEntry leaving={intro === "leaving"} onSkip={() => setIntro("leaving")} onReady={setWelcomeReady} />}
       <div
         className="water-frame"
         onContextMenu={(event) => event.preventDefault()}

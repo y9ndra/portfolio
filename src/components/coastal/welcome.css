@@ -1,4 +1,5 @@
 .welcome-entry { position: fixed; z-index: 200; inset: 0; overflow: hidden; background: var(--bg); color: var(--t1); opacity: 1; transition: opacity .8s ease; }
+.welcome-entry:not(.is-ready) * { animation-play-state: paused !important; }
 .welcome-entry.is-leaving { opacity: 0; pointer-events: none; }
 .welcome-character-wrap { position: absolute; width: clamp(120px, 19vw, 160px); aspect-ratio: 1; left: 50%; top: 49%; transform: translate(-50%, -50%); animation: welcome-arrive .55s ease both; }
 .welcome-character { width: 100%; height: 100%; pointer-events: none; }
@@ -10,7 +11,7 @@
 .welcome-character .character-blink-cover { animation: welcome-blink 6s steps(1, end) both; }
 .welcome-character .character-mouth:not(.entry-whistle-mouth) { animation: welcome-normal-mouth 6s steps(1, end) both; }
 .welcome-character .entry-whistle-mouth { animation: welcome-whistle-mouth 6s steps(1, end) both; }
-.welcome-character .character-hand { opacity: 1 !important; animation: welcome-wave 4.2s ease 2.2s both; }
+.welcome-character .character-hand { z-index: 2; opacity: 1 !important; animation: welcome-wave 3s ease 3.45s both; }
 .welcome-message { position: absolute; z-index: 4; left: calc(100% + 8px); top: 35%; width: max-content; max-width: calc(50vw - clamp(60px, 9.5vw, 80px) - 12px); padding: 8px 12px; white-space: normal; border: 1px solid var(--t1); border-radius: 14px 10px 16px 7px; background: var(--t1); color: var(--bg); box-shadow: 2px 2px 0 var(--t3); font: italic 17px/1.25 var(--font-serif, serif); pointer-events: none; }
 .welcome-message::after { content: "✦"; position: absolute; top: -10px; right: -9px; color: var(--t1); font: 11px/1 sans-serif; }
 .welcome-message > span > span { opacity: 0; animation: welcome-letter 0s step-end both; }
@@ -42,7 +43,7 @@
 @keyframes welcome-blink { 0%, 29% { transform: scaleY(0); } 30%, 32% { transform: scaleY(1); } 32.5%, 100% { transform: scaleY(0); } }
 @keyframes welcome-normal-mouth { 0%, 24% { opacity: 0; } 25%, 100% { opacity: 1; } }
 @keyframes welcome-whistle-mouth { 0%, 24% { opacity: 1; } 25%, 100% { opacity: 0; } }
-@keyframes welcome-wave { 0%, 20% { clip-path: inset(100% 0 0); transform: translateY(14%); } 32% { clip-path: inset(0); transform: translateY(0) rotate(0); } 40%, 55% { clip-path: inset(0); transform: translateY(0) rotate(-7deg); } 47%, 62% { clip-path: inset(0); transform: translateY(0) rotate(5deg); } 78%, 100% { clip-path: inset(100% 0 0); transform: translateY(10%); } }
+@keyframes welcome-wave { 0%, 10% { clip-path: inset(100% 0 0); transform: translateY(14%); } 25% { clip-path: inset(0); transform: translateY(0) rotate(0); } 36%, 58% { clip-path: inset(0); transform: translateY(0) rotate(-5deg); } 47%, 70% { clip-path: inset(0); transform: translateY(0) rotate(4deg); } 82% { clip-path: inset(0); transform: translateY(0); } 100% { clip-path: inset(100% 0 0); transform: translateY(10%); } }
 @keyframes welcome-first { 0%, 37% { opacity: 0; transform: translate(-5px, 5px) scale(.8); } 40%, 55% { opacity: 1; transform: scale(1); } 58%, 100% { opacity: 0; transform: translateY(-3px) scale(.95); } }
 @keyframes welcome-second { 0%, 65% { opacity: 0; transform: translate(-5px, 5px) scale(.8); } 68%, 91% { opacity: 1; transform: scale(1); } 98%, 100% { opacity: 0; transform: translateY(-3px) scale(.95); } }
 @keyframes welcome-letter { to { opacity: 1; } }
