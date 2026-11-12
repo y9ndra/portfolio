@@ -6575,3 +6575,24 @@ html.theme-orbit-reveal::view-transition-new(root) {
 @media (prefers-reduced-motion: reduce) {
   .radial-central-control, .radial-item, .content-pill, .content-circle { transition: none; }
 }
+
+/* The cover leads the blog card entrance, followed by its details. */
+@media (prefers-reduced-motion: no-preference) {
+  #blog .blog-card-link[data-reveal] { opacity: 1; transform: none; transition: none; }
+  #blog .blog-card-link[data-reveal]:not(.visible) .blog-img-col,
+  #blog .blog-card-link[data-reveal]:not(.visible) .blog-body > * { opacity: 0; }
+  #blog .blog-card-link.visible .blog-img-col { animation: blog-cover-first .75s cubic-bezier(.2,.7,.2,1) backwards; }
+  #blog .blog-card-link.visible .blog-body > :nth-child(-n+2) { animation: blog-content-first .65s .24s backwards; }
+  #blog .blog-card-link.visible .blog-body > :nth-child(2) { animation-delay: .36s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #blog .blog-card-link[data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+@keyframes blog-cover-first {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes blog-content-first {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -26,7 +26,7 @@ const EyeIcon = () => (
   </svg>
 );
 
-function BlogCard({ id, title, description, tags, image, date, readTime, delay }: BlogCardProps) {
+function BlogCard({ id, title, description, image, readTime, delay }: BlogCardProps) {
   const [imgErr, setImgErr] = useState(false);
   const [views, setViews] = useState<number | null>(null);
   const showImg = !!image && !imgErr;
