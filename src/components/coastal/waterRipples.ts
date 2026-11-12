@@ -458,7 +458,29 @@ export function localSceneHour() {
 }
 
 /** Animates the water and marine life in the split-view illustration. */
-export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number) {
+type WaterScene = { refresh: () => void; setPaused: (paused: boolean) => void; dispose: () => void };
+
+export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number, startPaused = false): WaterScene {
+  let disposed = false;
+  let paused = startPaused;
+  let scene: WaterScene | undefined;
+  let frame = requestAnimationFrame(() => {
+    // Let the welcome character paint before preparing the graphics program.
+    frame = requestAnimationFrame(() => {
+      void setupWaterRipples(still, canvas, onState, getSunHour, () => disposed, paused).then(result => {
+        if (disposed) result?.dispose();
+        else { scene = result; scene?.setPaused(paused); }
+      }).catch(() => { if (!disposed) onState(false, false); });
+    });
+  });
+  return {
+    refresh() { scene?.refresh(); },
+    setPaused(value) { paused = value; scene?.setPaused(value); },
+    dispose() { disposed = true; cancelAnimationFrame(frame); scene?.dispose(); },
+  };
+}
+
+async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour: (() => number) | undefined, isCancelled: () => boolean, startPaused: boolean): Promise<WaterScene | undefined> {
   const sceneSurface = canvas.parentElement;
   const surface = canvas.closest<HTMLElement>(".water-frame");
   const gl = canvas.getContext("webgl", { alpha: true, antialias: false, depth: false, premultipliedAlpha: false });
@@ -486,10 +508,17 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     shaders.push(shader);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { fail(); return; }
     gl.attachShader(program, shader);
   }
+  const parallel = gl.getExtension("KHR_parallel_shader_compile");
   gl.linkProgram(program);
+  if (parallel) {
+    while (!gl.getProgramParameter(program, parallel.COMPLETION_STATUS_KHR)) {
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      if (isCancelled()) { release(); return; }
+    }
+  }
+  if (isCancelled()) { release(); return; }
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { fail(); return; }
   gl.useProgram(program);
   const stars = new Float32Array(11 * 3);
@@ -549,6 +578,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   let elapsed = 0;
   let lastTime = 0;
   let ready = false;
+  let paused = startPaused;
   let disposed = false;
   let next = 0;
   let frame = 0;
@@ -607,7 +637,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     leaveBanner();
   }
   function allowed() {
-    return visible && !document.hidden && !motion.matches && !connection?.saveData && !unavailable && ready && (!needsExtension() || extensionReady);
+    return !paused && visible && !document.hidden && !motion.matches && !connection?.saveData && !unavailable && ready && (!needsExtension() || extensionReady);
   }
   function render() {
     const rect = sceneSurface!.getBoundingClientRect();
@@ -680,7 +710,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
     const active = allowed();
     if (active && !frame) frame = requestAnimationFrame(draw);
     else if (!active) stop();
-    onState(active, !unavailable);
+    onState(active || (paused && ready && visible && !document.hidden && !motion.matches && !connection?.saveData && !unavailable && (!needsExtension() || extensionReady)), !unavailable);
   }
   function contextLost() {
     unavailable = true;
@@ -769,6 +799,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   void load();
   return {
     refresh() { if (ready && !unavailable && (!needsExtension() || extensionReady)) render(); },
+    setPaused(value) { paused = value; sync(); },
     dispose() {
       disposed = true;
       stop();

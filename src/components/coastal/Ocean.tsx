@@ -11,6 +11,7 @@ export default function Ocean() {
   const wheelUntil = useRef(-Infinity);
   const still = useRef<HTMLImageElement>(null);
   const ripples = useRef<HTMLCanvasElement>(null);
+  const waterScene = useRef<ReturnType<typeof attachWaterRipples> | null>(null);
   const [playing, setPlaying] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
@@ -80,7 +81,8 @@ export default function Ocean() {
       setPlaying(active);
       if (active) setSceneReady(true);
       else if (!available) fallback();
-    }, localSceneHour);
+    }, localSceneHour, true);
+    waterScene.current = water;
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || connection?.saveData) fallback();
     const fallbackTimer = window.setTimeout(fallback, 12000);
@@ -94,9 +96,14 @@ export default function Ocean() {
       clearTimeout(limitTimer);
       clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
-      water?.dispose();
+      waterScene.current = null;
+      water.dispose();
     };
   }, []);
+
+  useEffect(() => {
+    waterScene.current?.setPaused(intro === "pending" || intro === "playing");
+  }, [intro]);
 
   useEffect(() => {
     if (window.location.hash) {
