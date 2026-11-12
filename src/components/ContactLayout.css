@@ -1,0 +1,6 @@
+.contact-side-layout { display:grid; grid-template-columns:1fr 1fr; gap:35px; padding:8px 0 16px; }
+.contact-side-title { font-size:clamp(28px,4.2vw,42px); line-height:1.12; letter-spacing:-.045em; margin:0; }
+.contact-side-message { border-left:1px solid var(--border); padding-left:25px; }
+.contact-side-message p { color:var(--t2); font-size:14px; line-height:1.7; max-width:370px; margin:0; }
+.contact-side-link { margin-top:22px; }
+@media (max-width:650px) { .contact-side-layout { grid-template-columns:1fr; gap:20px; }.contact-side-message { border-left:0; border-top:1px solid var(--border); padding:20px 0 0; } }
