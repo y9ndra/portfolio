@@ -1,4 +1,5 @@
 import { createWildlifeDraw } from "./inletWildlife";
+import { createBannerSounds } from "./bannerSounds";
 import wildlifeAtlas from "../../../public/assets/water/inlet-motion.webp";
 
 const atlasSize = "vec2(512., 1024.)";
@@ -564,6 +565,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.uniform1i(gl.getUniformLocation(program, "extension"), 2);
   const wildlife = createWildlifeDraw(gl, program, vertices.length / 2 - 6);
+  const sounds = createBannerSounds();
   const atlasImage = new Image();
   const extensionImage = new Image();
   const cropLocation = gl.getUniformLocation(program, "crop");
@@ -662,12 +664,13 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
       const screenY = (cursor.y - rect.top) / rect.height;
       if (screenX >= 0 && screenX <= 1 && screenY >= 0 && screenY <= 1) {
         const reach = 24; // CSS pixels beyond the wings, at either banner size.
-        wildlife.approachGulls(
+        const startled = wildlife.approachGulls(
           ((screenX - 0.5) * cropX + 0.5) * 1600,
           ((screenY - 0.5) * cropY * viewHeight + 0.5) * 640,
           reach * cropX * 1600 / rect.width,
           reach * cropY * viewHeight * 640 / rect.height,
         );
+        if (startled) sounds.play("gull");
       } else {
         leaveBanner();
       }
@@ -686,6 +689,18 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     }
     frame = requestAnimationFrame(draw);
   }
+  let pendingTouchSound: { pointerId: number; kind: "water" | "fish" | "gull" } | undefined;
+  function interactionSound(event: PointerEvent, kind: "water" | "fish" | "gull") {
+    // On touchscreens, browsers grant audio permission at pointerup, not pointerdown.
+    if (event.pointerType === "touch") pendingTouchSound = { pointerId: event.pointerId, kind };
+    else sounds.play(kind);
+  }
+  function finishTouchSound(event: PointerEvent) {
+    if (pendingTouchSound?.pointerId !== event.pointerId) return;
+    const kind = pendingTouchSound.kind;
+    pendingTouchSound = undefined;
+    if (event.type === "pointerup" && allowed()) sounds.play(kind);
+  }
   function disturb(event: PointerEvent) {
     if (!allowed()) return;
     if ((event.target as Element).closest("button")) { leaveBanner(); return; }
@@ -699,10 +714,12 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * cropY * viewHeight + 0.5;
     if (pressed) {
       const padding = event.pointerType === "touch" ? (mobile.matches ? 14 : 7) : 2;
-      if (wildlife.startle(x * 1600, y * 640, padding * cropX * 1600 / rect.width, padding * cropY * viewHeight * 640 / rect.height, event.pointerType === "touch")) return;
+      const animal = wildlife.startle(x * 1600, y * 640, padding * cropX * 1600 / rect.width, padding * cropY * viewHeight * 640 / rect.height, event.pointerType === "touch");
+      if (animal) { interactionSound(event, animal); return; }
     }
     if (x < 0 || x > 1 || y < 0.455 || y > 1) return;
     lastTouch = now;
+    if (pressed) interactionSound(event, "water");
     waves.set([x, y, elapsed, pressed ? 1 : 0.45], next * 4);
     next = (next + 1) % 8;
   }
@@ -787,6 +804,8 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   visibilityObserver.observe(surface);
   surface.addEventListener("pointermove", disturb, { passive: true });
   surface.addEventListener("pointerdown", disturb, { passive: true });
+  surface.addEventListener("pointerup", finishTouchSound, { passive: true });
+  surface.addEventListener("pointercancel", finishTouchSound, { passive: true });
   surface.addEventListener("pointerleave", leaveBanner);
   surface.addEventListener("pointercancel", leaveBanner);
   still.addEventListener("error", contextLost);
@@ -807,6 +826,8 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
       visibilityObserver.disconnect();
       surface.removeEventListener("pointermove", disturb);
       surface.removeEventListener("pointerdown", disturb);
+      surface.removeEventListener("pointerup", finishTouchSound);
+      surface.removeEventListener("pointercancel", finishTouchSound);
       surface.removeEventListener("pointerleave", leaveBanner);
       surface.removeEventListener("pointercancel", leaveBanner);
       still.removeEventListener("error", contextLost);
@@ -815,6 +836,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
       mobile.removeEventListener("change", mobileChanged);
       canvas.removeEventListener("webglcontextlost", contextLost);
       atlasImage.removeEventListener("error", contextLost);
+      sounds.dispose();
       release();
     },
   };

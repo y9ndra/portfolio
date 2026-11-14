@@ -9,7 +9,9 @@ export default function ClickSound() {
     // Instantiate Audio on the client-side
     audioRef.current = new Audio("/assets/sound/clicksoundv2.mp3");
     
-    const playClick = () => {
+    const playClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest(".water-frame") && !target.closest("button")) return;
       const audio = audioRef.current;
       if (!audio) return;
       
@@ -19,7 +21,7 @@ export default function ClickSound() {
         audio.play().catch(() => {
           // Silent catch for autoplay/interaction blocking policy
         });
-      } catch (e) {
+      } catch {
         // Catch any other unexpected audio context errors
       }
     };

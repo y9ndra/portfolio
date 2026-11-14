@@ -1,0 +1,2 @@
+The water and gull interaction sounds are trimmed from the provided
+water-drip.mp3 and birdswings.mp3 recordings, respectively.

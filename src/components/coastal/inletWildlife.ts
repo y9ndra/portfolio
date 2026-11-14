@@ -60,24 +60,26 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
 
   function startleGull(index: number) {
     const flight = flights[index - fish.length];
-    if (flight.started === -Infinity) flight.started = lastDraw;
+    if (flight.started !== -Infinity) return false;
+    flight.started = lastDraw;
+    return true;
   }
 
   function approachGulls(x: number, y: number, paddingX: number, paddingY: number) {
     const nearest = nearestAnimal(x, y, paddingX, paddingY, fish.length, animals.length);
-    if (nearest >= 0 && nearest !== hoveredGull) startleGull(nearest);
+    const started = nearest >= 0 && nearest !== hoveredGull && startleGull(nearest);
     hoveredGull = nearest;
+    return started;
   }
 
   function startle(x: number, y: number, paddingX: number, paddingY: number, includeGulls: boolean) {
     const nearest = nearestAnimal(x, y, paddingX, paddingY, 0, includeGulls ? animals.length : fish.length);
-    if (nearest < 0) return false;
+    if (nearest < 0) return null;
     if (nearest < fish.length) {
       animals[nearest].boost = 5;
-    } else {
-      startleGull(nearest);
+      return "fish" as const;
     }
-    return true;
+    return startleGull(nearest) ? "gull" as const : null;
   }
 
   function draw(sceneTime: number, cropX: number, mobile: boolean) {
