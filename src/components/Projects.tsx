@@ -270,7 +270,7 @@ export default function Projects() {
               {projects.map(p => <div className="proj-item proj-deck-item corner-box" key={p.id}>
                 <div className="proj-deck-banner-wrap"><div className="proj-deck-banner" /></div>
                 <div className="proj-body proj-deck-body">
-                  <div className="proj-row"><h3 className="proj-name">{p.title}</h3><div className="proj-actions">{p.demo && p.demo !== "#" && <span className="proj-live-btn"><LiveIcon /> <span className="btn-label">Live</span></span>}{p.github && p.github !== "#" && <span className="proj-gh-btn"><GH /> <span className="btn-label">GitHub</span></span>}</div></div>
+                  <div className="proj-row"><h3 className="proj-name">{p.title}</h3><div className="proj-actions">{p.demo && p.demo !== "#" && <span className="proj-live-btn">{p.demo.includes("npmjs.com") ? <NPMIcon /> : <LiveIcon />} <span className="btn-label">{p.demo.includes("npmjs.com") ? "npm" : "Live"}</span></span>}{p.github && p.github !== "#" && <span className="proj-gh-btn"><GH /> <span className="btn-label">GitHub</span></span>}</div></div>
                   <p className="proj-desc">{p.description}</p>
                   <div className="proj-tech-section"><span className="proj-tech-label">Technologies Used:</span><div className="proj-tags">{p.tech.slice(0, 6).map(t => <span key={t} className="proj-tag">{t}</span>)}{p.tech.length > 6 && <span className="proj-tag">+{p.tech.length - 6} more</span>}</div></div>
                   <span className="proj-view-more">View details →</span>

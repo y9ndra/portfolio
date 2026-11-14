@@ -33,6 +33,19 @@
 }
 @media (max-width:640px) {
   .project-circle-stage { --project-radius:clamp(65px,20vw,125px); perspective:850px; }
+  #projects .project-circle-stage .proj-tech-section,
+  #projects .project-circle-stage .proj-view-more { display:none; }
+  #projects .project-circle-stage .proj-row { gap:.25rem; }
+  #projects .project-circle-stage .proj-name { font-size:1rem; }
+  #projects .project-circle-stage .proj-actions { gap:.25rem; }
+  #projects .project-circle-stage .proj-live-btn,
+  #projects .project-circle-stage .proj-gh-btn { padding:4px 6px; gap:4px; font-size:.68rem; }
+  #projects .project-circle-stage .proj-desc {
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:4;
+    overflow:hidden;
+  }
   .project-circle-sizing { width:calc(100% - 64px); }
   .project-circle-card.proj-deck-card-wrap { margin:0 32px; width:calc(100% - 64px); }
 }
