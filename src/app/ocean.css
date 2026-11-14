@@ -99,7 +99,7 @@
 .water-controls>span {
   font: 9px var(--font-mono);
   color: #242424;
-  background: #ffffffe0;
+  background: rgba(255, 255, 255, .45);
   padding: 5px 8px;
   border-radius: 4px;
   opacity: 0;
