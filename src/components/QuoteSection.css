@@ -86,6 +86,18 @@
 .quote-break-free .quote-chain-diagonal.chain-up .chain-inner,.quote-break-free .quote-chain-diagonal.chain-up .chain-outer { animation-delay:2.21s; }
 .quote-break-free .quote-chain .lock-piece,.quote-break-free .quote-chain .lock-crack,.quote-break-free .quote-break-sparks i,.quote-break-free .quote-bound-word strong { animation-delay:2.23s; }
 .quote-break-free .quote-freedom-author { animation:quote-word-arrive .5s 3.8s both; }
+/* Return navigation shows the finished quote without replaying its reveal. */
+.quote-break-free.reveal-restored .quote-reveal-word,
+.quote-break-free.reveal-restored .quote-bound-word,
+.quote-break-free.reveal-restored .quote-freedom-author,
+.quote-break-free.reveal-restored .quote-bound-word strong,
+.quote-break-free.reveal-restored .author-decoration { animation:none !important; opacity:1; }
+.quote-break-free.reveal-restored .quote-bound-word strong { letter-spacing:.075em; }
+.quote-break-free.reveal-restored .author-decoration { transform:scaleX(1); }
+.quote-break-free.reveal-restored .quote-chain,
+.quote-break-free.reveal-restored .quote-break-sound-cue { display:none; }
+.quote-break-sound-cue { position:absolute; width:0; height:0; animation:quote-break-sound-cue 1ms 3.52s both; }
+@keyframes quote-break-sound-cue { from { opacity:0; } to { opacity:1; } }
 @keyframes quote-word-arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 @media(prefers-reduced-motion:reduce) { .quote-break-free .quote-reveal-word,.quote-break-free .quote-bound-word,.quote-break-free .quote-freedom-author,.quote-break-free .quote-bound-word strong { animation:none; }.quote-break-free .quote-chain { display:none; } }
 
