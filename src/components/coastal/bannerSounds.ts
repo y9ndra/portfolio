@@ -1,3 +1,5 @@
+import { isSoundEnabled, subscribeSound } from "@/lib/sound";
+
 type BannerSound = "water" | "fish" | "gull";
 
 /** Short interaction sounds are created only after a visitor gesture. */
@@ -8,10 +10,16 @@ export function createBannerSounds() {
   const activate = () => { activated = true; };
   document.addEventListener("pointerdown", activate, { capture: true });
   document.addEventListener("keydown", activate, { capture: true });
+  const unsubscribe = subscribeSound(() => {
+    if (isSoundEnabled()) return;
+    for (const sample of Object.values(samples)) sample?.pause();
+    for (const sample of gullSamples) sample.pause();
+  });
 
   return {
     play(kind: BannerSound) {
       if (kind === "fish") return;
+      if (!isSoundEnabled()) return;
       if (!activated && !navigator.userActivation?.hasBeenActive) return;
       try {
         let sample: HTMLAudioElement;
@@ -35,6 +43,7 @@ export function createBannerSounds() {
     dispose() {
       document.removeEventListener("pointerdown", activate, { capture: true });
       document.removeEventListener("keydown", activate, { capture: true });
+      unsubscribe();
       for (const sample of Object.values(samples)) sample?.pause();
       for (const sample of gullSamples) sample.pause();
     },

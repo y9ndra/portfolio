@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon, User2, Briefcase, Cpu, FolderGit2, GitPullRequest, BookOpen, Mail, X, ChevronDown } from "lucide-react";
+import { Sun, Moon, Volume2, VolumeX, User2, Briefcase, Cpu, FolderGit2, GitPullRequest, BookOpen, Mail, X, ChevronDown } from "lucide-react";
 import { BLOGS } from "@/data/portfolio";
+import { isSoundEnabled, setSoundEnabled, subscribeSound } from "@/lib/sound";
+
+const serverSoundSnapshot = () => true;
 
 const LINKS = [
   { label: "About",         id: "about",         key: "1", icon: User2 },
@@ -28,6 +31,7 @@ export default function Navbar() {
 
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
+  const soundEnabled = useSyncExternalStore(subscribeSound, isSoundEnabled, serverSoundSnapshot);
   const userInteracted = useRef(false);
 
   // Blog dynamic chapter navigation states
@@ -483,12 +487,12 @@ export default function Navbar() {
           );
         })}
 
-        {/* Floating Theme Toggle (straight up at half-radius) */}
+        {/* Theme and sound controls sit together inside the arc. */}
         <div
           className="radial-item radial-theme-float"
           style={{
             transform: isOpen 
-              ? "translate(0px, -62px) scale(1)" 
+              ? "translate(-24px, -62px) scale(1)"
               : "translate(0px, 0px) scale(0)",
             opacity: isOpen ? 1 : 0,
             transitionDelay: isOpen ? "120ms" : "75ms",
@@ -498,6 +502,7 @@ export default function Navbar() {
           <span className="radial-tooltip">Theme</span>
           <button
             className="radial-btn"
+            tabIndex={isOpen ? 0 : -1}
             onClick={() => {
               userInteracted.current = true;
               toggleTheme();
@@ -511,6 +516,30 @@ export default function Navbar() {
             ) : (
               <span style={{ width: 16, height: 16 }} />
             )}
+          </button>
+        </div>
+        <div
+          className="radial-item radial-sound-float"
+          style={{
+            transform: isOpen ? "translate(24px, -62px) scale(1)" : "translate(0px, 0px) scale(0)",
+            opacity: isOpen ? 1 : 0,
+            transitionDelay: isOpen ? "120ms" : "75ms",
+            pointerEvents: isOpen ? "auto" : "none",
+          }}
+        >
+          <span className="radial-tooltip">{soundEnabled ? "Mute sound" : "Enable sound"}</span>
+          <button
+            className="radial-btn"
+            data-sound-toggle
+            tabIndex={isOpen ? 0 : -1}
+            aria-label={soundEnabled ? "Mute sound" : "Enable sound"}
+            aria-pressed={soundEnabled}
+            onClick={() => {
+              userInteracted.current = true;
+              setSoundEnabled(!soundEnabled);
+            }}
+          >
+            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
         </div>
       </div>

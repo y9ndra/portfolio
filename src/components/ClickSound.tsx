@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { isSoundEnabled, subscribeSound } from "@/lib/sound";
 
 export default function ClickSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -11,6 +12,7 @@ export default function ClickSound() {
     
     const playClick = (event: MouseEvent) => {
       const target = event.target;
+      if (!isSoundEnabled() || (target instanceof Element && target.closest("[data-sound-toggle]"))) return;
       if (target instanceof Element && target.closest(".water-frame") && !target.closest("button")) return;
       const audio = audioRef.current;
       if (!audio) return;
@@ -26,9 +28,11 @@ export default function ClickSound() {
       }
     };
 
+    const unsubscribe = subscribeSound(() => { if (!isSoundEnabled()) audioRef.current?.pause(); });
     window.addEventListener("click", playClick);
     return () => {
       window.removeEventListener("click", playClick);
+      unsubscribe();
     };
   }, []);
 

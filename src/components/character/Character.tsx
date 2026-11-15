@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import WhisperDots from "./WhisperDots";
+import { isSoundEnabled, subscribeSound } from "@/lib/sound";
 
 export default function Character({ trackPointer = true, previewWhistle = false }: { trackPointer?: boolean; previewWhistle?: boolean }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -27,6 +28,9 @@ export default function Character({ trackPointer = true, previewWhistle = false 
     const landing = trackPointer ? new Audio("/assets/sound/character-straw-landing.mp3") : null;
     if (landing) { landing.preload = "auto"; landing.volume = .25; }
     landingAudio.current = landing;
+    const unsubscribe = subscribeSound(() => {
+      if (!isSoundEnabled()) { audio?.pause(); landing?.pause(); }
+    });
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let timer = 0;
     let reopen = 0;
@@ -74,7 +78,7 @@ export default function Character({ trackPointer = true, previewWhistle = false 
       window.addEventListener("pointerdown", touch, { passive: true });
       document.documentElement.addEventListener("pointerleave", leave);
     }
-    return () => { clearTimeout(timer); clearTimeout(reopen); clearTimeout(curiousBlinkTimer.current); greetingTimers.current.forEach(clearTimeout); audio?.pause(); landing?.pause(); windAudio.current = null; landingAudio.current = null; window.removeEventListener("pointermove", move); window.removeEventListener("pointerdown", touch); document.documentElement.removeEventListener("pointerleave", leave); };
+    return () => { unsubscribe(); clearTimeout(timer); clearTimeout(reopen); clearTimeout(curiousBlinkTimer.current); greetingTimers.current.forEach(clearTimeout); audio?.pause(); landing?.pause(); windAudio.current = null; landingAudio.current = null; window.removeEventListener("pointermove", move); window.removeEventListener("pointerdown", touch); document.documentElement.removeEventListener("pointerleave", leave); };
   }, [trackPointer]);
 
   function greet(clientX?: number, clientY?: number) {
@@ -88,11 +92,11 @@ export default function Character({ trackPointer = true, previewWhistle = false 
       ? { x: Math.max(-1.8, Math.min(1.5, (clientX - (rect.left + rect.width * .43)) / (rect.width * .2))) * scale, y: Math.max(-.65, Math.min(.65, (clientY - (rect.top + rect.height * .61)) / (rect.height * .3))) * scale }
       : { x: 0, y: 0 };
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduced && windAudio.current) {
+    if (!reduced && isSoundEnabled() && windAudio.current) {
       windAudio.current.currentTime = 0;
       void windAudio.current.play().catch(() => {});
     }
-    if (!reduced && landingAudio.current) {
+    if (!reduced && isSoundEnabled() && landingAudio.current) {
       landingAudio.current.currentTime = 0;
       void landingAudio.current.play().catch(() => {});
     }
