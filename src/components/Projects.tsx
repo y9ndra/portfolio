@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PROJECTS } from "@/data/portfolio";
 import { GH, LiveIcon, NPMIcon } from "@/components/ProjectCard";
+import { hasSeenHomeSection } from "@/hooks/useScrollReveal";
 import "./ProjectCircle.css";
 
 export { GH, LiveIcon, NPMIcon };
@@ -60,6 +61,7 @@ const ArrowRight = () => (
 
 
 const projects = PROJECTS.slice(0, 3);
+let homeIntroPlayed = false;
 
 export default function Projects() {
   const router = useRouter();
@@ -112,8 +114,12 @@ export default function Projects() {
     try {
       const saved = sessionStorage.getItem("home_active_project_index");
       const index = saved === null ? NaN : Number(saved);
-      if (window.location.hash === "#projects" && Number.isInteger(index) && index >= 0 && index < projects.length) {
-        const frame = requestAnimationFrame(() => { setRotation(-index); setHomeEntryPending(false); });
+      if (homeIntroPlayed || hasSeenHomeSection("projects") || (window.location.hash === "#projects" && Number.isInteger(index) && index >= 0 && index < projects.length)) {
+        const frame = requestAnimationFrame(() => {
+          homeIntroPlayed = true;
+          if (Number.isInteger(index) && index >= 0 && index < projects.length) setRotation(-index);
+          setHomeEntryPending(false);
+        });
         return () => cancelAnimationFrame(frame);
       }
     } catch {}
@@ -152,6 +158,7 @@ export default function Projects() {
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return;
       observer.disconnect();
+      homeIntroPlayed = true;
       homeIntroRunning.current = true;
       stage.classList.add("is-intro");
       draw(210);

@@ -6596,3 +6596,10 @@ html.theme-orbit-reveal::view-transition-new(root) {
   from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Already-seen content stays visible when returning from another page. */
+[data-reveal].reveal-restored { opacity: 1; transform: none; transition: none; }
+.experience-panels .exp-item.reveal-restored .exp-content,
+#blog .blog-card-link.reveal-restored .blog-img-col,
+#blog .blog-card-link.reveal-restored .blog-body > *,
+.quote-break-free.reveal-restored * { animation-delay: -60s !important; }
