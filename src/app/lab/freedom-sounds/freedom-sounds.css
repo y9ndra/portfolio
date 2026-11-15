@@ -1,0 +1,19 @@
+.freedom-sounds-lab { min-height:100svh; max-width:850px; margin:auto; padding:2rem clamp(1.25rem, 5vw, 3rem) 5rem; color:var(--t1); }
+.freedom-lab-back { color:var(--t2); text-decoration:none; font-size:.875rem; }
+.freedom-lab-heading { margin:4rem 0 2.5rem; }
+.freedom-lab-heading > span,.freedom-lab-preview-heading,.freedom-lab-index { color:var(--t3); font: .7rem var(--font-mono,monospace); letter-spacing:.12em; }
+.freedom-lab-heading h1 { margin:.8rem 0; font-size:clamp(2.2rem, 7vw, 4rem); line-height:1.08; letter-spacing:-.05em; }
+.freedom-lab-heading p,.freedom-lab-option p,.freedom-lab-preview > p { color:var(--t2); line-height:1.55; }
+.freedom-lab-options { border-top:1px solid var(--border); }
+.freedom-lab-option { display:grid; grid-template-columns:2rem 1fr auto; gap:1rem; align-items:center; padding:1.25rem 0; border-bottom:1px solid var(--border); }
+.freedom-lab-option h2 { font-size:1rem; margin:0 0 .25rem; }
+.freedom-lab-option p { font-size:.83rem; margin:0; }
+.freedom-lab-actions { display:flex; gap:.5rem; }
+.freedom-lab-actions button,.freedom-lab-preview-heading button,.freedom-lab-notice button { padding:.55rem .75rem; border:1px solid var(--border-h); border-radius:7px; background:transparent; color:var(--t1); cursor:pointer; font-size:.75rem; }
+.freedom-lab-actions button:hover,.freedom-lab-preview-heading button:hover,.freedom-lab-notice button:hover { background:var(--bg-3); }
+.freedom-lab-preview { margin-top:3rem; padding:1.25rem; border:1px solid var(--border); border-radius:12px; }
+.freedom-lab-preview-heading { display:flex; justify-content:space-between; gap:1rem; align-items:center; }
+.freedom-lab-preview .quote-section { padding:2.5rem 0; }
+.freedom-lab-preview .wrap { width:100%; }
+.freedom-lab-notice { margin:1rem 0; color:var(--t2); }
+@media(max-width:600px) { .freedom-lab-option { grid-template-columns:1.5rem 1fr; } .freedom-lab-actions { grid-column:2; } .freedom-lab-preview { padding:1rem; } }

@@ -51,6 +51,8 @@ export default function SunLab() {
   return <main className="sun-lab">
     <Link href="/">← Portfolio</Link>
     <h1>Sun and moon over the inlet</h1>
+    <p><Link href="/lab/character">Explore character interaction →</Link></p>
+    <p><Link href="/lab/freedom-sounds">Compare Freedom chain sounds →</Link></p>
     <p><Link href="/lab/contact">Explore contact ideas →</Link></p>
     <p><Link href="/lab/sounds">Compare fish and gull sounds →</Link></p>
     <div className="water-frame sun-lab-frame" onDragStart={event => event.preventDefault()} onContextMenu={event => event.preventDefault()}>
