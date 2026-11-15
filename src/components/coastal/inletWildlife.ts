@@ -40,7 +40,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
   }));
   const flights = Array.from({ length: 2 }, () => ({
     started: -Infinity, extraTravel: 0, direction: 1, speed: 35, altitude: 80, wingPhase: -1,
-    phaseOffset: 0, startBasePhase: 0, settleStarted: -Infinity, settleOffset: 0,
+    phaseOffset: 0, startBasePhase: 0, settleStarted: -Infinity, settleFrom: 0, settleTo: 0,
   }));
   let lastDraw = 0;
   let hoveredGull = -1;
@@ -180,8 +180,13 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
       if (!startled && flight.settleStarted !== -Infinity) {
         const progress = Math.min((sceneTime - flight.settleStarted) / wingSettleDuration, 1);
         const eased = progress * progress * (3 - 2 * progress);
-        flight.phaseOffset = flight.settleOffset * (1 - eased);
-        if (progress === 1) flight.settleStarted = -Infinity;
+        const settlingStroke = flight.settleFrom + (flight.settleTo - flight.settleFrom) * eased;
+        flight.phaseOffset = settlingStroke - baseStroke;
+        if (progress === 1) {
+          // Whole rotations do not change the pose, but keep the phase bounded.
+          flight.phaseOffset = 0;
+          flight.settleStarted = -Infinity;
+        }
       }
       let stroke = baseStroke + flight.phaseOffset;
       if (startled) {
@@ -196,9 +201,11 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         step += extraTravel - flight.extraTravel;
         flight.extraTravel = extraTravel;
         if (progress === 1) {
-          // Preserve the final pose, then ease back to the natural glide.
-          flight.phaseOffset = (((stroke - baseStroke + .5) % 1 + 1) % 1) - .5;
-          flight.settleOffset = flight.phaseOffset;
+          // Finish in the forward direction at the pose the normal flight will use.
+          const target = gullStroke((sceneTime + wingSettleDuration) * (1 + i * 0.06) + i * 2.3);
+          flight.settleFrom = stroke;
+          flight.settleTo = stroke + ((target - stroke) % 1 + 1) % 1;
+          flight.phaseOffset = stroke - baseStroke;
           flight.settleStarted = sceneTime;
           flight.extraTravel = 0;
           flight.started = -Infinity;
