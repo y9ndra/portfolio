@@ -5,17 +5,19 @@ import { useEffect, useRef, useState } from "react";
 import WhisperDots from "./WhisperDots";
 import { isSoundEnabled, subscribeSound } from "@/lib/sound";
 
-export default function Character({ trackPointer = true, previewWhistle = false }: { trackPointer?: boolean; previewWhistle?: boolean }) {
+export default function Character({ trackPointer = true, previewWhistle = false, splitGreeting = false }: { trackPointer?: boolean; previewWhistle?: boolean; splitGreeting?: boolean }) {
   const frame = useRef<HTMLDivElement>(null);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [blinking, setBlinking] = useState(false);
   const [greeting, setGreeting] = useState(false);
+  const [hatOn, setHatOn] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [breeze, setBreeze] = useState(false);
   const [curious, setCurious] = useState(false);
   const wasNear = useRef(false);
   const curiousBlinkTimer = useRef(0);
   const greetingActive = useRef(false);
+  const splitPhase = useRef<"drop" | "lift">("drop");
   const lastTouchLook = useRef<{ x: number; y: number } | null>(null);
   const greetingTimers = useRef<number[]>([]);
   const windAudio = useRef<HTMLAudioElement | null>(null);
@@ -92,7 +94,20 @@ export default function Character({ trackPointer = true, previewWhistle = false 
       ? { x: Math.max(-1.8, Math.min(1.5, (clientX - (rect.left + rect.width * .43)) / (rect.width * .2))) * scale, y: Math.max(-.65, Math.min(.65, (clientY - (rect.top + rect.height * .61)) / (rect.height * .3))) * scale }
       : { x: 0, y: 0 };
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduced && isSoundEnabled() && windAudio.current) {
+    if (splitGreeting && splitPhase.current === "lift") {
+      if (!reduced && isSoundEnabled() && windAudio.current) {
+        windAudio.current.currentTime = 3.2;
+        void windAudio.current.play().catch(() => {});
+      }
+      if (!reduced) { setBreeze(true); setLook({ x: 0, y: -.65 }); setBlinking(true); }
+      greetingTimers.current.push(window.setTimeout(() => {
+        setBreeze(false); setHatOn(false); setBlinking(false);
+        setLook(lastTouchLook.current ?? { x: 0, y: 0 });
+        splitPhase.current = "drop"; greetingActive.current = false; greetingTimers.current = [];
+      }, reduced ? 0 : 1300));
+      return;
+    }
+    if (!splitGreeting && !reduced && isSoundEnabled() && windAudio.current) {
       windAudio.current.currentTime = 0;
       void windAudio.current.play().catch(() => {});
     }
@@ -107,6 +122,14 @@ export default function Character({ trackPointer = true, previewWhistle = false 
       greetingTimers.current.push(window.setTimeout(() => setBlinking(false), 1250));
     }
     greetingTimers.current.push(window.setTimeout(() => { setLook(lastTouchLook.current ?? tapLook); setSpeaking(true); }, reduced ? 0 : 1850));
+    if (splitGreeting) {
+      greetingTimers.current.push(window.setTimeout(() => {
+        setHatOn(true); setGreeting(false); setSpeaking(false); setBlinking(false);
+        setLook(lastTouchLook.current ?? { x: 0, y: 0 });
+        splitPhase.current = "lift"; greetingActive.current = false; greetingTimers.current = [];
+      }, reduced ? 1100 : 3200));
+      return;
+    }
     if (!reduced) {
       greetingTimers.current.push(window.setTimeout(() => { setSpeaking(false); setBreeze(true); setLook({ x: 0, y: -.65 }); setBlinking(true); }, 3200));
     }
@@ -121,7 +144,7 @@ export default function Character({ trackPointer = true, previewWhistle = false 
     {image("body.png", "character-body")}
     {image("hand.png", "character-hand", { opacity: speaking ? 1 : 0 })}
     <div className="character-head">
-    {image("straw-hat.png", "character-hat", { opacity: greeting ? 1 : 0 })}
+    {image("straw-hat.png", "character-hat", { opacity: greeting || hatOn ? 1 : 0 })}
     {image("head.png", "character-base")}
     {image("eyebrow.png", "character-eyebrow")}
     {image(speaking ? "yo-mouth.png" : "mouth-normal.png", "character-mouth")}
