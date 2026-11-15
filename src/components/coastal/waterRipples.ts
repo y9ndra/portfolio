@@ -658,7 +658,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     gl!.uniform1f(sunLocation, getSunHour ? getSunHour() : -1);
     gl!.uniform4fv(rippleLocation, waves);
     gl!.drawArrays(gl!.TRIANGLES, 0, 6);
-    wildlife.draw(elapsed, cropX, mobile.matches);
+    wildlife.draw(elapsed, cropX, mobile.matches, () => sounds.play("gull"), () => sounds.play("fish"));
     if (cursor) {
       const screenX = (cursor.x - rect.left) / rect.width;
       const screenY = (cursor.y - rect.top) / rect.height;
@@ -670,7 +670,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
           reach * cropX * 1600 / rect.width,
           reach * cropY * viewHeight * 640 / rect.height,
         );
-        if (startled) sounds.play("gull");
+        if (startled) sounds.prepareGull();
       } else {
         leaveBanner();
       }
@@ -690,12 +690,17 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     frame = requestAnimationFrame(draw);
   }
   let pendingTouchSound: { pointerId: number; kind: "water" | "fish" | "gull" } | undefined;
+  let pendingFishPointer: number | undefined;
   function interactionSound(event: PointerEvent, kind: "water" | "fish" | "gull") {
     // On touchscreens, browsers grant audio permission at pointerup, not pointerdown.
     if (event.pointerType === "touch") pendingTouchSound = { pointerId: event.pointerId, kind };
     else sounds.play(kind);
   }
   function finishTouchSound(event: PointerEvent) {
+    if (event.pointerId === pendingFishPointer) {
+      wildlife.finishTouchFish(event.type === "pointerup" && allowed());
+      pendingFishPointer = undefined;
+    }
     if (pendingTouchSound?.pointerId !== event.pointerId) return;
     const kind = pendingTouchSound.kind;
     pendingTouchSound = undefined;
@@ -714,8 +719,16 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * cropY * viewHeight + 0.5;
     if (pressed) {
       const padding = event.pointerType === "touch" ? (mobile.matches ? 14 : 7) : 2;
-      const animal = wildlife.startle(x * 1600, y * 640, padding * cropX * 1600 / rect.width, padding * cropY * viewHeight * 640 / rect.height, event.pointerType === "touch");
-      if (animal) { interactionSound(event, animal); return; }
+      const touch = event.pointerType === "touch";
+      const animal = wildlife.startle(x * 1600, y * 640, padding * cropX * 1600 / rect.width, padding * cropY * viewHeight * 640 / rect.height, touch, touch);
+      if (animal) {
+        if (animal === "gull") sounds.prepareGull();
+        else {
+          sounds.prepareFish();
+          if (touch) pendingFishPointer = event.pointerId;
+        }
+        return;
+      }
     }
     if (x < 0 || x > 1 || y < 0.455 || y > 1) return;
     lastTouch = now;

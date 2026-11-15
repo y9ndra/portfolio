@@ -1,2 +1,11 @@
+The fish interaction sound is an excerpt of the provided
+freesound_community-fish-in-river-6114.mp3 recording, sped up and filtered.
+
 The water and gull interaction sounds are trimmed from the provided
 water-drip.mp3 and birdswings.mp3 recordings, respectively.
+
+Fish sound lab recordings:
+“Water Sloshing in a Small Bottle” by tamanders, public domain; excerpts, filtering, and speed adjustments.
+https://commons.wikimedia.org/wiki/File:Water_sloshing_in_a_small_bottle.ogg
+“Bathtub water splashes” by gradha, public domain; excerpts and filtering.
+https://commons.wikimedia.org/wiki/File:Bathtub_water_splashes.ogg

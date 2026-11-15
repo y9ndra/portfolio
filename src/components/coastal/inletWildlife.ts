@@ -8,19 +8,21 @@ const deeperFishLanes = [0, 0, 0, 0, 0, 0, 0, 0, 180, 220];
 const foregroundFishCount = 2;
 
 const respawnDelay = 2;
-const escapeDuration = 3.1 / 2.1;
+const escapeWingSpeed = 2.7;
+const escapeWingbeats = 4;
+const escapeDuration = 3.1 / escapeWingSpeed;
 const escapePeakSpeed = 3.5; // Additional speed, in multiples of cruising speed.
 const escapeDistance = escapePeakSpeed * escapeDuration / 2;
+const wingSettleDuration = 0.8;
 
-// Each burst contains three strokes followed by a glide. Ease the phase at
-// both ends so the wings settle into (and leave) the extended pose smoothly.
-function gullStroke(time: number) {
+// Ease each burst at both ends so the wings leave and return smoothly.
+function gullStroke(time: number, beats = 3) {
   const progress = Math.min((time % 6.4) / 3.1, 1);
   const ramp = 0.12;
   let distance = progress - ramp / 2;
   if (progress < ramp) distance = progress * progress / (2 * ramp);
   if (progress > 1 - ramp) distance = 1 - ramp - (1 - progress) ** 2 / (2 * ramp);
-  return 3 * distance / (1 - ramp);
+  return beats * distance / (1 - ramp);
 }
 
 export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProgram, vertexCount: number) {
@@ -33,13 +35,16 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
   const firstGull = Math.floor(Math.random() * 2);
   const animals = Array.from({ length: fish.length + 2 }, (_, i) => ({
     x: 0, y: 0, radiusX: 0, radiusY: 0, extraTime: 0, boost: 0, routeX: 0, facing: 1,
+    tailCycle: null as number | null, tailSoundsRemaining: 0,
     enterAt: i < fish.length || i === fish.length + firstGull ? 0 : 1.5 + Math.random() * 2,
   }));
   const flights = Array.from({ length: 2 }, () => ({
-    started: -Infinity, extraTravel: 0, direction: 1, speed: 35, altitude: 80,
+    started: -Infinity, extraTravel: 0, direction: 1, speed: 35, altitude: 80, wingPhase: -1,
+    phaseOffset: 0, startBasePhase: 0, settleStarted: -Infinity, settleOffset: 0,
   }));
   let lastDraw = 0;
   let hoveredGull = -1;
+  let pendingTouchFish = -1;
 
   function nearestAnimal(x: number, y: number, paddingX: number, paddingY: number, first: number, end: number) {
     let nearest = -1;
@@ -59,9 +64,12 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
   }
 
   function startleGull(index: number) {
-    const flight = flights[index - fish.length];
+    const bird = index - fish.length;
+    const flight = flights[bird];
     if (flight.started !== -Infinity) return false;
     flight.started = lastDraw;
+    flight.settleStarted = -Infinity;
+    flight.startBasePhase = gullStroke(lastDraw * (1 + bird * 0.06) + bird * 2.3);
     return true;
   }
 
@@ -72,17 +80,26 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     return started;
   }
 
-  function startle(x: number, y: number, paddingX: number, paddingY: number, includeGulls: boolean) {
+  function startle(x: number, y: number, paddingX: number, paddingY: number, includeGulls: boolean, deferFishSound = false) {
     const nearest = nearestAnimal(x, y, paddingX, paddingY, 0, includeGulls ? animals.length : fish.length);
     if (nearest < 0) return null;
     if (nearest < fish.length) {
       animals[nearest].boost = 5;
+      animals[nearest].tailSoundsRemaining = deferFishSound ? 0 : 4;
+      if (deferFishSound) pendingTouchFish = nearest;
       return "fish" as const;
     }
     return startleGull(nearest) ? "gull" as const : null;
   }
 
-  function draw(sceneTime: number, cropX: number, mobile: boolean) {
+  function finishTouchFish(playSound: boolean) {
+    if (pendingTouchFish >= 0 && playSound && animals[pendingTouchFish].boost > .1) {
+      animals[pendingTouchFish].tailSoundsRemaining = 4;
+    }
+    pendingTouchFish = -1;
+  }
+
+  function draw(sceneTime: number, cropX: number, mobile: boolean, onGullFlap?: () => void, onFishTail?: () => void) {
     const decayTime = 0.7;
     const dt = sceneTime - lastDraw;
     const decay = Math.exp(-dt / decayTime);
@@ -118,6 +135,8 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         animal.facing = Math.random() < 0.5 ? -1 : 1;
         animal.radiusX = 0;
         animal.boost = 0;
+        animal.tailCycle = null;
+        animal.tailSoundsRemaining = 0;
         continue;
       }
       const facing = animal.facing; // The fish in the print faces left.
@@ -129,7 +148,14 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
       animal.radiusX = 68 * scale;
       animal.radiusY = 20 * scale;
       gl.uniform4f(pose, x, y, scale * facing, scale);
-      gl.uniform2f(bend, time * (8.1 + i * 0.42) + i * 1.7, 0);
+      const tailBend = time * (8.1 + i * 0.42) + i * 1.7;
+      const tailCycle = Math.floor((tailBend - 2.1) / (Math.PI * 2));
+      if (animal.tailSoundsRemaining > 0 && animal.tailCycle !== null && tailCycle > animal.tailCycle) {
+        animal.tailSoundsRemaining--;
+        onFishTail?.();
+      }
+      animal.tailCycle = tailCycle;
+      gl.uniform2f(bend, tailBend, 0);
       gl.uniform1f(foreground, i >= fish.length - foregroundFishCount ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 6, vertexCount);
     }
@@ -149,17 +175,31 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         animal.x = flight.direction === 1 ? left : right;
       }
       let step = dt;
-      let stroke = gullStroke(sceneTime * (1 + i * 0.06) + i * 2.3);
-      if (flight.started !== -Infinity) {
+      const baseStroke = gullStroke(sceneTime * (1 + i * 0.06) + i * 2.3);
+      const startled = flight.started !== -Infinity;
+      if (!startled && flight.settleStarted !== -Infinity) {
+        const progress = Math.min((sceneTime - flight.settleStarted) / wingSettleDuration, 1);
+        const eased = progress * progress * (3 - 2 * progress);
+        flight.phaseOffset = flight.settleOffset * (1 - eased);
+        if (progress === 1) flight.settleStarted = -Infinity;
+      }
+      let stroke = baseStroke + flight.phaseOffset;
+      if (startled) {
         const age = sceneTime - flight.started;
-        // Add three wingbeats to the current pose, even during a glide.
-        stroke += gullStroke(Math.min(age * 2.1, 3.1));
+        // Keep the normal motion gentle enough for four or five total downstrokes.
+        const baseAdvance = (baseStroke - flight.startBasePhase + 3) % 3;
+        stroke = flight.startBasePhase + flight.phaseOffset + baseAdvance * .7 +
+          gullStroke(Math.min(age * escapeWingSpeed, 3.1), escapeWingbeats);
         const progress = Math.min(1, Math.max(0, age / escapeDuration));
-        // The speed pulse begins and ends with the three-wingbeat burst.
+        // The speed pulse begins and ends with the wingbeat burst.
         const extraTravel = escapeDistance * (progress - Math.sin(2 * Math.PI * progress) / (2 * Math.PI));
         step += extraTravel - flight.extraTravel;
         flight.extraTravel = extraTravel;
         if (progress === 1) {
+          // Preserve the final pose, then ease back to the natural glide.
+          flight.phaseOffset = (((stroke - baseStroke + .5) % 1 + 1) % 1) - .5;
+          flight.settleOffset = flight.phaseOffset;
+          flight.settleStarted = sceneTime;
           flight.extraTravel = 0;
           flight.started = -Infinity;
         }
@@ -170,12 +210,22 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         flight.started = -Infinity;
         flight.extraTravel = 0;
         animal.radiusX = 0;
+        flight.wingPhase = -1;
+        flight.phaseOffset = 0;
+        flight.settleStarted = -Infinity;
         if (hoveredGull === fish.length + i) hoveredGull = -1;
         continue;
       }
       // A narrowing crop can move the entry edge past an incoming bird.
       animal.x = Math.max(left, Math.min(right, animal.x));
-      const frame = Math.round(stroke * 48) % 48;
+      const wingPhase = ((stroke % 1) + 1) % 1;
+      if (startled && flight.wingPhase >= 0) {
+        const advance = (wingPhase - flight.wingPhase + 1) % 1;
+        const sinceDownstroke = (wingPhase - 0.31 + 1) % 1;
+        if (advance > 0 && advance < .5 && sinceDownstroke < advance) onGullFlap?.();
+      }
+      flight.wingPhase = wingPhase;
+      const frame = Math.round(wingPhase * 48) % 48;
       const lift = Math.sin(stroke * Math.PI * 2);
       const y = flight.altitude + 12 * Math.sin(animal.x / 184 + i) - 1.35 * lift;
       animal.y = y;
@@ -188,5 +238,5 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     gl.disable(gl.BLEND);
     gl.uniform1i(kind, 0);
   }
-  return { draw, startle, approachGulls, leaveGulls() { hoveredGull = -1; } };
+  return { draw, startle, finishTouchFish, approachGulls, leaveGulls() { hoveredGull = -1; } };
 }
