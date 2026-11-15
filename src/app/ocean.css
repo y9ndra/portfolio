@@ -40,6 +40,11 @@
   border-radius: 12px;
 }
 
+.water-stage.water-returning,
+.water-stage.water-returning .water-frame {
+  transition: none;
+}
+
 .water-scene {
   position: absolute;
   left: 50%;
@@ -240,4 +245,10 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
   .water-stage, .water-frame {
     transition: none;
   }
+}
+
+/* Returning visitors have already seen the page entrance. */
+@media (prefers-reduced-motion: no-preference) {
+  body:has(.water-revisited) :is(nav, footer, #about ~ *) { animation: none; }
+  #about:has(.water-revisited) :is(.character-switch, .hero-name, .hero-tagline, .hero-profile-meta, .hero-bio p, .hero-actions-left, .hero-actions-right, .hero-inner > .a4) { animation: none; }
 }

@@ -5,6 +5,25 @@ import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { attachWaterRipples, localSceneHour } from "./waterRipples";
 import WelcomeEntry from "./WelcomeEntry";
+import { isHomeReturnNavigation } from "@/lib/homeReturn";
+
+// This module stays loaded during client-side navigation, but resets on a reload.
+let homeVisitedInDocument = false;
+let lastHomePosition: { top: number; section: string | null } | null = null;
+const HOME_POSITION_KEY = "portfolio-home-position";
+
+function readHomePosition() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(HOME_POSITION_KEY) || "null");
+    if (value && typeof value.top === "number" && Number.isFinite(value.top) && value.top >= 0 &&
+      (typeof value.section === "string" || value.section === null)) return value as { top: number; section: string | null };
+  } catch { /* The page still works without storage. */ }
+  return null;
+}
+
+function saveHomePosition() {
+  try { if (lastHomePosition) sessionStorage.setItem(HOME_POSITION_KEY, JSON.stringify(lastHomePosition)); } catch { /* Storage is optional. */ }
+}
 
 export default function Ocean() {
   const stage = useRef<HTMLElement>(null);
@@ -18,14 +37,67 @@ export default function Ocean() {
   const [welcomeReady, setWelcomeReady] = useState(false);
   const [intro, setIntro] = useState<"pending" | "playing" | "leaving" | "done">("pending");
   const [phase, setPhase] = useState<"open" | "settling" | "settled">("open");
+  const [restoring, setRestoring] = useState(false);
+  const [returnVisit, setReturnVisit] = useState(false);
   const expanded = phase === "open";
 
   useEffect(() => {
+    let restoreFrame = 0;
+    let restoreTimer = 0;
+    let finalRestoreTimer = 0;
+    const cancelRestore = () => {
+      clearTimeout(restoreTimer);
+      clearTimeout(finalRestoreTimer);
+      setRestoring(false);
+    };
     const frame = requestAnimationFrame(() => {
-      if (window.location.hash || window.matchMedia("(prefers-reduced-motion: reduce)").matches) setIntro("done");
+      const returning = homeVisitedInDocument || isHomeReturnNavigation();
+      homeVisitedInDocument = true;
+      if (returning && !lastHomePosition) lastHomePosition = readHomePosition();
+      if (!returning) {
+        lastHomePosition = null;
+        try { sessionStorage.removeItem(HOME_POSITION_KEY); } catch { /* Storage is optional. */ }
+      }
+      if (returning) setReturnVisit(true);
+      if (returning || window.location.hash || window.matchMedia("(prefers-reduced-motion: reduce)").matches) setIntro("done");
       else setIntro("playing");
+
+      const hash = window.location.hash.slice(1);
+      const saved = returning && lastHomePosition && (!hash || hash === lastHomePosition.section) ? lastHomePosition : null;
+      if (saved) {
+        setRestoring(true);
+        setPhase("settled");
+        restoreFrame = requestAnimationFrame(() => {
+          window.scrollTo({ top: saved.top, behavior: "instant" });
+          // Next can apply its own hash scroll after the home page mounts.
+          restoreTimer = window.setTimeout(() => window.scrollTo({ top: saved.top, behavior: "instant" }), 200);
+          finalRestoreTimer = window.setTimeout(() => {
+            window.scrollTo({ top: saved.top, behavior: "instant" });
+            setRestoring(false);
+          }, 950);
+          window.addEventListener("wheel", cancelRestore, { once: true, passive: true });
+          window.addEventListener("touchstart", cancelRestore, { once: true, passive: true });
+          window.addEventListener("pointerdown", cancelRestore, { once: true, passive: true });
+          window.addEventListener("keydown", cancelRestore, { once: true });
+        });
+      } else if (hash) {
+        setPhase("settled");
+        restoreFrame = requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: "instant" }));
+      } else if (returning) {
+        // A direct visit to a detail page has no saved home position. The
+        // portfolio must still open so its sections can render on return.
+        setRestoring(true);
+        setPhase("settled");
+        restoreTimer = window.setTimeout(() => setRestoring(false), 200);
+      } else {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame); cancelAnimationFrame(restoreFrame); clearTimeout(restoreTimer); clearTimeout(finalRestoreTimer);
+      window.removeEventListener("wheel", cancelRestore); window.removeEventListener("touchstart", cancelRestore);
+      window.removeEventListener("pointerdown", cancelRestore); window.removeEventListener("keydown", cancelRestore);
+    };
   }, []);
 
   useEffect(() => {
@@ -107,15 +179,40 @@ export default function Ocean() {
   }, [intro]);
 
   useEffect(() => {
-    if (window.location.hash) {
-      const frame = requestAnimationFrame(() => {
-        setPhase("settled");
-        requestAnimationFrame(() => document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: "instant" }));
+    if (phase !== "settled" || intro !== "done" || restoring) return;
+    let navigating = false;
+    let navigationTimer = 0;
+    let saveTimer = 0;
+    const remember = () => {
+      if (navigating || window.location.pathname !== "/") return;
+      const focusLine = window.innerHeight * .35;
+      const sections = Array.from(document.querySelectorAll<HTMLElement>("main section[id]"));
+      const section = sections.find(element => {
+        const rect = element.getBoundingClientRect();
+        return rect.top <= focusLine && rect.bottom > focusLine;
       });
-      return () => cancelAnimationFrame(frame);
-    }
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
+      lastHomePosition = { top: window.scrollY, section: section?.id ?? null };
+      clearTimeout(saveTimer);
+      saveTimer = window.setTimeout(saveHomePosition, 150);
+    };
+    const rememberDeparture = (event: MouseEvent) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !(event.target instanceof Element)) return;
+      const link = event.target.closest<HTMLAnchorElement>('a[href^="/projects"], a[href^="/blog/"]');
+      const card = event.target.closest(".project-circle-card.front");
+      if ((!link || link.target === "_blank") && (!card || event.target.closest("a, button"))) return;
+      remember();
+      const section = event.target.closest<HTMLElement>("section[id]");
+      lastHomePosition = { top: window.scrollY, section: section?.id ?? lastHomePosition?.section ?? null };
+      clearTimeout(saveTimer);
+      saveHomePosition();
+      navigating = true;
+      navigationTimer = window.setTimeout(() => { navigating = false; }, 1500);
+    };
+    remember();
+    window.addEventListener("scroll", remember, { passive: true });
+    document.addEventListener("click", rememberDeparture, true);
+    return () => { clearTimeout(navigationTimer); clearTimeout(saveTimer); saveHomePosition(); window.removeEventListener("scroll", remember); document.removeEventListener("click", rememberDeparture, true); };
+  }, [phase, intro, restoring]);
 
   useEffect(() => {
     if (phase === "settling" || intro !== "done") return;
@@ -189,7 +286,7 @@ export default function Ocean() {
   }, [expanded, phase, intro]);
 
   return (
-    <section ref={stage} data-phase={phase} className={`water-stage${expanded ? " water-expanded" : ""}`} aria-label="Tidal inlet with interactive waves">
+    <section ref={stage} data-phase={phase} className={`water-stage${expanded ? " water-expanded" : ""}${restoring ? " water-returning" : ""}${returnVisit ? " water-revisited" : ""}`} aria-label="Tidal inlet with interactive waves">
       {intro === "pending" ? <div className="welcome-entry" aria-hidden="true" /> : intro !== "done" && <WelcomeEntry leaving={intro === "leaving"} onSkip={() => setIntro("leaving")} onReady={setWelcomeReady} />}
       <div
         className="water-frame"
