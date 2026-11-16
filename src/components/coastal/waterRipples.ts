@@ -221,7 +221,7 @@ void main() {
     swell -= deflection / printSize;
   }
   vec2 slope = vec2(0.0);
-  for (int i = 0; i < 8; i++) {
+  if (water > 0.0) for (int i = 0; i < 8; i++) {
     float age = time - ripples[i].z;
     if (ripples[i].w > 0.0 && age >= 0.0 && age < 3.0) {
       // Foreshortened rings: a travelling wave packet with damping and
@@ -232,6 +232,9 @@ void main() {
       float radius = length(delta);
       float front = radius - age * mix(0.035, 0.08, rippleDepth);
       float width = 0.025 + age * 0.008;
+      // Outside this envelope the wave is effectively invisible. Avoid the
+      // expensive trigonometry for the rest of the water surface.
+      if (abs(front) > width * 4.0) continue;
       float phase = front * 220.0;
       float envelope = exp(-front * front / (width * width))
         * exp(-age * 1.5) / (1.0 + radius * 15.0)
@@ -246,7 +249,9 @@ void main() {
   vec2 source = uv + swell + offset;
   vec3 color = sceneInk(source);
   float foreground = 0.;
-  if (sunHour >= 0.) foreground = foregroundCoverage(source, color);
+  // Every part of the foreground mask is zero below this point, so avoid an
+  // extra scenery texture sample for underwater pixels.
+  if (sunHour >= 0. && source.y * 640. < 245.) foreground = foregroundCoverage(source, color);
   float sunDisc = 0.;
   vec3 visibleSunColor = vec3(1., .91, .72);
   if (sunHour >= 6. && sunHour <= 18.) {
@@ -285,32 +290,34 @@ void main() {
 
     // Sunlight enters along the whole surface, with uneven, drifting shafts.
     float illumination = smoothstep(6., 6.3, sunHour) * (1. - smoothstep(17.7, 18., sunHour));
-    float depth = max(uv.y - .505, 0.);
-    // Project back to the point where a ray from the sun entered the water.
-    // Refraction bends it towards vertical while retaining the sun's direction.
-    float refraction = depth * .55 / max(.505 - sunCenter.y, .08);
-    float entryX = (uv.x + refraction * sunCenter.x) / (1. + refraction);
-    float drift = .0025 * sin(time * .22);
-    float rayX = entryX + drift;
-    float rays = lightShaft(rayX, .075, .012) * .45
-      + lightShaft(rayX, .145, .029) * .68
-      + lightShaft(rayX, .245, .009) * .43
-      + lightShaft(rayX, .325, .022) * .74
-      + lightShaft(rayX, .455, .015) * .50
-      + lightShaft(rayX, .535, .035) * .72
-      + lightShaft(rayX, .66, .011) * .45
-      + lightShaft(rayX, .735, .026) * .63
-      + lightShaft(rayX, .85, .014) * .55
-      + lightShaft(rayX, .94, .031) * .52;
-    vec2 entry = vec2(entryX, .49);
-    float lighthouseShadow = blocksSun(sunCenter, entry, vec2(.589, .27), .012);
-    float canopyShadow = blocksSun(sunCenter, entry, vec2(.72, .145), .072);
-    float trunkShadow = blocksSun(sunCenter, entry, vec2(.69, .27), .013);
-    float shadow = max(lighthouseShadow, max(canopyShadow * .8, trunkShadow));
-    float depthFade = smoothstep(.505, .54, uv.y) * (1. - smoothstep(.66, .87, uv.y));
-    float openWater = smoothstep(.015, .08, color.b - color.r) * smoothstep(.24, .42, color.g);
-    float light = illumination * depthFade * openWater * min(rays, 1.) * .40 * (1. - shadow * .88);
-    color = mix(color, vec3(.91, .89, .67), light);
+    if (illumination > 0. && uv.y > .505 && uv.y < .87) {
+      float depth = max(uv.y - .505, 0.);
+      // Project back to the point where a ray from the sun entered the water.
+      // Refraction bends it towards vertical while retaining the sun's direction.
+      float refraction = depth * .55 / max(.505 - sunCenter.y, .08);
+      float entryX = (uv.x + refraction * sunCenter.x) / (1. + refraction);
+      float drift = .0025 * sin(time * .22);
+      float rayX = entryX + drift;
+      float rays = lightShaft(rayX, .075, .012) * .45
+        + lightShaft(rayX, .145, .029) * .68
+        + lightShaft(rayX, .245, .009) * .43
+        + lightShaft(rayX, .325, .022) * .74
+        + lightShaft(rayX, .455, .015) * .50
+        + lightShaft(rayX, .535, .035) * .72
+        + lightShaft(rayX, .66, .011) * .45
+        + lightShaft(rayX, .735, .026) * .63
+        + lightShaft(rayX, .85, .014) * .55
+        + lightShaft(rayX, .94, .031) * .52;
+      vec2 entry = vec2(entryX, .49);
+      float lighthouseShadow = blocksSun(sunCenter, entry, vec2(.589, .27), .012);
+      float canopyShadow = blocksSun(sunCenter, entry, vec2(.72, .145), .072);
+      float trunkShadow = blocksSun(sunCenter, entry, vec2(.69, .27), .013);
+      float shadow = max(lighthouseShadow, max(canopyShadow * .8, trunkShadow));
+      float depthFade = smoothstep(.505, .54, uv.y) * (1. - smoothstep(.66, .87, uv.y));
+      float openWater = smoothstep(.015, .08, color.b - color.r) * smoothstep(.24, .42, color.g);
+      float light = illumination * depthFade * openWater * min(rays, 1.) * .40 * (1. - shadow * .88);
+      color = mix(color, vec3(.91, .89, .67), light);
+    }
 
   }
   if (printPoint.y < 200.) {
@@ -336,23 +343,26 @@ void main() {
     vec3 warmTint = mix(vec3(1.08, 1.015, .94), vec3(1.16, 1.035, .90), horizon);
     color = sceneColor * mix(vec3(1.), warmTint, warm * .55);
 
-    // The rotating lamp casts a soft beam across the night sky.
-    vec2 lampPoint = vec2(.589, .226) * printSize;
-    vec2 fromLamp = printPoint - lampPoint;
-    float sweep = cos(time * .22);
-    float facing = .5 + .5 * sign(fromLamp.x) * sweep;
-    float beamWidth = 5. + abs(fromLamp.x) * .065;
-    float beamHeight = fromLamp.y + abs(fromLamp.x) * .035;
-    float beam = exp(-pow(beamHeight / beamWidth, 2.))
-      * exp(-abs(fromLamp.x) / 310.)
-      * smoothstep(8., 32., abs(fromLamp.x))
-      * (1. - foreground) * (1. - day);
-    color = mix(color, vec3(.82, .75, .57), beam * facing * .32);
+    // The lamp contributes nothing in full daylight.
+    if (day < 1.) {
+      // The rotating lamp casts a soft beam across the night sky.
+      vec2 lampPoint = vec2(.589, .226) * printSize;
+      vec2 fromLamp = printPoint - lampPoint;
+      float sweep = cos(time * .22);
+      float facing = .5 + .5 * sign(fromLamp.x) * sweep;
+      float beamWidth = 5. + abs(fromLamp.x) * .065;
+      float beamHeight = fromLamp.y + abs(fromLamp.x) * .035;
+      float beam = exp(-pow(beamHeight / beamWidth, 2.))
+        * exp(-abs(fromLamp.x) / 310.)
+        * smoothstep(8., 32., abs(fromLamp.x))
+        * (1. - foreground) * (1. - day);
+      color = mix(color, vec3(.82, .75, .57), beam * facing * .32);
 
-    float lampDistance = length(fromLamp);
-    float lamp = (1. - smoothstep(3., 7., lampDistance)) * (1. - day);
-    float halo = exp(-lampDistance / 22.) * (1. - day);
-    color = mix(color, vec3(1., .78, .43), lamp * .85 + halo * .28);
+      float lampDistance = length(fromLamp);
+      float lamp = (1. - smoothstep(3., 7., lampDistance)) * (1. - day);
+      float halo = exp(-lampDistance / 22.) * (1. - day);
+      color = mix(color, vec3(1., .78, .43), lamp * .85 + halo * .28);
+    }
   }
   if (sunHour >= 0. && uv.y > .44 && uv.y < .52) {
     bool sunVisible = sunHour >= 6. && sunHour < 18.;
@@ -369,7 +379,7 @@ void main() {
     float strength = sunVisible ? .22 : .09;
     color = mix(color, glintColor, min(glints, 1.) * skyTime * visibleWater * strength);
   }
-  if (sunHour >= 0.) {
+  if (((sunHour > 4.9 && sunHour < 6.7) || (sunHour > 17.1 && sunHour < 19.15)) && uv.y < .43) {
     // A lingering glow marks where the sun is about to rise or has just set.
     float dawn = smoothstep(4.9, 5.8, sunHour) * (1. - smoothstep(6.38, 6.7, sunHour));
     float dusk = smoothstep(17.1, 17.55, sunHour) * (1. - smoothstep(18.25, 19.15, sunHour));
@@ -426,23 +436,25 @@ void main() {
     float halo = exp(-distanceToMoon / 100.) * sky * night * moonlight;
     color = mix(color, vec3(.53, .66, .78), halo * .22);
 
-    float depth = max(uv.y - .505, 0.);
-    float refraction = depth * .55 / max(.505 - moonCenter.y, .08);
-    float entryX = (uv.x + refraction * moonCenter.x) / (1. + refraction);
-    float rayX = entryX + .0025 * sin(time * .22);
-    float rays = lightShaft(rayX, .145, .029) * .45
-      + lightShaft(rayX, .325, .022) * .55
-      + lightShaft(rayX, .535, .035) * .50
-      + lightShaft(rayX, .735, .026) * .50
-      + lightShaft(rayX, .94, .031) * .40;
-    vec2 entry = vec2(entryX, .49);
-    float shadow = max(blocksSun(moonCenter, entry, vec2(.589, .27), .012),
-      max(blocksSun(moonCenter, entry, vec2(.72, .145), .072) * .8,
-        blocksSun(moonCenter, entry, vec2(.69, .27), .013)));
-    float depthFade = smoothstep(.505, .54, uv.y) * (1. - smoothstep(.66, .87, uv.y));
-    float openWater = smoothstep(.005, .04, color.b - color.r) * smoothstep(.08, .20, color.g);
-    float light = night * moonlight * depthFade * openWater * min(rays, 1.) * .16 * (1. - shadow * .88);
-    color = mix(color, vec3(.49, .64, .72), light);
+    if (uv.y > .505 && uv.y < .87 && moonlight > 0.) {
+      float depth = max(uv.y - .505, 0.);
+      float refraction = depth * .55 / max(.505 - moonCenter.y, .08);
+      float entryX = (uv.x + refraction * moonCenter.x) / (1. + refraction);
+      float rayX = entryX + .0025 * sin(time * .22);
+      float rays = lightShaft(rayX, .145, .029) * .45
+        + lightShaft(rayX, .325, .022) * .55
+        + lightShaft(rayX, .535, .035) * .50
+        + lightShaft(rayX, .735, .026) * .50
+        + lightShaft(rayX, .94, .031) * .40;
+      vec2 entry = vec2(entryX, .49);
+      float shadow = max(blocksSun(moonCenter, entry, vec2(.589, .27), .012),
+        max(blocksSun(moonCenter, entry, vec2(.72, .145), .072) * .8,
+          blocksSun(moonCenter, entry, vec2(.69, .27), .013)));
+      float depthFade = smoothstep(.505, .54, uv.y) * (1. - smoothstep(.66, .87, uv.y));
+      float openWater = smoothstep(.005, .04, color.b - color.r) * smoothstep(.08, .20, color.g);
+      float light = night * moonlight * depthFade * openWater * min(rays, 1.) * .16 * (1. - shadow * .88);
+      color = mix(color, vec3(.49, .64, .72), light);
+    }
 
     float moonDisc = (1. - smoothstep(14., 16., distanceToMoon)) * ridgeVisibility * (1. - foreground);
     // A faint surface texture lets the moon remain legible at the banner's small size.
@@ -566,6 +578,8 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   gl.uniform1i(gl.getUniformLocation(program, "extension"), 2);
   const wildlife = createWildlifeDraw(gl, program, vertices.length / 2 - 6);
   const sounds = createBannerSounds();
+  const playGull = () => sounds.play("gull");
+  const playFish = () => sounds.play("fish");
   const atlasImage = new Image();
   const extensionImage = new Image();
   const cropLocation = gl.getUniformLocation(program, "crop");
@@ -595,6 +609,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   let extensionReady = false;
   let extensionLoading: Promise<void> | undefined;
   let cursor: { x: number; y: number } | null = null;
+  let soundPreparation = 0;
 
   function leaveBanner() {
     cursor = null;
@@ -658,7 +673,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     gl!.uniform1f(sunLocation, getSunHour ? getSunHour() : -1);
     gl!.uniform4fv(rippleLocation, waves);
     gl!.drawArrays(gl!.TRIANGLES, 0, 6);
-    wildlife.draw(elapsed, cropX, mobile.matches, () => sounds.play("gull"), () => sounds.play("fish"));
+    wildlife.draw(elapsed, cropX, mobile.matches, playGull, playFish);
     if (cursor) {
       const screenX = (cursor.x - rect.left) / rect.width;
       const screenY = (cursor.y - rect.top) / rect.height;
@@ -675,7 +690,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
         leaveBanner();
       }
     }
-    canvas.style.opacity = "1";
+    if (canvas.style.opacity !== "1") canvas.style.opacity = "1";
   }
   function draw(now: number) {
     frame = 0;
@@ -738,6 +753,13 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   }
   function sync() {
     const active = allowed();
+    if (active && !soundPreparation) {
+      // Prepare these tiny samples off the first touch, after the entry has
+      // had time to paint, so creating audio players cannot stall a gesture.
+      soundPreparation = window.setTimeout(() => {
+        if (!disposed) { sounds.prepareWater(); sounds.prepareFish(); sounds.prepareGull(); }
+      }, 4000);
+    }
     if (active && !frame) frame = requestAnimationFrame(draw);
     else if (!active) stop();
     onState(active || (paused && ready && visible && !document.hidden && !motion.matches && !connection?.saveData && !unavailable && (!needsExtension() || extensionReady)), !unavailable);
@@ -834,6 +856,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     setPaused(value) { paused = value; sync(); },
     dispose() {
       disposed = true;
+      clearTimeout(soundPreparation);
       stop();
       sizeObserver.disconnect();
       visibilityObserver.disconnect();

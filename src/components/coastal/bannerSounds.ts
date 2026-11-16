@@ -20,11 +20,19 @@ export function createBannerSounds() {
   });
 
   return {
+    prepareWater() {
+      if (!isSoundEnabled() || waterSample) return;
+      try {
+        waterSample = new Audio("/assets/sound/banner-water.mp3");
+        waterSample.preload = "auto";
+        waterSample.load();
+      } catch { /* Audio is optional when playback is unavailable. */ }
+    },
     prepareFish() {
       if (!isSoundEnabled()) return;
       try {
         fishSamples.forEach((group, index) => {
-          while (group.length < 2) {
+          while (group.length < 1) {
             const sample = new Audio(`/assets/sound/banner-fish${index ? "-alt" : ""}.mp3`);
             sample.preload = "auto";
             sample.load();
@@ -36,7 +44,7 @@ export function createBannerSounds() {
     prepareGull() {
       if (!isSoundEnabled()) return;
       try {
-        while (gullSamples.length < 2) {
+        while (gullSamples.length < 1) {
           const sample = new Audio("/assets/sound/banner-gull.mp3");
           sample.preload = "auto";
           sample.load();
