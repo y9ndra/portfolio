@@ -19,7 +19,7 @@ const LINKS = [
 ];
 
 export default function Navbar() {
-  const [active, setActive] = useState("");
+  const [homeActive, setActive] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const io = useRef<IntersectionObserver | null>(null);
@@ -28,6 +28,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
+  const active = pathname.startsWith("/blog") ? "blog" : pathname.startsWith("/projects") ? "projects" : pathname.startsWith("/open-source") ? "open-source" : homeActive;
 
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
@@ -93,17 +94,6 @@ export default function Navbar() {
     };
   }, []);
 
-  // Set active route highlights for sub-routes
-  useEffect(() => {
-    if (pathname.startsWith("/blog")) {
-      setActive("blog");
-    } else if (pathname.startsWith("/projects")) {
-      setActive("projects");
-    } else if (pathname.startsWith("/open-source")) {
-      setActive("open-source");
-    }
-  }, [pathname]);
-
   // Calculate position in the semi-circular arc
   const getCoordinates = (index: number, total: number) => {
     const radius = 125; // px radius of the arc
@@ -137,6 +127,7 @@ export default function Navbar() {
       }
     };
     
+    const initialFrame = requestAnimationFrame(() => {
     if (isSubRoute) {
       const saved = sessionStorage.getItem("homeScrollProgress");
       if (saved) {
@@ -148,11 +139,12 @@ export default function Navbar() {
         setScrollProgress(ratio);
       }
     } else {
-      window.addEventListener("scroll", handleProgress, { passive: true });
       handleProgress();
     }
+    });
+    if (!isSubRoute) window.addEventListener("scroll", handleProgress, { passive: true });
     
-    return () => window.removeEventListener("scroll", handleProgress);
+    return () => { cancelAnimationFrame(initialFrame); window.removeEventListener("scroll", handleProgress); };
   }, [pathname]);
 
   // Auto-collapse radial menu on actual scroll
@@ -216,27 +208,57 @@ export default function Navbar() {
 
     if (typeof document.startViewTransition === "function") {
       root.classList.add("theme-orbit-reveal");
+      const profileBounds = document.querySelector("#about .hero-profile .character-switch")?.getBoundingClientRect();
+      const banner = document.querySelector<HTMLElement>("#about > .water-stage .water-frame");
+      let bannerShade: HTMLDivElement | undefined;
+      if (banner && CSS.supports("backdrop-filter", "brightness(.78)") && CSS.supports("mask-image", "radial-gradient(circle, black, transparent)")) {
+        bannerShade = document.createElement("div");
+        bannerShade.className = "theme-orbit-banner-shade";
+        bannerShade.style.maskImage = theme === "dark" ? "linear-gradient(black, black)" : "linear-gradient(transparent, transparent)";
+        banner.append(bannerShade);
+        root.classList.add("theme-orbit-water-shading");
+      }
+      const bannerBounds = bannerShade?.getBoundingClientRect();
       const transition = document.startViewTransition(applyTheme);
       transition.ready.then(() => {
         const orbitRadius = track.offsetWidth / 2;
         const centerX = window.innerWidth / 2;
         const centerY = window.innerHeight;
         const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.35;
-        const frames = Array.from({ length: 41 }, (_, index) => {
+        const makeFrames = (offsetX = 0, offsetY = 0) => Array.from({ length: 41 }, (_, index) => {
           const progress = index / 40;
           const x = centerX - orbitRadius * Math.sin(Math.PI * progress);
           const y = centerY + orbitRadius * Math.cos(Math.PI * progress);
           const radius = Math.pow(progress, 1.45) * maxRadius;
-          return { clipPath: `circle(${radius}px at ${x}px ${y}px)` };
+          return { clipPath: `circle(${radius}px at ${x - offsetX}px ${y - offsetY}px)` };
         });
-        root.animate(frames, {
+        const timing = {
           duration: 2500,
           easing: "cubic-bezier(.37,0,.21,1)",
-          fill: "forwards",
+          fill: "forwards" as const,
+        };
+        root.animate(makeFrames(), {
+          ...timing,
           pseudoElement: "::view-transition-new(root)",
         });
+        if (profileBounds) root.animate(makeFrames(profileBounds.left, profileBounds.top), {
+          ...timing,
+          pseudoElement: "::view-transition-new(coastal-profile)",
+        });
+        if (bannerShade && bannerBounds) {
+          const shades = Array.from({ length: 41 }, (_, index) => {
+            const progress = index / 40;
+            const x = centerX - orbitRadius * Math.sin(Math.PI * progress) - bannerBounds.left;
+            const y = centerY + orbitRadius * Math.cos(Math.PI * progress) - bannerBounds.top;
+            const radius = Math.pow(progress, 1.45) * maxRadius;
+            const inner = nextTheme === "dark" ? "black" : "transparent";
+            const outer = nextTheme === "dark" ? "transparent" : "black";
+            return { maskImage: `radial-gradient(circle at ${x}px ${y}px, ${inner} ${radius}px, ${outer} ${radius + 1}px)` };
+          });
+          bannerShade.animate(shades, timing);
+        }
       }).catch(() => {});
-      transition.finished.finally(() => root.classList.remove("theme-orbit-reveal"));    } else {
+      transition.finished.finally(() => { bannerShade?.remove(); root.classList.remove("theme-orbit-reveal", "theme-orbit-water-shading"); });    } else {
       window.setTimeout(() => {
         root.classList.add("theme-transitioning");
         applyTheme();

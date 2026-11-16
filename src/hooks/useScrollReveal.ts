@@ -38,8 +38,7 @@ function revealKey(element: Element) {
 export function useScrollReveal() {
   useEffect(() => {
     initializeHomeReveals();
-    const io = new IntersectionObserver(
-      (entries) => {
+    const reveal: IntersectionObserverCallback = (entries, observer) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("visible");
@@ -50,12 +49,12 @@ export function useScrollReveal() {
                 try { sessionStorage.setItem(HOME_REVEALS_KEY, JSON.stringify(Array.from(revealedInDocument).filter(item => item.startsWith("/:")))); } catch { /* Storage is optional. */ }
               }
             }
-            io.unobserve(entry.target);
+            observer.unobserve(entry.target);
           }
         });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
-    );
+      };
+    const io = new IntersectionObserver(reveal, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+    const quoteObserver = new IntersectionObserver(reveal, { threshold: 0.65, rootMargin: "0px 0px -40px 0px" });
 
     // Observe initial elements
     const observe = (el: Element) => {
@@ -63,7 +62,7 @@ export function useScrollReveal() {
       if (key && revealedInDocument.has(key)) {
         el.classList.add("visible", "reveal-restored");
       } else {
-        io.observe(el);
+        (el.classList.contains("quote-break-free") ? quoteObserver : io).observe(el);
       }
     };
     const els = document.querySelectorAll("[data-reveal]");
@@ -89,6 +88,7 @@ export function useScrollReveal() {
 
     return () => {
       io.disconnect();
+      quoteObserver.disconnect();
       observer.disconnect();
     };
   }, []);
