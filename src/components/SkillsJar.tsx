@@ -159,7 +159,9 @@ export default function SkillsJar() {
       body.isSensor = isOrganizedMode;
       // Negative group (-1) in Matter.js guarantees Detector.canCollide returns false for all pills
       body.collisionFilter.group = isOrganizedMode ? -1 : 0;
-      body.collisionFilter.mask = isOrganizedMode ? 0 : 0xFFFFFFFF;
+      // The negative group prevents pills colliding with each other while
+      // retaining the collision mask needed by the mouse constraint.
+      body.collisionFilter.mask = 0xFFFFFFFF;
       body.collisionFilter.category = 0x0001;
     });
   }, []);
@@ -419,6 +421,11 @@ export default function SkillsJar() {
     // Setup Mouse and MouseConstraint
     const mouse = Mouse.create(canvas);
     mouse.element.removeEventListener("wheel", (mouse as unknown as { mousewheel: (e: WheelEvent) => void }).mousewheel);
+    // Handle touch ourselves so only gestures starting on a skill capture scrolling.
+    const matterMouse = mouse as unknown as { mousedown: EventListener; mousemove: EventListener; mouseup: EventListener };
+    canvas.removeEventListener("touchstart", matterMouse.mousedown);
+    canvas.removeEventListener("touchmove", matterMouse.mousemove);
+    canvas.removeEventListener("touchend", matterMouse.mouseup);
 
     const mouseConstraint = MouseConstraint.create(engine, {
       mouse,
@@ -428,8 +435,11 @@ export default function SkillsJar() {
       },
     });
     Composite.add(engine.world, mouseConstraint);
+    const constraintState = mouseConstraint as unknown as { body: Matter.Body | null };
+    const mouseState = mouse as unknown as { buttons: number; sourceEvents: { mousedown: Event | null; mousemove: Event | null; mouseup: Event | null } };
 
-    Matter.Events.on(mouseConstraint, "startdrag", (evt: any) => {
+    Matter.Events.on(mouseConstraint, "startdrag", (event) => {
+      const evt = event as typeof event & { body?: Matter.Body };
       cancelAutoFall();
       draggedBodyRef.current = evt.body || mouseConstraint.body;
       if (canvas) canvas.style.cursor = "grabbing";
@@ -460,7 +470,7 @@ export default function SkillsJar() {
         isSensor: true,
         collisionFilter: {
           group: -1,
-          mask: 0,
+          mask: 0xFFFFFFFF,
           category: 0x0001,
         },
       });
@@ -565,9 +575,9 @@ export default function SkillsJar() {
 
       // Strict safety guard: if no drag is actively happening, ensure mouse constraint is completely detached
       if (!draggedBodyRef.current && mouseConstraint) {
-        if (mouseConstraint.constraint.bodyB || (mouseConstraint as any).body) {
+        if (mouseConstraint.constraint.bodyB || constraintState.body) {
           mouseConstraint.constraint.bodyB = null;
-          (mouseConstraint as any).body = null;
+          constraintState.body = null;
           mouse.button = -1;
           mouse.position.x = -99999;
           mouse.position.y = -99999;
@@ -603,17 +613,17 @@ export default function SkillsJar() {
 
       if (mouseConstraint) {
         mouseConstraint.constraint.bodyB = null;
-        (mouseConstraint as any).body = null;
+        constraintState.body = null;
         // Temporarily disable mouse constraint collision mask so it CANNOT re-grab anything while outside!
         mouseConstraint.collisionFilter.mask = 0;
         mouse.position.x = -99999;
         mouse.position.y = -99999;
         mouse.button = -1;
-        (mouse as any).buttons = 0;
-        if ((mouse as any).sourceEvents) {
-          (mouse as any).sourceEvents.mousedown = null;
-          (mouse as any).sourceEvents.mousemove = null;
-          (mouse as any).sourceEvents.mouseup = null;
+        mouseState.buttons = 0;
+        if (mouseState.sourceEvents) {
+          mouseState.sourceEvents.mousedown = null;
+          mouseState.sourceEvents.mousemove = null;
+          mouseState.sourceEvents.mouseup = null;
         }
       }
 
@@ -623,7 +633,8 @@ export default function SkillsJar() {
     };
 
     // When clicking inside the canvas, re-enable mouseConstraint grabbing
-    const handleCanvasPointerDown = () => {
+    const handleCanvasPointerDown = (event: MouseEvent | PointerEvent) => {
+      if ("pointerType" in event && event.pointerType === "touch") return;
       cancelAutoFall();
       if (mouseConstraint) {
         mouseConstraint.collisionFilter.mask = 0xFFFFFFFF;
@@ -632,7 +643,7 @@ export default function SkillsJar() {
 
     // Track mouse on canvas: if dragging and cursor leaves bounds, release and drop immediately!
     const handleMouseMove = (e: MouseEvent) => {
-      if (checkIsOutside(e) && (draggedBodyRef.current || (mouseConstraint as any)?.body)) {
+      if (checkIsOutside(e) && (draggedBodyRef.current || constraintState.body)) {
         releaseDragged();
         return;
       }
@@ -656,7 +667,7 @@ export default function SkillsJar() {
 
     // Global pointer tracker: EVEN IF THE BUTTON IS HELD DOWN, as soon as cursor exits the jar, drop the block!
     const handleGlobalPointerMove = (e: MouseEvent | PointerEvent) => {
-      if (!draggedBodyRef.current && !(mouseConstraint as any)?.body) return;
+      if (!draggedBodyRef.current && !constraintState.body) return;
       if (checkIsOutside(e)) {
         releaseDragged();
       }
@@ -714,6 +725,7 @@ export default function SkillsJar() {
     let lastTouchTime = 0;
     let touchVelocityX = 0;
     let touchVelocityY = 0;
+    let draggingTouch = false;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (mouseConstraint) {
@@ -725,10 +737,18 @@ export default function SkillsJar() {
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
 
+        draggingTouch = bodiesRef.current.some(({ body }) =>
+          Matter.Bounds.contains(body.bounds, { x, y }) &&
+          Matter.Vertices.contains(body.vertices, { x, y })
+        );
+        if (!draggingTouch) return;
+        if (e.cancelable) e.preventDefault();
+        cancelAutoFall();
+
         mouse.position.x = x;
         mouse.position.y = y;
         mouse.button = 0;
-        (mouse as any).buttons = 1;
+        mouseState.buttons = 1;
 
         lastTouchX = x;
         lastTouchY = y;
@@ -738,10 +758,11 @@ export default function SkillsJar() {
 
         applySwipeForceAt(x, y, 0.5, 0.5);
       }
-      if (e.cancelable) e.preventDefault();
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      if (!draggingTouch) return;
+      if (e.cancelable) e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
@@ -770,10 +791,11 @@ export default function SkillsJar() {
 
         applySwipeForceAt(x, y, vx, vy);
       }
-      if (e.cancelable) e.preventDefault();
     };
 
     const handleTouchEnd = () => {
+      if (!draggingTouch) return;
+      draggingTouch = false;
       const releasedBody = draggedBodyRef.current;
       if (releasedBody && !isOrganizedRef.current) {
         const speed = Math.hypot(touchVelocityX, touchVelocityY);
@@ -849,9 +871,10 @@ export default function SkillsJar() {
           if (entry.isIntersecting) {
             isJarVisible = true;
             resumeJarLoop();
-            if (!hasTriggeredAutoFallRef.current) {
-              hasTriggeredAutoFallRef.current = true;
+            if (!hasTriggeredAutoFallRef.current && !autoFallTimerRef.current) {
               autoFallTimerRef.current = setTimeout(() => {
+                autoFallTimerRef.current = null;
+                hasTriggeredAutoFallRef.current = true;
                 triggerAutoFall();
               }, 2000);
             }
@@ -1004,7 +1027,10 @@ export default function SkillsJar() {
 
     // Cleanup on unmount
     return () => {
-      if (autoFallTimerRef.current) clearTimeout(autoFallTimerRef.current);
+      if (autoFallTimerRef.current) {
+        clearTimeout(autoFallTimerRef.current);
+        autoFallTimerRef.current = null;
+      }
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       themeObserver.disconnect();
