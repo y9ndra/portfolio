@@ -7,7 +7,7 @@
   position: relative;
   width: calc(100% - 32px);
   max-width: 650px;
-  margin: 73px auto 0;
+  margin: 54px auto 0;
   transition: max-width var(--banner-motion), margin-top var(--banner-motion);
   z-index: 1;
 }
@@ -215,6 +215,8 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
 }
 
 @media (max-width:600px) {
+  .water-stage:not(.water-expanded) { margin-top: 36px; }
+
   .water-frame {
     aspect-ratio: 16 / 9;
   }
