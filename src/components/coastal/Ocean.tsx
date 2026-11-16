@@ -260,6 +260,7 @@ export default function Ocean() {
     function touchMove(event: TouchEvent) {
       if (event.touches.length !== 1) return;
       const dy = event.touches[0].clientY - touchY;
+      if (expanded && dy < 0 && event.cancelable) event.preventDefault();
       if (!expanded && touchAtTop && dy > 0 && event.cancelable) event.preventDefault();
       if ((expanded && dy < -20) || (!expanded && touchAtTop && dy >= 90 && window.scrollY <= 0)) {
         if (event.cancelable) event.preventDefault();

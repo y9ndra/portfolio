@@ -151,6 +151,18 @@ html:has(.water-stage:not([data-phase="settled"])) {
   touch-action: pinch-zoom;
 }
 
+/* Let mobile browsers handle pull-to-refresh while the entry banner is open. */
+html:has(.water-stage[data-phase="open"]) {
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y pinch-zoom;
+}
+
+/* Keep the centered banner's margin inside its section, not below the viewport. */
+#about:has(> .water-stage.water-expanded) {
+  display: flow-root;
+}
+
 body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, #about > .hero-inner) {
   display: none;
 }
