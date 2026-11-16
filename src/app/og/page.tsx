@@ -59,9 +59,9 @@ export default function OGTestingPage() {
         };
 
         setMetaTags(extracted);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.message || "An error occurred while fetching page metadata.");
+        setError(err instanceof Error ? err.message : "An error occurred while fetching page metadata.");
       } finally {
         setLoading(false);
       }

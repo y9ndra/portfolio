@@ -1,35 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 
 // ogl + the shader are only needed on the client, after first paint
 const Galaxy = dynamic(() => import("./Galaxy"), { ssr: false });
 
+function subscribeTheme(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => observer.disconnect();
+}
+
+const getTheme = () => document.documentElement.getAttribute("data-theme") === "light";
+const serverTheme = () => false;
+const subscribeMounted = () => () => {};
+const getMounted = () => true;
+const serverMounted = () => false;
+
 export default function GalaxyBackground() {
-  const [mounted, setMounted] = useState(false);
-  const [isLight, setIsLight] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    const updateTheme = () => {
-      setIsLight(document.documentElement.getAttribute("data-theme") === "light");
-    };
-
-    updateTheme();
-
-    const observer = new MutationObserver(() => {
-      updateTheme();
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const mounted = useSyncExternalStore(subscribeMounted, getMounted, serverMounted);
+  const isLight = useSyncExternalStore(subscribeTheme, getTheme, serverTheme);
 
   if (!mounted) {
     return null;

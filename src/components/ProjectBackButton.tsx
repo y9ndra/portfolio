@@ -34,6 +34,7 @@ export function ProjectBackButton({
   const [canGoBack, setCanGoBack] = useState<boolean>(false);
 
   useEffect(() => {
+    const frame = requestAnimationFrame(() => {
     try {
       // If user arrived from an external site, fallback cleanly to /projects
       if (document.referrer) {
@@ -80,6 +81,8 @@ export function ProjectBackButton({
       setBackUrl("/projects");
       setCanGoBack(false);
     }
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {

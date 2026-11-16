@@ -10,18 +10,16 @@ function OdometerDigit({ char }: OdometerDigitProps) {
   const [current, setCurrent] = useState(char);
   const [prev, setPrev] = useState<string | null>(null);
 
+  if (char !== current) {
+    setPrev(current);
+    setCurrent(char);
+  }
+
   useEffect(() => {
-    if (char !== current) {
-      setPrev(current);
-      setCurrent(char);
-
-      const timer = setTimeout(() => {
-        setPrev(null);
-      }, 420);
-
-      return () => clearTimeout(timer);
-    }
-  }, [char, current]);
+    if (prev === null) return;
+    const timer = setTimeout(() => setPrev(null), 420);
+    return () => clearTimeout(timer);
+  }, [prev, current]);
 
   return (
     <span className="odometer-slot">
@@ -64,22 +62,19 @@ const getKolkataTime = (): ParsedTime => {
 };
 
 export default function OdometerClock() {
-  const [mounted, setMounted] = useState(false);
   const [timeData, setTimeData] = useState<ParsedTime | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-
     const update = () => {
       setTimeData(getKolkataTime());
     };
 
-    update();
+    const initial = setTimeout(update, 0);
     const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
+    return () => { clearTimeout(initial); clearInterval(interval); };
   }, []);
 
-  if (!mounted || !timeData) {
+  if (!timeData) {
     return <span className="odometer-fallback">--:--:-- --</span>;
   }
 

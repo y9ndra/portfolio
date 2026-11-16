@@ -495,10 +495,10 @@ function WebComparison() {
                   <>
                     <h1 className="mosaic-main-title">W3 Bibliography</h1>
                     <p className="mosaic-p">
-                      - Berners-Lee, T., "Information Management: A Proposal", CERN, March 1989.
+                      - Berners-Lee, T., &quot;Information Management: A Proposal&quot;, CERN, March 1989.
                     </p>
                     <p className="mosaic-p">
-                      - Cailliau, R., "Proposal for W3 Funding", CERN, 1990.
+                      - Cailliau, R., &quot;Proposal for W3 Funding&quot;, CERN, 1990.
                     </p>
                     <p className="mosaic-p" style={{ marginTop: "1rem" }}>
                       <a 
@@ -752,7 +752,7 @@ function InterpreterVsJit() {
             <div className={`jit-step-item ${jitActive === "observe" ? "active" : ""}`}>
               <div className="jit-step-indicator">&darr;</div>
               <div className="jit-step-label">Observe</div>
-              <div className="jit-step-desc">Monitor code for frequently run loops ("hot code")</div>
+              <div className="jit-step-desc">Monitor code for frequently run loops (&quot;hot code&quot;)</div>
             </div>
 
             <div className={`jit-step-item ${jitActive === "compile" ? "active" : ""}`}>
