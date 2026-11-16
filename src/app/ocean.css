@@ -214,6 +214,10 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
   opacity: 1;
 }
 
+.water-stage .water-controls > span.is-dismissed {
+  opacity: 0;
+}
+
 @media (max-width:600px) {
   .water-stage:not(.water-expanded) { margin-top: 36px; }
 
@@ -239,6 +243,10 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
 
   .water-controls>span {
     font-size: 8px;
+    line-height: 1.25;
+    color: rgba(255, 255, 255, .94);
+    background: rgba(0, 0, 0, .3);
+    padding: 3px 5px;
     opacity: 1;
   }
 }

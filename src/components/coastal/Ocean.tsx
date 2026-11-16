@@ -39,6 +39,8 @@ export default function Ocean() {
   const [phase, setPhase] = useState<"open" | "settling" | "settled">("open");
   const [restoring, setRestoring] = useState(false);
   const [returnVisit, setReturnVisit] = useState(false);
+  const [entryHintDismissed, setEntryHintDismissed] = useState(false);
+  const [wildlifeHintDismissed, setWildlifeHintDismissed] = useState(false);
   const expanded = phase === "open";
 
   useEffect(() => {
@@ -119,6 +121,7 @@ export default function Ocean() {
   }, [intro]);
 
   function change(open: boolean) {
+    if (!open) setEntryHintDismissed(true);
     window.scrollTo({ top: 0, behavior: "instant" });
     setPhase(open ? "open" : "settling");
   }
@@ -292,6 +295,9 @@ export default function Ocean() {
         className="water-frame"
         onContextMenu={(event) => event.preventDefault()}
         onDragStart={(event) => event.preventDefault()}
+        onPointerDown={(event) => {
+          if (event.target instanceof Element && !event.target.closest("button")) setWildlifeHintDismissed(true);
+        }}
       >
         <div className="water-scene">
           <Image
@@ -308,7 +314,7 @@ export default function Ocean() {
           <canvas ref={ripples} className="water-ripples" aria-hidden="true" />
         </div>
         <div className="water-controls">
-          {expanded ? <span className="water-intro-hint">Scroll to enter</span> : playing && <span><span className="water-mouse-hint">Move near a gull or tap a fish</span><span className="water-touch-hint">Tap a gull or fish</span></span>}
+          {phase !== "settled" ? <span className={`water-intro-hint${entryHintDismissed ? " is-dismissed" : ""}`} aria-hidden={entryHintDismissed}>Scroll to enter</span> : playing && <span className={wildlifeHintDismissed ? "is-dismissed" : undefined} aria-hidden={wildlifeHintDismissed}><span className="water-mouse-hint">Move near a gull or tap a fish</span><span className="water-touch-hint">Tap a gull or fish</span></span>}
           <div>
             <button disabled={phase === "settling"} onClick={() => change(!expanded)} aria-label={expanded ? "Enter portfolio" : "Expand ocean banner"}>{expanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}</button>
           </div>
