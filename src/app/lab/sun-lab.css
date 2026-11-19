@@ -2,10 +2,12 @@
 body:has(.sun-lab) > nav { display:none; }
 .sun-lab h1 { margin:20px 0; font:normal clamp(28px,5vw,42px) var(--font-serif); }
 .sun-lab-frame { height:auto; aspect-ratio: 1600 / 640; border-radius:10px; }
+[data-theme='dark'] .sun-lab .sun-lab-frame { filter:none; }
 .sun-lab-controls { max-width:650px; margin:24px auto; display:grid; gap:12px; color:var(--t1); }
 .sun-lab-controls span,.sun-lab-controls p { color:var(--t2); }
 .sun-lab-controls input { width:100%; accent-color:var(--t1); }
 .sun-lab-times { display:flex; justify-content:space-between; font:10px var(--font-mono); }
 .sun-lab-controls button { justify-self:start; border:1px solid var(--border-h); border-radius:5px; padding:8px 12px; cursor:pointer; }
-.sun-lab-controls button:disabled { opacity:.45; cursor:default; }
+.sun-lab-presets { display:flex; flex-wrap:wrap; gap:8px; }
+.sun-lab-presets button[aria-pressed="true"] { background:var(--t1); color:var(--bg); border-color:var(--t1); }
 @media(max-width:600px) { .sun-lab { margin-top:36px; } .sun-lab-frame { aspect-ratio:16 / 9; } }

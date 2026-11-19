@@ -34,7 +34,7 @@ void main() {
   gl_Position = vec4(clip.x, -clip.y, 0., 1.);
 }`;
 
-const fragmentSource = `
+const fragmentSource = (atmosphere: string) => `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -176,6 +176,8 @@ float windPath(vec2 p, float head, float altitude, float curlX, float radius, fl
   return max(line, windTrail(head - arc, trail, edge));
 }
 
+${atmosphere}
+
 void main() {
   if (spriteKind != 0) {
     vec4 animal = texture2D(wildlife, screenUV, -0.25);
@@ -247,7 +249,8 @@ void main() {
   }
   vec2 offset = clamp(slope, vec2(-1.5), vec2(1.5)) * vec2(0.009, 0.004) * water;
   vec2 source = uv + swell + offset;
-  vec3 color = sceneInk(source);
+  vec3 ink = sceneInk(source);
+  vec3 color = ink;
   float foreground = 0.;
   // Every part of the foreground mask is zero below this point, so avoid an
   // extra scenery texture sample for underwater pixels.
@@ -287,6 +290,9 @@ void main() {
     color = mix(color, vec3(1., .68, .40), halo * .16 + glow * (.14 + .16 * dusk));
     color = mix(color, vec3(1., .36, .16), horizonHalo * .25);
     visibleSunColor = mix(visibleSunColor, vec3(1., .66, .32), horizonWarmth * .85);
+#ifdef INLET_ATMOSPHERE
+    lightInletSun(sunDisc, visibleSunColor, ink, source, distanceToSun, horizonWarmth);
+#endif
 
     // Sunlight enters along the whole surface, with uneven, drifting shafts.
     float illumination = smoothstep(6., 6.3, sunHour) * (1. - smoothstep(17.7, 18., sunHour));
@@ -320,6 +326,9 @@ void main() {
     }
 
   }
+#ifdef INLET_ATMOSPHERE
+  vec3 beforeWind = color;
+#endif
   if (printPoint.y < 200.) {
     float companion = mix(-320., 2340., fract(time / 8.4 + .76));
     float breeze = windPath(printPoint, windHead, 106., mainCurlX, mainRadius, 132.);
@@ -329,6 +338,9 @@ void main() {
     color = mix(color, vec3(1., .98, .94), breeze * skyMask * .59);
   }
   color += clamp(slope.y * 0.025, -0.035, 0.035) * water;
+#ifdef INLET_ATMOSPHERE
+  vec3 surfaceMotion = color - beforeWind;
+#endif
   if (sunHour >= 0.) {
     float day = daytime(sunHour);
     // Cool the whole print at night while retaining the original painted detail.
@@ -342,6 +354,9 @@ void main() {
     float horizon = smoothstep(.04, .20, uv.y) * (1. - smoothstep(.43, .55, uv.y));
     vec3 warmTint = mix(vec3(1.08, 1.015, .94), vec3(1.16, 1.035, .90), horizon);
     color = sceneColor * mix(vec3(1.), warmTint, warm * .55);
+#ifdef INLET_ATMOSPHERE
+    color = lightInlet(color, ink, surfaceMotion, source, sunHour);
+#endif
 
     // The lamp contributes nothing in full daylight.
     if (day < 1.) {
@@ -379,6 +394,7 @@ void main() {
     float strength = sunVisible ? .22 : .09;
     color = mix(color, glintColor, min(glints, 1.) * skyTime * visibleWater * strength);
   }
+#ifndef INLET_ATMOSPHERE
   if (((sunHour > 4.9 && sunHour < 6.7) || (sunHour > 17.1 && sunHour < 19.15)) && uv.y < .43) {
     // A lingering glow marks where the sun is about to rise or has just set.
     float dawn = smoothstep(4.9, 5.8, sunHour) * (1. - smoothstep(6.38, 6.7, sunHour));
@@ -404,6 +420,7 @@ void main() {
       * (1. - smoothstep(.36, .43, uv.y)) * (1. - foreground);
     color = mix(color, vec3(.98, .48, .23), glow * sky * .64);
   }
+#endif
   if (sunHour >= 0.) {
     // A few steady points of starlight fade in with the night sky.
     float night = 1. - daytime(sunHour);
@@ -473,14 +490,14 @@ export function localSceneHour() {
 /** Animates the water and marine life in the split-view illustration. */
 type WaterScene = { refresh: () => void; setPaused: (paused: boolean) => void; dispose: () => void };
 
-export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number, startPaused = false): WaterScene {
+export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number, startPaused = false, atmosphere = ""): WaterScene {
   let disposed = false;
   let paused = startPaused;
   let scene: WaterScene | undefined;
   let frame = requestAnimationFrame(() => {
     // Let the welcome character paint before preparing the graphics program.
     frame = requestAnimationFrame(() => {
-      void setupWaterRipples(still, canvas, onState, getSunHour, () => disposed, paused).then(result => {
+      void setupWaterRipples(still, canvas, onState, getSunHour, () => disposed, paused, atmosphere).then(result => {
         if (disposed) result?.dispose();
         else { scene = result; scene?.setPaused(paused); }
       }).catch(() => { if (!disposed) onState(false, false); });
@@ -493,7 +510,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   };
 }
 
-async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour: (() => number) | undefined, isCancelled: () => boolean, startPaused: boolean): Promise<WaterScene | undefined> {
+async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour: (() => number) | undefined, isCancelled: () => boolean, startPaused: boolean, atmosphere: string): Promise<WaterScene | undefined> {
   const sceneSurface = canvas.parentElement;
   const surface = canvas.closest<HTMLElement>(".water-frame");
   const gl = canvas.getContext("webgl", { alpha: true, antialias: false, depth: false, premultipliedAlpha: false });
@@ -515,7 +532,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   };
   const fail = () => { release(); onState(false, false); };
   if (!program || !buffer || !texture || !atlasTexture || !extensionTexture) { fail(); return; }
-  for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]] as const) {
+  for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource(atmosphere)]] as const) {
     const shader = gl.createShader(type);
     if (!shader) { fail(); return; }
     shaders.push(shader);
