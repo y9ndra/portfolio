@@ -1,8 +1,8 @@
-// Positions and sizes use the print's 1600 × 640 coordinate system.
+// Spacing, lane, scale and flank colour for each fish in print coordinates.
 const fish = [
-  [0, 14, 0.91], [90, -14, 0.78], [135, 5, 0.80], [190, -24, 0.68],
-  [248, 8, 0.53], [279, -36, 0.58], [332, -4, 0.43], [348, -13, 0.35],
-  [430, 16, 0.72], [550, -15, 0.62],
+  [0, 14, 0.91, 0], [90, -14, 0.78, -1], [135, 5, 0.80, 1], [190, -24, 0.68, 0],
+  [248, 8, 0.53, -1], [279, -36, 0.58, 1], [332, -4, 0.43, 0], [348, -13, 0.35, -1],
+  [430, 16, 0.72, 1], [550, -15, 0.62, -1],
 ];
 const deeperFishLanes = [0, 0, 0, 0, 0, 0, 0, 0, 180, 220];
 const foregroundFishCount = 2;
@@ -111,7 +111,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     for (let i = 0; i < fish.length; i++) {
       const animal = animals[i];
       if (sceneTime < animal.enterAt) continue;
-      const [spacing, lane, size] = fish[i];
+      const [spacing, lane, size, marking] = fish[i];
       // Keep smaller fish farther away while making the foreground easier to see on phones.
       const mobileScale = mobile ? 1.2 + 0.25 * (size - 0.35) / (0.91 - 0.35) : 1;
       const depth = deeperFishLanes[i];
@@ -155,7 +155,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         onFishTail?.();
       }
       animal.tailCycle = tailCycle;
-      gl.uniform2f(bend, tailBend, 0);
+      gl.uniform2f(bend, tailBend, marking);
       gl.uniform1f(foreground, i >= fish.length - foregroundFishCount ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 6, vertexCount);
     }
