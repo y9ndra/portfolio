@@ -4,14 +4,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { attachWaterRipples, localSceneHour } from "@/components/coastal/waterRipples";
-import { inletTwilight } from "./inletTwilight";
+import { inletLighting } from "./inletLighting";
+import pocketInlet from "./inlet-pocket.webp";
+import wideInlet from "./inlet-wide.webp";
 import "./sun-lab.css";
 
 const previews = [
   { label: "First light", hour: 5 + 40 / 60 },
   { label: "Sunrise", hour: 6 + 18 / 60 },
+  { label: "Noon", hour: 12 },
   { label: "Sunset", hour: 17 + 38 / 60 },
   { label: "Afterglow", hour: 18 + 15 / 60 },
+  { label: "Moonrise", hour: 19 },
+  { label: "Midnight", hour: 0 },
 ];
 
 function formatTime(hour: number) {
@@ -33,10 +38,11 @@ export default function SunLab() {
     if (!still.current || !canvas.current) return;
     const scene = attachWaterRipples(
       still.current, canvas.current, (_, available) => setFailed(!available),
-      () => override.current ?? localSceneHour(), false, inletTwilight,
+      () => override.current ?? localSceneHour(), false, { lighting: inletLighting, extendedPoster: true },
     );
     water.current = scene;
     const refresh = () => {
+      if (document.hidden || override.current !== null) return;
       setClock(localSceneHour());
       scene?.refresh();
     };
@@ -55,6 +61,7 @@ export default function SunLab() {
   function choose(hour: number | null) {
     override.current = hour;
     setPreview(hour);
+    if (hour === null) setClock(localSceneHour());
     water.current?.refresh();
   }
 
@@ -63,7 +70,10 @@ export default function SunLab() {
     <Link href="/">← Portfolio</Link>
     <h1>Sun and moon over the inlet</h1>
     <div className="water-frame sun-lab-frame" onDragStart={event => event.preventDefault()} onContextMenu={event => event.preventDefault()}>
-      <Image ref={still} className="water-image" src="/assets/water/inlet-unlit.webp" width={1600} height={640} alt="An inlet with a lighthouse and fish beneath the water" draggable={false} preload unoptimized />
+      <picture>
+        <source media="(max-width: 600px)" srcSet={pocketInlet.src} />
+        <Image ref={still} className="water-image" src={wideInlet} alt="A lighthouse and windswept pines above a kelp-lined inlet" draggable={false} loading="eager" fetchPriority="high" unoptimized />
+      </picture>
       <canvas ref={canvas} className="water-ripples" aria-hidden="true" />
     </div>
     <div className="sun-lab-controls">

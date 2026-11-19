@@ -241,18 +241,6 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
     aspect-ratio: 16 / 8.4;
   }
 
-  .sun-lab-frame::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: url('/assets/water/inlet-mobile.webp') center / cover no-repeat;
-  }
-
-  .sun-lab-frame .water-image {
-    inset: 14.444% 0 auto;
-    height: 71.112%;
-  }
-
   .water-controls>span {
     font-size: 8px;
     line-height: 1.25;
