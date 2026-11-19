@@ -55,13 +55,6 @@
   pointer-events: none;
 }
 
-.water-scene::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url('/assets/water/inlet-mobile.webp') center / cover no-repeat;
-}
-
 .water-image {
   position: absolute;
   inset: 0;
@@ -73,8 +66,8 @@
 }
 
 .water-scene .water-image {
-  inset: 14.444% 0 auto;
-  height: 71.112%;
+  inset: 0;
+  height: 100%;
 }
 
 .water-ripples {
@@ -239,18 +232,6 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
 
   #about > .water-stage:not(.water-expanded) .water-frame {
     aspect-ratio: 16 / 8.4;
-  }
-
-  .sun-lab-frame::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: url('/assets/water/inlet-mobile.webp') center / cover no-repeat;
-  }
-
-  .sun-lab-frame .water-image {
-    inset: 14.444% 0 auto;
-    height: 71.112%;
   }
 
   .water-controls>span {

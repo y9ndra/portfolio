@@ -3,8 +3,17 @@ import { createBannerSounds } from "./bannerSounds";
 import wildlifeAtlas from "../../../public/assets/water/inlet-motion.webp";
 
 const atlasSize = "vec2(512., 1024.)";
+const extendedHeight = 45 / 32;
+type SceneArtwork = { lighting?: { vertex: string; fragment: string }; extendedPoster?: boolean };
 
-const vertexSource = `
+const skyPath = `
+vec2 skyPath(float progress) {
+  float risingY = mix(.23, .32, progress) - .22 * sin(progress * 3.14159265);
+  float settingY = mix(.055, .32, pow(max(0., progress * 2. - 1.), 3.3));
+  return vec2(mix(.10, .90, progress), mix(risingY, settingY, smoothstep(.48, .58, progress)));
+}`;
+
+const vertexSource = ({ lighting }: SceneArtwork) => `
 attribute vec2 position;
 varying vec2 screenUV;
 varying vec2 printUV;
@@ -13,8 +22,11 @@ uniform mediump float viewHeight;
 uniform mediump int spriteKind;
 uniform vec4 spriteRegion, spritePose;
 uniform vec2 spriteBend;
+${lighting ? `uniform mediump float sunHour;\n${skyPath}\n${lighting.vertex}` : ""}
 void main() {
+  ${lighting ? "placeLights(sunHour);" : ""}
   screenUV = vec2(position.x, -position.y) * 0.5 + 0.5;
+  ${lighting ? "fishDetail = vec3(screenUV, spriteBend.y);" : ""}
   printUV = vec2(0.);
   gl_Position = vec4(position, 0.0, 1.0);
   if (spriteKind == 0) return;
@@ -24,6 +36,7 @@ void main() {
     // A bending wave runs down the spine. The head leads and the flexible
     // tail swings farther, shortening in projection when it turns away.
     float spine = smoothstep(0.22, 0.96, local.x / spriteRegion.z);
+    ${lighting ? "local.y += (local.y - spriteRegion.w * .5) * max(spriteBend.y, 0.) * (1. - spine) * .16;" : ""}
     float beat = sin(spriteBend.x - spine * 2.1);
     local.y += spine * spine * beat * 5.2;
     local.x -= spine * beat * beat * 6.;
@@ -34,7 +47,7 @@ void main() {
   gl_Position = vec4(clip.x, -clip.y, 0., 1.);
 }`;
 
-const fragmentSource = `
+const fragmentSource = ({ lighting, extendedPoster }: SceneArtwork) => `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -48,20 +61,25 @@ uniform mediump vec2 crop;
 uniform mediump float viewHeight;
 uniform mediump float fishForeground;
 uniform float time;
-uniform float sunHour;
+${lighting ? "uniform mediump float sunHour;" : "uniform float sunHour;"}
 uniform vec3 stars[11];
 uniform vec4 ripples[8];
 varying vec2 screenUV;
 varying vec2 printUV;
 
-vec3 sceneInk(vec2 point) {
-  vec3 original = texture2D(scene, clamp(point, .001, .999), -0.35).rgb;
+vec3 sceneInk(vec2 point, float bias) {
+${extendedPoster ? `
+  vec2 posterUV = vec2(point.x, (point.y - .5) / ${extendedHeight} + .5);
+  return texture2D(scene, clamp(posterUV, .001, .999), bias).rgb;` : `
+  vec3 original = texture2D(scene, clamp(point, .001, .999), bias).rgb;
   if (viewHeight < 1.01 || (point.y >= .06 && point.y <= .94)) return original;
   vec2 extended = vec2(point.x, (point.y - .5) / viewHeight + .5);
-  vec3 extra = texture2D(extension, clamp(extended, .001, .999), -0.35).rgb;
+  vec3 extra = texture2D(extension, clamp(extended, .001, .999), bias).rgb;
   float originalWeight = smoothstep(0., .06, point.y) * (1. - smoothstep(.94, 1., point.y));
-  return mix(extra, original, originalWeight);
+  return mix(extra, original, originalWeight);`}
 }
+
+vec3 sceneInk(vec2 point) { return sceneInk(point, -.35); }
 
 float daytime(float hour) {
   return smoothstep(5.1, 7.5, hour) * (1. - smoothstep(16.9, 19.3, hour));
@@ -73,12 +91,7 @@ float twilight(float hour) {
   return max(dawn, dusk);
 }
 
-vec2 skyPath(float progress) {
-  float risingY = mix(.23, .32, progress) - .22 * sin(progress * 3.14159265);
-  // Descend smoothly towards the right ridge during the second half.
-  float settingY = mix(.055, .32, pow(max(0., progress * 2. - 1.), 3.3));
-  return vec2(mix(.10, .90, progress), mix(risingY, settingY, smoothstep(.48, .58, progress)));
-}
+${skyPath}
 
 // Trace a ray from the sun to the water surface through a simplified object silhouette.
 float blocksSun(vec2 sun, vec2 entry, vec2 objectCenter, float halfWidth) {
@@ -176,9 +189,14 @@ float windPath(vec2 p, float head, float altitude, float curlX, float radius, fl
   return max(line, windTrail(head - arc, trail, edge));
 }
 
+${lighting ? "#define INLET_LIGHTING\n" + lighting.fragment : ""}
+
 void main() {
   if (spriteKind != 0) {
     vec4 animal = texture2D(wildlife, screenUV, -0.25);
+#ifdef INLET_LIGHTING
+    if (animal.a < .001) { gl_FragColor = vec4(0.); return; }
+#endif
     if (spriteKind == 1 && fishForeground < .5) {
       // The foreground kelp and rocks interrupt the open-water channel.
       vec3 ink = sceneInk(printUV + vec2(kelpSway(printUV), 0.));
@@ -187,10 +205,15 @@ void main() {
       animal *= mix(1., openWater, banks);
     }
     if (sunHour >= 0.) {
+#ifdef INLET_LIGHTING
+      if (spriteKind == 1) animal.rgb = fishInk(animal, fishDetail);
+      animal.rgb *= wildlifeLight(printUV, spriteKind == 1);
+#else
       float day = daytime(sunHour);
       vec3 nightTint = spriteKind == 1 ? vec3(.37, .54, .65) : vec3(.45, .52, .64);
       animal.rgb *= mix(nightTint, vec3(1.), day);
       animal.rgb *= mix(vec3(1.), vec3(1.06, 1.01, .95), twilight(sunHour) * .45);
+#endif
     }
     gl_FragColor = animal;
     return;
@@ -247,10 +270,12 @@ void main() {
   }
   vec2 offset = clamp(slope, vec2(-1.5), vec2(1.5)) * vec2(0.009, 0.004) * water;
   vec2 source = uv + swell + offset;
-  vec3 color = sceneInk(source);
+  vec3 ink = sceneInk(source);
+  vec3 color = ink;
   float foreground = 0.;
   // Every part of the foreground mask is zero below this point, so avoid an
   // extra scenery texture sample for underwater pixels.
+#ifndef INLET_LIGHTING
   if (sunHour >= 0. && source.y * 640. < 245.) foreground = foregroundCoverage(source, color);
   float sunDisc = 0.;
   vec3 visibleSunColor = vec3(1., .91, .72);
@@ -320,6 +345,7 @@ void main() {
     }
 
   }
+#endif
   if (printPoint.y < 200.) {
     float companion = mix(-320., 2340., fract(time / 8.4 + .76));
     float breeze = windPath(printPoint, windHead, 106., mainCurlX, mainRadius, 132.);
@@ -328,9 +354,20 @@ void main() {
     float skyMask = smoothstep(.54, .72, dot(color, vec3(.299, .587, .114)));
     color = mix(color, vec3(1., .98, .94), breeze * skyMask * .59);
   }
+#ifndef INLET_LIGHTING
   color += clamp(slope.y * 0.025, -0.035, 0.035) * water;
+#endif
   if (sunHour >= 0.) {
     float day = daytime(sunHour);
+#ifdef INLET_LIGHTING
+    color = lightInlet(ink, source, uv) + (color - ink) * mix(.22, .84, day);
+    if (water > 0. && dot(slope, slope) > .00001) {
+      vec4 body = sunHour >= 6. && sunHour < 18. ? sunLight : moonLight;
+      vec2 facing = normalize((body.xy - uv) * vec2(2.5, 1.));
+      float highlight = clamp(dot(slope, facing), -1., 1.) * water;
+      color += mix(vec3(.009, .018, .024), vec3(.043, .052, .048), skyDay) * highlight;
+    }
+#else
     // Cool the whole print at night while retaining the original painted detail.
     vec3 nightColor = color * vec3(.30, .42, .57);
     float skyArea = 1. - smoothstep(.20, .44, uv.y);
@@ -342,9 +379,13 @@ void main() {
     float horizon = smoothstep(.04, .20, uv.y) * (1. - smoothstep(.43, .55, uv.y));
     vec3 warmTint = mix(vec3(1.08, 1.015, .94), vec3(1.16, 1.035, .90), horizon);
     color = sceneColor * mix(vec3(1.), warmTint, warm * .55);
+#endif
 
     // The lamp contributes nothing in full daylight.
     if (day < 1.) {
+#ifdef INLET_LIGHTING
+      if (abs(printPoint.y - 144.) < 128.) foreground = foregroundCoverage(source, ink);
+#endif
       // The rotating lamp casts a soft beam across the night sky.
       vec2 lampPoint = vec2(.589, .226) * printSize;
       vec2 fromLamp = printPoint - lampPoint;
@@ -364,6 +405,7 @@ void main() {
       color = mix(color, vec3(1., .78, .43), lamp * .85 + halo * .28);
     }
   }
+#ifndef INLET_LIGHTING
   if (sunHour >= 0. && uv.y > .44 && uv.y < .52) {
     bool sunVisible = sunHour >= 6. && sunHour < 18.;
     float elapsedHours = sunVisible ? sunHour - 6. : (sunHour >= 18. ? sunHour - 18. : sunHour + 6.);
@@ -462,6 +504,7 @@ void main() {
     color = mix(color, vec3(.91, .93, .87) - detail, moonDisc * .96);
   }
   color = mix(color, visibleSunColor, sunDisc * .96);
+#endif
   gl_FragColor = vec4(color, 1.0);
 }`;
 
@@ -473,14 +516,14 @@ export function localSceneHour() {
 /** Animates the water and marine life in the split-view illustration. */
 type WaterScene = { refresh: () => void; setPaused: (paused: boolean) => void; dispose: () => void };
 
-export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number, startPaused = false): WaterScene {
+export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour?: () => number, startPaused = false, artwork: SceneArtwork = {}): WaterScene {
   let disposed = false;
   let paused = startPaused;
   let scene: WaterScene | undefined;
   let frame = requestAnimationFrame(() => {
     // Let the welcome character paint before preparing the graphics program.
     frame = requestAnimationFrame(() => {
-      void setupWaterRipples(still, canvas, onState, getSunHour, () => disposed, paused).then(result => {
+      void setupWaterRipples(still, canvas, onState, getSunHour, () => disposed, paused, artwork).then(result => {
         if (disposed) result?.dispose();
         else { scene = result; scene?.setPaused(paused); }
       }).catch(() => { if (!disposed) onState(false, false); });
@@ -493,7 +536,7 @@ export function attachWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasEl
   };
 }
 
-async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour: (() => number) | undefined, isCancelled: () => boolean, startPaused: boolean): Promise<WaterScene | undefined> {
+async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElement, onState: (playing: boolean, available: boolean) => void, getSunHour: (() => number) | undefined, isCancelled: () => boolean, startPaused: boolean, artwork: SceneArtwork): Promise<WaterScene | undefined> {
   const sceneSurface = canvas.parentElement;
   const surface = canvas.closest<HTMLElement>(".water-frame");
   const gl = canvas.getContext("webgl", { alpha: true, antialias: false, depth: false, premultipliedAlpha: false });
@@ -515,7 +558,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   };
   const fail = () => { release(); onState(false, false); };
   if (!program || !buffer || !texture || !atlasTexture || !extensionTexture) { fail(); return; }
-  for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]] as const) {
+  for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource(artwork)], [gl.FRAGMENT_SHADER, fragmentSource(artwork)]] as const) {
     const shader = gl.createShader(type);
     if (!shader) { fail(); return; }
     shaders.push(shader);
@@ -599,6 +642,9 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   let next = 0;
   let frame = 0;
   const interval = 1000 / 30;
+  let pixelRatioLimit = 2;
+  let sampleStart = 0;
+  let sampledFrames = 0;
   let nextDraw = 0;
   let lastTouch = -Infinity;
   let visible = false;
@@ -617,19 +663,19 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   }
 
   function needsExtension() {
-    return mobile.matches || sceneSurface !== surface;
+    return !artwork.extendedPoster && (mobile.matches || sceneSurface !== surface);
   }
 
   function resize() {
     const width = sceneSurface!.clientWidth;
     const height = sceneSurface!.clientHeight;
     const aspect = width / Math.max(height, 1);
-    const originalAspect = still.naturalWidth && still.naturalHeight ? still.naturalWidth / still.naturalHeight : 2.5;
-    viewHeight = extensionReady ? Math.max(1, Math.min(45 / 32, originalAspect / Math.max(aspect, 0.01))) : 1;
+    const originalAspect = 1600 / 640;
+    viewHeight = artwork.extendedPoster || extensionReady ? Math.max(1, Math.min(extendedHeight, originalAspect / Math.max(aspect, 0.01))) : 1;
     const sourceAspect = originalAspect / viewHeight;
     cropX = Math.min(1, aspect / sourceAspect);
     cropY = Math.min(1, sourceAspect / aspect);
-    const scale = Math.min(devicePixelRatio || 1, 2, 1600 / Math.max(width, 1));
+    const scale = Math.min(devicePixelRatio || 1, pixelRatioLimit, 1600 / Math.max(width, 1));
     // Reuse the backing buffer across nearby sizes during the CSS transition.
     const bufferWidth = Math.max(64, Math.ceil(width * scale / 64) * 64);
     const bufferHeight = Math.max(32, Math.ceil(height * scale / 32) * 32);
@@ -651,6 +697,8 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     frame = 0;
     lastTime = 0;
     nextDraw = 0;
+    sampleStart = 0;
+    sampledFrames = 0;
     leaveBanner();
   }
   function allowed() {
@@ -692,6 +740,23 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     }
     if (canvas.style.opacity !== "1") canvas.style.opacity = "1";
   }
+  function adaptResolution(now: number) {
+    if (!artwork.extendedPoster || Math.min(devicePixelRatio, pixelRatioLimit) <= 1) return false;
+    if (!sampleStart) sampleStart = now;
+    sampledFrames++;
+    const span = now - sampleStart;
+    if (span < 2000) return false;
+    // Discard long interruptions. Only give up supersampling after repeated
+    // missed frames, keeping at least one rendered pixel per CSS pixel.
+    const slow = span < 2500 && sampledFrames * 1000 / span < 24;
+    sampleStart = now;
+    sampledFrames = 0;
+    if (slow) {
+      pixelRatioLimit = Math.max(1, Math.min(devicePixelRatio, pixelRatioLimit) - .5);
+      resize();
+    }
+    return slow;
+  }
   function draw(now: number) {
     frame = 0;
     if (!allowed()) { stop(); return; }
@@ -700,7 +765,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     if (now >= nextDraw - 0.5) {
       // Keep the original cadence when a refresh arrives fractionally late.
       nextDraw = nextDraw && now - nextDraw < interval ? nextDraw + interval : now + interval;
-      render();
+      if (!adaptResolution(now)) render();
     }
     frame = requestAnimationFrame(draw);
   }
@@ -809,15 +874,18 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
       sync();
     }
   }
-  async function load() {
+  let atlasReady = false;
+  let uploadedPoster = "";
+  async function uploadCurrentPoster() {
+    // A <picture> can select a new file while the previous decode is pending.
+    // Keep drawing the old texture until its replacement is ready.
+    if (!atlasReady || !still.complete || !still.naturalWidth) return;
+    const src = still.currentSrc;
     try {
-      // Dimensions can be available before the pixels on a cached reload.
-      await Promise.all([still.decode(), atlasImage.decode()]);
-      if (disposed || unavailable) return;
+      await still.decode();
+      if (disposed || unavailable || src !== still.currentSrc || src === uploadedPoster) return;
       upload(still, gl!.TEXTURE0, texture!);
-      upload(atlasImage, gl!.TEXTURE1, atlasTexture!);
-      if (needsExtension()) await loadExtension();
-      if (disposed || unavailable) return;
+      uploadedPoster = src;
       if (gl!.getError() !== gl!.NO_ERROR) {
         contextLost();
         return;
@@ -825,6 +893,20 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
       ready = true;
       resize();
       sync();
+    } catch {
+      if (!disposed && still.complete && src === still.currentSrc) contextLost();
+    }
+  }
+  async function load() {
+    try {
+      await atlasImage.decode();
+      if (disposed || unavailable) return;
+      upload(atlasImage, gl!.TEXTURE1, atlasTexture!);
+      if (needsExtension()) await loadExtension();
+      if (disposed || unavailable) return;
+      atlasReady = true;
+      if (still.complete && !still.naturalWidth && still.currentSrc) { contextLost(); return; }
+      await uploadCurrentPoster();
     } catch {
       if (!disposed) contextLost();
     }
@@ -843,6 +925,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   surface.addEventListener("pointercancel", finishTouchSound, { passive: true });
   surface.addEventListener("pointerleave", leaveBanner);
   surface.addEventListener("pointercancel", leaveBanner);
+  still.addEventListener("load", uploadCurrentPoster);
   still.addEventListener("error", contextLost);
   document.addEventListener("visibilitychange", sync);
   motion.addEventListener("change", sync);
@@ -866,6 +949,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
       surface.removeEventListener("pointercancel", finishTouchSound);
       surface.removeEventListener("pointerleave", leaveBanner);
       surface.removeEventListener("pointercancel", leaveBanner);
+      still.removeEventListener("load", uploadCurrentPoster);
       still.removeEventListener("error", contextLost);
       document.removeEventListener("visibilitychange", sync);
       motion.removeEventListener("change", sync);
