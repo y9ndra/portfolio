@@ -55,13 +55,6 @@
   pointer-events: none;
 }
 
-.water-scene::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url('/assets/water/inlet-mobile.webp') center / cover no-repeat;
-}
-
 .water-image {
   position: absolute;
   inset: 0;
@@ -73,8 +66,8 @@
 }
 
 .water-scene .water-image {
-  inset: 14.444% 0 auto;
-  height: 71.112%;
+  inset: 0;
+  height: 100%;
 }
 
 .water-ripples {

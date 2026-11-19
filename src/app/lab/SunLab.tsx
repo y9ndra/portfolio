@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { attachWaterRipples, localSceneHour } from "@/components/coastal/waterRipples";
-import { inletLighting } from "./inletLighting";
-import pocketInlet from "./inlet-pocket.webp";
-import wideInlet from "./inlet-wide.webp";
+import { inletLighting } from "@/components/coastal/inletLighting";
+import pocketInlet from "@/components/coastal/inlet-pocket.webp";
+import wideInlet from "@/components/coastal/inlet-wide.webp";
 import "./sun-lab.css";
 
 const previews = [

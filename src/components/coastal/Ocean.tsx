@@ -4,6 +4,9 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { attachWaterRipples, localSceneHour } from "./waterRipples";
+import { inletLighting } from "./inletLighting";
+import pocketInlet from "./inlet-pocket.webp";
+import wideInlet from "./inlet-wide.webp";
 import WelcomeEntry from "./WelcomeEntry";
 import { isHomeReturnNavigation } from "@/lib/homeReturn";
 
@@ -149,15 +152,13 @@ export default function Ocean() {
     let mounted = true;
     const image = still.current;
     const fallback = () => {
-      const extension = new window.Image();
-      extension.src = "/assets/water/inlet-mobile.webp";
-      void Promise.allSettled([image.decode(), extension.decode()]).then(() => { if (mounted) setSceneReady(true); });
+      void image.decode().catch(() => {}).then(() => { if (mounted) setSceneReady(true); });
     };
     const water = attachWaterRipples(image, ripples.current, (active, available) => {
       setPlaying(active);
       if (active) setSceneReady(true);
       else if (!available) fallback();
-    }, localSceneHour, true);
+    }, localSceneHour, true, { lighting: inletLighting, extendedPoster: true });
     waterScene.current = water;
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || connection?.saveData) fallback();
@@ -301,17 +302,18 @@ export default function Ocean() {
         }}
       >
         <div className="water-scene">
+          <picture>
+          <source media="(max-width: 600px)" srcSet={pocketInlet.src} />
           <Image
             ref={still}
             className="water-image"
             draggable={false}
-            src="/assets/water/inlet-unlit.webp"
-            width={1600}
-            height={640}
+            src={wideInlet}
             alt="Gulls fly past wind-bent pines and a lighthouse. Beneath the waves, a school of silver fish swims between stands of kelp."
             preload
             unoptimized
           />
+          </picture>
           <canvas ref={ripples} className="water-ripples" aria-hidden="true" />
         </div>
         <div className="water-controls">
