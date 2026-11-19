@@ -17,7 +17,7 @@ export const PERSONAL = {
 export const SKILLS = [
   {
     category: "Languages",
-    items: ["C++", "Java", "Python", "JavaScript", "TypeScript", "Lua"],
+    items: ["C++", "Java", "Python", "JavaScript", "TypeScript", "Go", "Lua"],
   },
   {
     category: "Frontend",
