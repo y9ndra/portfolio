@@ -163,6 +163,13 @@ body:has(.water-stage:not([data-phase="settled"])) :is(nav, footer, #about ~ *, 
 #about > .hero-inner {
   position: relative;
   z-index: 2;
+  pointer-events: none;
+}
+
+#about > .hero-inner > :not(.hero-profile),
+#about .hero-profile > :not(.hero-info),
+#about .hero-info > * {
+  pointer-events: auto;
 }
 
 #about:has(.water-stage) .hero-profile {
