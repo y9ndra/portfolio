@@ -66,12 +66,6 @@ export const metadata: Metadata = {
         height: 630,
         alt: "Yugendhra E, Backend-focused Full-Stack Engineer, beside a coastal sunset with two gulls.",
       },
-      {
-        url: "/assets/images/portfolio-character.png",
-        width: 512,
-        height: 512,
-        alt: "Yugendhra’s illustrated character in a hoodie.",
-      },
     ],
   },
   twitter: {
