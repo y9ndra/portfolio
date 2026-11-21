@@ -61,10 +61,16 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/images/profile+v6.png",
+        url: "/assets/images/portfolio-sunset.jpg",
         width: 1200,
         height: 630,
-        alt: "Yugendhra E — Portfolio",
+        alt: "Yugendhra E, Backend-focused Full-Stack Engineer, beside a coastal sunset with two gulls.",
+      },
+      {
+        url: "/assets/images/portfolio-character.png",
+        width: 512,
+        height: 512,
+        alt: "Yugendhra’s illustrated character in a hoodie.",
       },
     ],
   },
@@ -73,7 +79,7 @@ export const metadata: Metadata = {
     title: "Yugendhra E — Backend-focused Full-Stack Engineer",
     description:
       "Building reliable backends, and the apps on top of them.",
-    images: ["/assets/images/profile+v6.png"],
+    images: ["/assets/images/portfolio-sunset.jpg"],
   },
 };
 
