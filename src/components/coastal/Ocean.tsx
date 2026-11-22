@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { ArrowDown, Maximize2, Minimize2 } from "lucide-react";
 import { attachWaterRipples, localSceneHour } from "./waterRipples";
 import { inletLighting } from "./inletLighting";
 import pocketInlet from "./inlet-pocket.webp";
@@ -34,7 +34,6 @@ export default function Ocean() {
   const still = useRef<HTMLImageElement>(null);
   const ripples = useRef<HTMLCanvasElement>(null);
   const waterScene = useRef<ReturnType<typeof attachWaterRipples> | null>(null);
-  const [playing, setPlaying] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
   const [welcomeReady, setWelcomeReady] = useState(false);
@@ -42,8 +41,6 @@ export default function Ocean() {
   const [phase, setPhase] = useState<"open" | "settling" | "settled">("open");
   const [restoring, setRestoring] = useState(false);
   const [returnVisit, setReturnVisit] = useState(false);
-  const [entryHintDismissed, setEntryHintDismissed] = useState(false);
-  const [wildlifeHintDismissed, setWildlifeHintDismissed] = useState(false);
   const expanded = phase === "open";
 
   useEffect(() => {
@@ -124,7 +121,6 @@ export default function Ocean() {
   }, [intro]);
 
   function change(open: boolean) {
-    if (!open) setEntryHintDismissed(true);
     window.scrollTo({ top: 0, behavior: "instant" });
     setPhase(open ? "open" : "settling");
   }
@@ -155,7 +151,6 @@ export default function Ocean() {
       void image.decode().catch(() => {}).then(() => { if (mounted) setSceneReady(true); });
     };
     const water = attachWaterRipples(image, ripples.current, (active, available) => {
-      setPlaying(active);
       if (active) setSceneReady(true);
       else if (!available) fallback();
     }, localSceneHour, true, { lighting: inletLighting, extendedPoster: true });
@@ -297,9 +292,6 @@ export default function Ocean() {
         className="water-frame"
         onContextMenu={(event) => event.preventDefault()}
         onDragStart={(event) => event.preventDefault()}
-        onPointerDown={(event) => {
-          if (event.target instanceof Element && !event.target.closest("button")) setWildlifeHintDismissed(true);
-        }}
       >
         <div className="water-scene">
           <picture>
@@ -317,12 +309,17 @@ export default function Ocean() {
           <canvas ref={ripples} className="water-ripples" aria-hidden="true" />
         </div>
         <div className="water-controls">
-          {phase !== "settled" ? <span className={`water-intro-hint${entryHintDismissed ? " is-dismissed" : ""}`} aria-hidden={entryHintDismissed}>Scroll to enter</span> : playing && <span className={wildlifeHintDismissed ? "is-dismissed" : undefined} aria-hidden={wildlifeHintDismissed}><span className="water-mouse-hint">Move near a gull or tap a fish</span><span className="water-touch-hint">Tap a gull or fish</span></span>}
           <div>
             <button disabled={phase === "settling"} onClick={() => change(!expanded)} aria-label={expanded ? "Enter portfolio" : "Expand ocean banner"}>{expanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}</button>
           </div>
         </div>
       </div>
+      {expanded && intro === "done" && (
+        <span className="water-entry-cue">
+          <span>Scroll to explore</span>
+          <ArrowDown size={18} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+      )}
     </section>
   );
 }
