@@ -42,23 +42,12 @@ float cloudInk(vec3 ink, float y) {
   return smoothstep(.018, .118, excess);
 }
 
-float skyCoverage(vec3 ink, vec2 p) {
-  // The far shore supplies an upper bound for the sky. In particular, pale
-  // granite on the island should catch light as rock, never as a pink cloud.
-  vec2 tower = p * vec2(1600., 640.);
-  float ridge = 101. + 62. * smoothstep(72., 225., tower.x)
-    + 77. * smoothstep(310., 790., tower.x) - 45. * smoothstep(850., 1130., tower.x)
-    - 22. * smoothstep(1210., 1410., tower.x) + 27. * smoothstep(1410., 1600., tower.x);
-  float skyline = 1. - smoothstep(ridge - 2., ridge + 6., tower.y);
-  if (skyline <= 0.) return 0.;
-  vec2 paper = clearPaper(p.y);
-  float skyInk = smoothstep(-.11, -.035, ink.r - paper.x + .65 * (ink.r - ink.g - paper.y));
-  float towerWidth = mix(12., 23., smoothstep(145., 225., tower.y));
-  float masonry = (1. - smoothstep(towerWidth - 1., towerWidth + 1., abs(tower.x - 943.)))
-    * smoothstep(130., 138., tower.y);
-  return skyline * skyInk * (1. - masonry);
+uniform sampler2D skyMask;
+float skyCoverage(vec2 p) {
+  // The mask covers the top 400 rows of the 1600 x 900 extended print.
+  // Sample the wind-displaced print coordinates so the mask follows the pines.
+  return texture2D(skyMask, clamp(vec2(p.x, (p.y * 640. + 130.) / 400.), 0., 1.)).r;
 }
-
 
 float reach(float x, float lightX) {
   float dx = x - lightX;
@@ -224,7 +213,7 @@ vec3 inletWater(vec3 ink, vec2 p) {
 vec3 lightInlet(vec3 ink, vec2 p, vec2 uv) {
   float wet = smoothstep(.423, .45, p.y);
   if (wet >= 1.) return inletWater(ink, p);
-  float sky = skyCoverage(ink, p);
+  float sky = skyCoverage(p);
   if (sky >= 1.) return inletSky(ink, p, uv);
   vec3 land = shoreLight(ink, p);
   if (sky > 0.) land = mix(land, inletSky(ink, p, uv), sky);
