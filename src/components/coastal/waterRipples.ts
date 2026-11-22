@@ -548,6 +548,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   const texture = gl.createTexture();
   const atlasTexture = gl.createTexture();
   const extensionTexture = gl.createTexture();
+  const maskTexture = artwork.lighting ? gl.createTexture() : null;
   const release = () => {
     shaders.forEach((shader) => gl.deleteShader(shader));
     gl.deleteProgram(program);
@@ -555,9 +556,10 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     gl.deleteTexture(texture);
     gl.deleteTexture(atlasTexture);
     gl.deleteTexture(extensionTexture);
+    gl.deleteTexture(maskTexture);
   };
   const fail = () => { release(); onState(false, false); };
-  if (!program || !buffer || !texture || !atlasTexture || !extensionTexture) { fail(); return; }
+  if (!program || !buffer || !texture || !atlasTexture || !extensionTexture || (artwork.lighting && !maskTexture)) { fail(); return; }
   for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource(artwork)], [gl.FRAGMENT_SHADER, fragmentSource(artwork)]] as const) {
     const shader = gl.createShader(type);
     if (!shader) { fail(); return; }
@@ -609,6 +611,7 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
+  if (maskTexture) gl.uniform1i(gl.getUniformLocation(program, "skyMask"), 3);
   gl.uniform1i(gl.getUniformLocation(program, "scene"), 0);
   gl.uniform1i(gl.getUniformLocation(program, "wildlife"), 1);
   gl.activeTexture(gl.TEXTURE2);
@@ -899,8 +902,15 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
   }
   async function load() {
     try {
-      await atlasImage.decode();
+      const mask = maskTexture ? new Image() : null;
+      if (mask) mask.src = "/assets/water/inlet-sky.png";
+      await Promise.all([atlasImage.decode(), mask?.decode()]);
       if (disposed || unavailable) return;
+      if (mask && maskTexture) {
+        upload(mask, gl!.TEXTURE3, maskTexture);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_S, gl!.CLAMP_TO_EDGE);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_T, gl!.CLAMP_TO_EDGE);
+      }
       upload(atlasImage, gl!.TEXTURE1, atlasTexture!);
       if (needsExtension()) await loadExtension();
       if (disposed || unavailable) return;
