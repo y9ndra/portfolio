@@ -13,7 +13,7 @@ const escapeWingbeats = 4;
 const escapeDuration = 3.1 / escapeWingSpeed;
 const escapePeakSpeed = 3.5; // Additional speed, in multiples of cruising speed.
 const escapeDistance = escapePeakSpeed * escapeDuration / 2;
-const wingSettleDuration = 0.8;
+const wingSettleDuration = 0.3;
 
 // Ease each burst at both ends so the wings leave and return smoothly.
 function gullStroke(time: number, beats = 3) {
@@ -43,7 +43,6 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     phaseOffset: 0, startBasePhase: 0, settleStarted: -Infinity, settleFrom: 0, settleTo: 0,
   }));
   let lastDraw = 0;
-  let hoveredGull = -1;
   let pendingTouchFish = -1;
 
   function nearestAnimal(x: number, y: number, paddingX: number, paddingY: number, first: number, end: number) {
@@ -66,7 +65,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
   function startleGull(index: number) {
     const bird = index - fish.length;
     const flight = flights[bird];
-    if (flight.started !== -Infinity) return false;
+    if (flight.started !== -Infinity || flight.settleStarted !== -Infinity) return false;
     flight.started = lastDraw;
     flight.settleStarted = -Infinity;
     flight.startBasePhase = gullStroke(lastDraw * (1 + bird * 0.06) + bird * 2.3);
@@ -75,9 +74,7 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
 
   function approachGulls(x: number, y: number, paddingX: number, paddingY: number) {
     const nearest = nearestAnimal(x, y, paddingX, paddingY, fish.length, animals.length);
-    const started = nearest >= 0 && nearest !== hoveredGull && startleGull(nearest);
-    hoveredGull = nearest;
-    return started;
+    return nearest >= 0 && startleGull(nearest);
   }
 
   function startle(x: number, y: number, paddingX: number, paddingY: number, includeGulls: boolean, deferFishSound = false) {
@@ -220,7 +217,6 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
         flight.wingPhase = -1;
         flight.phaseOffset = 0;
         flight.settleStarted = -Infinity;
-        if (hoveredGull === fish.length + i) hoveredGull = -1;
         continue;
       }
       // A narrowing crop can move the entry edge past an incoming bird.
@@ -245,5 +241,5 @@ export function createWildlifeDraw(gl: WebGLRenderingContext, program: WebGLProg
     gl.disable(gl.BLEND);
     gl.uniform1i(kind, 0);
   }
-  return { draw, startle, finishTouchFish, approachGulls, leaveGulls() { hoveredGull = -1; } };
+  return { draw, startle, finishTouchFish, approachGulls };
 }

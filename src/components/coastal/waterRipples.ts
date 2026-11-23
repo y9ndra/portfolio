@@ -662,7 +662,6 @@ async function setupWaterRipples(still: HTMLImageElement, canvas: HTMLCanvasElem
 
   function leaveBanner() {
     cursor = null;
-    wildlife.leaveGulls();
   }
 
   function needsExtension() {
