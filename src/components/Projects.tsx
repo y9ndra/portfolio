@@ -60,7 +60,7 @@ const ArrowRight = () => (
 );
 
 
-const projects = PROJECTS.slice(0, 3);
+const projects = [PROJECTS[2], PROJECTS[0], PROJECTS[1]];
 let homeIntroPlayed = false;
 
 export default function Projects() {
@@ -112,8 +112,10 @@ export default function Projects() {
 
     // Returning from a project keeps the card the visitor was looking at.
     try {
-      const saved = sessionStorage.getItem("home_active_project_index");
-      const index = saved === null ? NaN : Number(saved);
+      const savedId = sessionStorage.getItem("home_active_project_id");
+      const savedIndex = sessionStorage.getItem("home_active_project_index");
+      const legacyProject = savedIndex === null ? undefined : PROJECTS[Number(savedIndex)];
+      const index = projects.findIndex(project => project.id === (savedId ?? legacyProject?.id));
       if (homeIntroPlayed || hasSeenHomeSection("projects") || (window.location.hash === "#projects" && Number.isInteger(index) && index >= 0 && index < projects.length)) {
         const frame = requestAnimationFrame(() => {
           homeIntroPlayed = true;
@@ -177,7 +179,7 @@ export default function Projects() {
     setRotation(current => {
       const next = current + step;
       const index = ((-next % projects.length) + projects.length) % projects.length;
-      try { sessionStorage.setItem("home_active_project_index", String(index)); } catch {}
+      try { sessionStorage.setItem("home_active_project_id", projects[index].id); } catch {}
       return next;
     });
   }, [cancelIntro]);
@@ -203,7 +205,7 @@ export default function Projects() {
     }
     try {
       sessionStorage.setItem("projects_back_url", "/#projects");
-      sessionStorage.setItem("home_active_project_index", String(index));
+      sessionStorage.setItem("home_active_project_id", projects[index].id);
     } catch {}
     if (event.metaKey || event.ctrlKey) window.open(`/projects/${id}`, "_blank");
     else router.push(`/projects/${id}`);
